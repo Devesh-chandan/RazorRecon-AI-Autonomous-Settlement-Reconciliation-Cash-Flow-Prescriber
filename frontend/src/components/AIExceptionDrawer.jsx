@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Bot, X, CheckCircle, ArrowUpRight, ChevronUp, ChevronDown, AlertTriangle } from 'lucide-react';
+import { Bot, X, CheckCircle, ArrowUpRight, AlertTriangle } from 'lucide-react';
 import { useReconciliation, selectBreaks } from '../context/ReconciliationContext';
 import { resolveBreak } from '../api/client';
 import './AIExceptionDrawer.css';
@@ -23,7 +23,7 @@ const ROOT_CAUSE_LABELS = {
   unknown:           'Unknown',
 };
 
-function BreakCard({ result, language, onResolve, onEscalate, isResolved, runId }) {
+function BreakCard({ result, language, onResolve, onEscalate, isResolved }) {
   const [resolving, setResolving] = useState(false);
   const explanation = language === 'hi' ? result.explanation_hi : result.explanation_en;
   const sev = SEVERITY_CONFIG[result.severity] || SEVERITY_CONFIG.medium;
@@ -106,13 +106,17 @@ function BreakCard({ result, language, onResolve, onEscalate, isResolved, runId 
   );
 }
 
-export default function AIExceptionDrawer() {
+export default function AIExceptionDrawer({ isOpen, onClose }) {
   const { state, dispatch } = useReconciliation();
   const { results, drawerOpen, language, resolvedBreaks, runId } = state;
 
   const breaks = useMemo(() => selectBreaks(results), [results]);
+  const active = isOpen || drawerOpen;
 
-  const toggleDrawer = () => dispatch({ type: 'TOGGLE_DRAWER' });
+  const handleClose = () => {
+    if (drawerOpen) dispatch({ type: 'CLOSE_DRAWER' });
+    if (onClose) onClose();
+  };
 
   const handleResolve = async (orderId) => {
     if (!runId) return;
@@ -126,46 +130,43 @@ export default function AIExceptionDrawer() {
   };
 
   const handleEscalate = (result) => {
-    // In production: open a ticket creation flow
-    alert(`Escalating ${result.order_id} to finance team.\n\nRoot cause: ${result.root_cause}\n\nIn production, this would create a support ticket.`);
+    alert(`Escalating ${result.order_id} to finance team.\n\nRoot cause: ${result.root_cause}\n\nIn production, this creates a support ticket.`);
   };
 
-  if (!breaks.length && results.length === 0) return null;
+  if (!active) return null;
 
   return (
-    <div className={`ai-drawer ${drawerOpen ? 'ai-drawer--open' : ''}`} id="ai-exception-drawer">
-      {/* Drawer Handle */}
-      <button
-        id="drawer-toggle"
-        className="drawer-handle"
-        onClick={toggleDrawer}
-        aria-expanded={drawerOpen}
-        aria-label={`${drawerOpen ? 'Close' : 'Open'} AI Exception Drawer`}
+    <div className="drawer-overlay animate-fadeIn" onClick={handleClose}>
+      <aside
+        className="ai-sidepanel animate-slideLeft"
+        onClick={e => e.stopPropagation()}
+        id="ai-exception-drawer"
+        role="dialog"
+        aria-label="AI Exception Analysis Side Panel"
       >
-        <div className="drawer-handle-left">
-          <Bot size={16} className="drawer-bot-icon" />
-          <span className="drawer-title">AI Exception Analysis</span>
-          {breaks.length > 0 && (
-            <span className="drawer-badge">{breaks.length - resolvedBreaks.size} unresolved</span>
-          )}
+        {/* Header */}
+        <div className="ai-panel-header">
+          <div className="ai-panel-title-group">
+            <Bot size={18} className="drawer-bot-icon" />
+            <div>
+              <h3>AI Exception Analysis &amp; Diagnostics</h3>
+              <span className="ai-sub-count">
+                {breaks.length > 0 ? `${breaks.length - resolvedBreaks.size} unresolved exceptions` : 'All exceptions clear'}
+              </span>
+            </div>
+          </div>
+          <button className="drawer-close-btn" onClick={handleClose} aria-label="Close AI Drawer">
+            <X size={16} />
+          </button>
         </div>
-        <div className="drawer-handle-right">
-          {resolvedBreaks.size > 0 && (
-            <span className="resolved-count">
-              <CheckCircle size={12} /> {resolvedBreaks.size} resolved
-            </span>
-          )}
-          {drawerOpen ? <ChevronDown size={16} /> : <ChevronUp size={16} />}
-        </div>
-      </button>
 
-      {/* Drawer Content */}
-      {drawerOpen && (
-        <div className="drawer-content" role="region" aria-label="AI Exception Cards">
+        {/* Body */}
+        <div className="ai-panel-body">
           {breaks.length === 0 ? (
             <div className="drawer-empty">
-              <CheckCircle size={32} className="drawer-empty-icon" />
-              <p>All records matched successfully! No breaks to review.</p>
+              <CheckCircle size={36} className="drawer-empty-icon text-green" />
+              <h4>Zero Unresolved Exceptions!</h4>
+              <p>All settlement records matched successfully or resolved via What-If engine.</p>
             </div>
           ) : (
             <div className="drawer-cards">
@@ -177,13 +178,12 @@ export default function AIExceptionDrawer() {
                   onResolve={handleResolve}
                   onEscalate={handleEscalate}
                   isResolved={resolvedBreaks.has(result.order_id)}
-                  runId={runId}
                 />
               ))}
             </div>
           )}
         </div>
-      )}
+      </aside>
     </div>
   );
 }

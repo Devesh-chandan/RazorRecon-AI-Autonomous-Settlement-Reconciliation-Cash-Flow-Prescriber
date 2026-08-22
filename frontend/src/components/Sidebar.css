@@ -1,0 +1,253 @@
+.rzp-sidebar {
+  height: 100vh;
+  background: #eef2f6;
+  border-right: 1px solid #e2e8f0;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  user-select: none;
+  z-index: var(--z-sticky);
+  transition: width 200ms cubic-bezier(0.16, 1, 0.3, 1), min-width 200ms cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+}
+
+.sidebar-logo-area {
+  height: 56px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 12px;
+  border-bottom: 1px solid #e2e8f0;
+  background: #ffffff;
+  position: relative;
+}
+
+.rzp-logo-badge {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.rzp-brand-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.1;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.rzp-brand-name {
+  font-size: 15px;
+  font-weight: 800;
+  color: #0c2340;
+  letter-spacing: -0.03em;
+}
+
+.rzp-sub-brand {
+  font-size: 10px;
+  font-weight: 600;
+  color: #0b72e7;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.sidebar-collapse-toggle-btn {
+  margin-left: auto;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 150ms ease;
+  flex-shrink: 0;
+}
+.sidebar-collapse-toggle-btn:hover {
+  background: #0b72e7;
+  color: #ffffff;
+  border-color: #0b72e7;
+}
+
+/* Nav */
+.sidebar-nav {
+  flex: 1;
+  overflow-y: auto;
+  padding: 14px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.nav-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.nav-group-title {
+  font-size: 10px;
+  font-weight: 800;
+  color: #64748b;
+  letter-spacing: 0.06em;
+  padding: 8px 8px 4px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 38px;
+  padding: 0 10px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #475569;
+  transition: all 150ms ease;
+  width: 100%;
+  text-align: left;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.nav-item:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+.nav-item--active {
+  background: #ffffff;
+  color: #0c2340;
+  font-weight: 700;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
+}
+
+.nav-active-bar {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: #0b72e7;
+  border-radius: 4px 0 0 4px;
+}
+
+.nav-icon {
+  color: #475569;
+  flex-shrink: 0;
+}
+
+.nav-icon--ai {
+  color: #0b72e7;
+}
+
+.nav-item--active .nav-icon {
+  color: #0c2340;
+}
+
+.nav-label {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nav-badge-pill {
+  margin-left: auto;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 2px 7px;
+  border-radius: 10px;
+  background: #e2e8f0;
+  color: #475569;
+}
+
+.nav-badge-pill--ai {
+  background: #ffe3e3;
+  color: #e53e3e;
+  box-shadow: 0 1px 3px rgba(229, 62, 62, 0.15);
+}
+
+/* Collapsed Icon-Only State */
+.rzp-sidebar--collapsed {
+  width: 64px !important;
+  min-width: 64px !important;
+}
+
+.rzp-sidebar--collapsed .sidebar-logo-area {
+  padding: 0;
+  justify-content: center;
+}
+
+.rzp-sidebar--collapsed .sidebar-collapse-toggle-btn {
+  margin-left: 0;
+}
+
+.rzp-sidebar--collapsed .nav-item {
+  justify-content: center;
+  padding: 0;
+}
+
+.rzp-sidebar--collapsed .nav-badge-pill--dot {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 7px;
+  height: 7px;
+  padding: 0;
+  border-radius: 50%;
+  background: #e53e3e;
+}
+
+.rzp-sidebar--collapsed .sidebar-footer {
+  padding: 10px;
+}
+
+.rzp-sidebar--collapsed .help-support-btn {
+  padding: 0;
+  justify-content: center;
+}
+
+/* Footer */
+.sidebar-footer {
+  padding: 12px 10px;
+  border-top: 1px solid #e2e8f0;
+  background: #eef2f6;
+}
+
+.help-support-btn {
+  width: 100%;
+  height: 36px;
+  background: #0c2340;
+  color: #ffffff;
+  border-radius: 18px;
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: background 150ms ease;
+  box-shadow: 0 2px 6px rgba(12, 35, 64, 0.2);
+  border: none;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.help-support-btn:hover {
+  background: #1a365d;
+}
+
+@media (max-width: 900px) {
+  .rzp-sidebar {
+    display: none;
+  }
+}

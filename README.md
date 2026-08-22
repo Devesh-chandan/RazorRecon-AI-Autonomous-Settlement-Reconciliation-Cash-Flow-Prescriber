@@ -30,6 +30,22 @@ Razorpay merchants receive daily **net settlements** that lump captured orders, 
 
 ---
 
+## 🔌 Port Mapping & Documentation Services
+
+Below is the complete table of all ports and services configured across the project:
+
+| Port | Service / Component | Protocol / Type | URL / Endpoint | Purpose |
+| :---: | :--- | :---: | :--- | :--- |
+| **`5173`** | **React 19 Frontend** | HTTP | [http://localhost:5173](http://localhost:5173) | Main Razorpay Recon & Flow Dashboard UI |
+| **`8000`** | **FastAPI Backend Server** | HTTP / SSE | [http://localhost:8000](http://localhost:8000) | REST API & Server-Sent Events progress stream |
+| **`8000`** | **Swagger OpenAPI Docs** | HTTP / UI | [http://localhost:8000/docs](http://localhost:8000/docs) | Interactive API documentation & live testing console |
+| **`8000`** | **ReDoc API Docs** | HTTP / UI | [http://localhost:8000/redoc](http://localhost:8000/redoc) | OpenAPI spec documentation view |
+| **`5432`** | **PostgreSQL Database** | TCP / SQL | `postgresql://localhost:5432` | Relational storage for orders, settlements & recon runs |
+| **`6379`** | **Redis Cache Server** | TCP / In-Memory | `redis://localhost:6379` | Fast caching layer for 7-day cash flow projections |
+| **`3000`** | **Alternative Frontend Port** | HTTP | `http://localhost:3000` | Configured fallback CORS origin for React/Next dev |
+
+---
+
 ## 🔥 Key Features
 
 - **⚡ 4-Pass Hybrid Reconciliation Engine**:
@@ -177,7 +193,7 @@ The benchmark dataset contains **100 records** seeded with real-world payment pr
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/) installed & running
 - [Python 3.12+](https://www.python.org/)
 - [Node.js 20+](https://nodejs.org/)
-- A free Groq Cloud API Key from [console.groq.com](https://console.groq.com)
+- A free Groq Cloud API Key from [consolegroq.com](https://console.groq.com)
 
 ---
 
@@ -314,7 +330,7 @@ RazorRecon-AI/
 │   ├── public/
 │   ├── src/
 │   │   ├── api/              # API REST & SSE client
-│   │   ├── components/       # Header, KPIRow, ReconWorkbench, CashFlowChart, AIExceptionDrawer, AuditLogPanel
+│   │   ├── components/       # Header, KPIRow, ReconWorkbench, CashFlowChart, AIExceptionDrawer, AuditLogPanel, Sidebar
 │   │   ├── context/          # Reconciliation State Context
 │   │   ├── App.jsx
 │   │   └── index.css         # Razorpay Design System tokens & styles

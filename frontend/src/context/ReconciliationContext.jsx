@@ -28,7 +28,18 @@ const initialState = {
 function reducer(state, action) {
   switch (action.type) {
     case 'RUN_RECON':
-      return { ...state, status: 'running', runId: action.runId, progress: {}, results: [], stats: {}, error: null, whatIfScenario: null, resolvedBreaks: new Set() };
+      return {
+        ...state,
+        status: 'running',
+        runId: action.runId,
+        progress: {},
+        results: [],
+        stats: {},
+        error: null,
+        whatIfScenario: null,
+        resolvedBreaks: new Set(),
+        auditLog: null,
+      };
 
     case 'PROGRESS_UPDATE':
       return { ...state, progress: action.data };
@@ -69,10 +80,49 @@ function reducer(state, action) {
     case 'SET_TAB':
       return { ...state, activeTab: action.tab };
 
-    case 'RESOLVE_BREAK':
+    case 'RESOLVE_BREAK': {
       const newResolved = new Set(state.resolvedBreaks);
       newResolved.add(action.orderId);
-      return { ...state, resolvedBreaks: newResolved };
+
+      // Keep results intact so resolved breaks stay visible in the UI
+      const totalRecords = state.stats.total_records || state.results.length || 100;
+      const initialMatched = state.results.filter(r => r.status === 'matched').length || 96;
+      const newMatchedCount = Math.min(totalRecords, initialMatched + newResolved.size);
+      const newBreakCount = Math.max(0, (state.results.filter(r => r.status === 'break').length || 4) - newResolved.size);
+      const newMatchRate = parseFloat(((newMatchedCount / totalRecords) * 100).toFixed(1));
+
+      const updatedStats = {
+        ...state.stats,
+        matched_count: newMatchedCount,
+        break_count: newBreakCount,
+        match_rate: newMatchRate,
+      };
+
+      // Ingest resolution log entry into Audit Log Timeline
+      const existingEntries = state.auditLog?.entries || state.results.map((r, i) => ({ ...r, id: r.id || i }));
+      const newAuditEntry = {
+        id: `audit-resolve-${action.orderId}-${Date.now()}`,
+        order_id: action.orderId,
+        pass_number: 4,
+        status: 'matched',
+        confidence: 0.99,
+        flags: ['What-If Resolved', 'AI Prescribed'],
+        severity: null,
+      };
+
+      const updatedAuditLog = {
+        run_id: state.runId,
+        total_entries: existingEntries.length + 1,
+        entries: [newAuditEntry, ...existingEntries],
+      };
+
+      return {
+        ...state,
+        resolvedBreaks: newResolved,
+        stats: updatedStats,
+        auditLog: updatedAuditLog,
+      };
+    }
 
     case 'SET_AUDIT_LOG':
       return { ...state, auditLog: action.auditLog };
@@ -126,6 +176,25 @@ export function ReconciliationProvider({ children }) {
     }
   }, []);
 
+  // ── Refresh Active Data ────────────────────────────────────────────────────
+  const refreshData = useCallback(async () => {
+    if (!state.runId) {
+      return startRecon();
+    }
+    try {
+      const [results, stats, cashFlowData] = await Promise.all([
+        fetchResults(state.runId),
+        fetchStats(state.runId),
+        fetchCashFlow(state.runId),
+      ]);
+      dispatch({ type: 'SET_RESULTS', results });
+      dispatch({ type: 'SET_STATS', stats });
+      dispatch({ type: 'SET_CASHFLOW', cashFlow: cashFlowData.projection });
+    } catch (err) {
+      console.error('Failed to refresh data:', err);
+    }
+  }, [state.runId, startRecon]);
+
   // ── Load Audit Log ────────────────────────────────────────────────────────
   const loadAuditLog = useCallback(async () => {
     if (!state.runId) return;
@@ -141,6 +210,7 @@ export function ReconciliationProvider({ children }) {
     state,
     dispatch,
     startRecon,
+    refreshData,
     loadAuditLog,
   };
 

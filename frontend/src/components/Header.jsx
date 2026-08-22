@@ -1,10 +1,10 @@
-import { Play, RefreshCw, Activity } from 'lucide-react';
+import { Play, RefreshCw, Activity, Search, User, ChevronDown } from 'lucide-react';
 import { useReconciliation } from '../context/ReconciliationContext';
 import './Header.css';
 
-export default function Header() {
+export default function Header({ onOpenAudit }) {
   const { state, dispatch, startRecon } = useReconciliation();
-  const { status, progress, language } = state;
+  const { status, progress, language, results } = state;
 
   const isRunning = status === 'running';
 
@@ -18,29 +18,25 @@ export default function Header() {
   };
 
   const getProgressText = () => {
-    if (!progress.pass) return 'Initializing...';
-    const passNames = ['', 'Exact Match', 'Rule-Based', 'Fuzzy Match', 'AI Analysis'];
+    if (!progress.pass) return 'Initializing Engine...';
+    const passNames = ['', 'Exact Match', 'Rule-Based', 'Fuzzy Match', 'AI Diagnostics'];
     return `Pass ${progress.pass} — ${passNames[progress.pass] || ''}: ${progress.total_matched || 0}/${progress.total_records || 100} matched`;
   };
 
   return (
-    <header className="header" id="app-header">
-      <div className="header-inner">
-        {/* Logo + Brand */}
-        <div className="header-brand">
-          <div className="header-logo" aria-hidden="true">
-            <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-              <rect width="32" height="32" rx="6" fill="#2D81E0"/>
-              <path d="M8 10h10c2.2 0 4 1.8 4 4s-1.8 4-4 4h-6l5 4" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          </div>
-          <div>
-            <h1 className="header-title">RazorRecon &amp; Flow</h1>
-            <p className="header-subtitle">AI Settlement Reconciliation</p>
-          </div>
+    <div className="rzp-header-wrapper">
+      <header className="rzp-top-header" id="app-header">
+        {/* Global Search Bar */}
+        <div className="header-search-container">
+          <Search size={14} className="search-icon" />
+          <input
+            id="global-search"
+            className="global-search-input"
+            placeholder="Search order ID, settlement, flag..."
+          />
         </div>
 
-        {/* Center: Progress bar (during run) */}
+        {/* Live Progress Bar (During Run) */}
         {isRunning && (
           <div className="header-progress" aria-live="polite">
             <div className="header-progress-bar">
@@ -60,8 +56,33 @@ export default function Header() {
           </div>
         )}
 
-        {/* Right: Controls */}
-        <div className="header-controls">
+        {/* Right Utility Controls */}
+        <div className="header-utility-controls">
+          {/* Live System Status Badge */}
+          <div className="system-status-badge" title="AI Recon Engine Operational Status">
+            <span className={`system-status-dot ${isRunning ? 'system-status-dot--busy' : ''}`} />
+            <span>{isRunning ? 'Engine Active' : 'System Ready'}</span>
+          </div>
+
+          {/* Test Mode Badge Toggle */}
+          <div className="test-mode-badge" title="AI Multi-Pass Engine Active in Test Mode">
+            <span className="test-mode-dot" />
+            <span>Test Mode</span>
+            <ChevronDown size={12} className="text-tertiary" />
+          </div>
+
+
+
+          {/* API Docs Button */}
+          <button
+            className="icon-btn user-avatar-btn"
+            title="API Documentation (Swagger)"
+            aria-label="API Documentation"
+            onClick={() => window.open('http://localhost:8000/docs', '_blank')}
+          >
+            <User size={15} />
+          </button>
+
           {/* Language Toggle */}
           <button
             id="language-toggle"
@@ -75,7 +96,7 @@ export default function Header() {
             <span className={`lang-option ${language === 'hi' ? 'active' : ''}`}>HI</span>
           </button>
 
-          {/* Run Recon Button */}
+          {/* Run Recon Primary Button */}
           <button
             id="run-recon-btn"
             className={`btn btn-primary header-cta ${isRunning ? 'btn-running' : ''}`}
@@ -85,18 +106,18 @@ export default function Header() {
           >
             {isRunning ? (
               <>
-                <RefreshCw size={14} className="animate-spin" />
+                <RefreshCw size={13} className="animate-spin" />
                 Running...
               </>
             ) : (
               <>
-                <Play size={14} />
-                {status === 'complete' ? 'Re-run Recon' : 'Run Reconciliation'}
+                <Play size={13} />
+                {status === 'complete' ? 'Re-run Recon' : 'Run Recon'}
               </>
             )}
           </button>
         </div>
-      </div>
-    </header>
+      </header>
+    </div>
   );
 }

@@ -68,7 +68,6 @@ export default function CashFlowChart() {
             <TrendingUp size={16} />
             7-Day Cash Flow
           </h2>
-          <p className="cashflow-subtitle">Forward settlement projection</p>
         </div>
         {!isEmpty && (
           <div className="cashflow-totals">
@@ -104,7 +103,7 @@ export default function CashFlowChart() {
             <p>Run reconciliation to see the 7-day projection</p>
           </div>
         ) : (
-          <ResponsiveContainer width="100%" height={220}>
+          <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={chartData} margin={{ top: 10, right: 16, left: 0, bottom: 0 }}>
               <defs>
                 <linearGradient id="gradConfirmed" x1="0" y1="0" x2="0" y2="1">

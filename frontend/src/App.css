@@ -1,37 +1,87 @@
-/* ── App Shell Layout ─────────────────────────────────────── */
+/* ── Authentic Razorpay Portal Layout ──────────────────────── */
 
-.app-shell {
+.rzp-dashboard-layout {
   display: flex;
-  flex-direction: column;
-  min-height: 100vh;
-  background: var(--bg-page);
+  height: 100vh;
+  max-height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  background: #f4f6f8;
+  font-family: var(--font-sans);
 }
 
-.app-main {
+.layout-dragging {
+  cursor: col-resize;
+  user-select: none;
+}
+
+.rzp-main-wrapper {
   flex: 1;
   display: flex;
   flex-direction: column;
+  height: 100vh;
+  min-width: 0;
+  overflow: hidden;
+  background: #f4f6f8;
+}
+
+.rzp-content-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
   overflow: hidden;
 }
 
-/* ── Workbench Split Layout ────────────────────────────────── */
+/* ── Sidebar Resizer Drag Handle ───────────────────────────── */
+.sidebar-resizer {
+  width: 6px;
+  height: 100vh;
+  cursor: col-resize;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+  z-index: 10;
+  margin-left: -3px;
+  margin-right: -3px;
+  background: transparent;
+  transition: background 150ms ease;
+}
+
+.sidebar-resizer:hover,
+.sidebar-resizer--dragging {
+  background: rgba(11, 114, 231, 0.15);
+}
+
+.sidebar-resizer::after {
+  content: '';
+  width: 2px;
+  height: 100%;
+  background: transparent;
+  transition: background 150ms ease;
+}
+
+.sidebar-resizer:hover::after,
+.sidebar-resizer--dragging::after {
+  background: #0b72e7;
+}
+
+/* ── Split Workbench Grid & Resizer ───────────────────────────── */
 .app-workbench {
   display: grid;
-  grid-template-columns: 55fr 45fr;
-  gap: var(--space-4);
-  padding: 0 var(--space-6) var(--space-4);
-  max-width: 1400px;
-  margin: 0 auto;
+  gap: 0;
+  padding: 8px 24px 16px;
   width: 100%;
-  /* Fill available height */
   flex: 1;
   min-height: 0;
-  max-height: calc(100vh - 64px - 180px - 48px - 48px);
+  overflow: hidden;
 }
 
 .workbench-left,
 .workbench-right {
   min-height: 0;
+  height: 100%;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -41,28 +91,59 @@
 .workbench-right > * {
   flex: 1;
   min-height: 0;
+  height: 100%;
 }
 
-/* ── Responsive ────────────────────────────────────────────── */
-@media (max-width: 900px) {
-  .app-workbench {
-    grid-template-columns: 1fr;
-    max-height: none;
-    gap: var(--space-4);
-    padding: 0 var(--space-4) var(--space-4);
-  }
-
-  .workbench-left {
-    min-height: 400px;
-  }
-
-  .workbench-right {
-    min-height: 300px;
-  }
+/* ── Drag Splitter Handle ──────────────────────────────────── */
+.workbench-resizer {
+  width: 12px;
+  height: 100%;
+  cursor: col-resize;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+  z-index: 5;
+  margin: 0 -2px;
+  background: transparent;
+  transition: background 150ms ease;
 }
 
-@media (max-width: 768px) {
+.workbench-resizer::after {
+  content: '';
+  width: 4px;
+  height: 36px;
+  background: #cbd5e1;
+  border-radius: 2px;
+  transition: all 150ms ease;
+}
+
+.workbench-resizer:hover::after,
+.workbench-resizer--dragging::after {
+  background: #0b72e7;
+  height: 60px;
+  width: 5px;
+  box-shadow: 0 0 8px rgba(11, 114, 231, 0.5);
+}
+
+/* ── Responsive ───────────────────────────────────────────── */
+@media (max-width: 1024px) {
+  .sidebar-resizer {
+    display: none;
+  }
+
   .app-workbench {
-    padding: 0 var(--space-3) var(--space-3);
+    grid-template-columns: 1fr !important;
+    overflow-y: auto;
+  }
+
+  .workbench-resizer {
+    display: none;
+  }
+
+  .rzp-dashboard-layout {
+    height: auto;
+    min-height: 100vh;
+    overflow: auto;
   }
 }

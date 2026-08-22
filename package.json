@@ -1,0 +1,14 @@
+{
+  "name": "razorrecon-ai",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "backend": "cd backend && .venv\\Scripts\\python.exe -m uvicorn app.main:app --reload --port 8000",
+    "frontend": "cd frontend && npm run dev",
+    "dev": "concurrently \"npm run backend\" \"npm run frontend\"",
+    "start": "npm run dev"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}

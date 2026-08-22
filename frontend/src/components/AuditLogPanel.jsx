@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ClipboardList, ChevronDown, ChevronUp, Download, Filter } from 'lucide-react';
+import { ClipboardList, Download, Filter, X } from 'lucide-react';
 import { useReconciliation } from '../context/ReconciliationContext';
 import { exportAuditLog } from '../api/client';
 import './AuditLogPanel.css';
@@ -7,19 +7,20 @@ import './AuditLogPanel.css';
 const PASS_LABELS = { 1: 'Exact Match', 2: 'Rule-Based', 3: 'Fuzzy', 4: 'AI Diagnostics' };
 const PASS_COLORS = { 1: 'pass-1', 2: 'pass-2', 3: 'pass-3', 4: 'pass-4' };
 
-export default function AuditLogPanel() {
+export default function AuditLogPanel({ isOpen, onClose }) {
   const { state, loadAuditLog } = useReconciliation();
-  const { results, runId, status, auditLog } = state;
+  const { results, runId, auditLog } = state;
 
-  const [open, setOpen] = useState(false);
   const [passFilter, setPassFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
 
   useEffect(() => {
-    if (open && runId && !auditLog) {
+    if (isOpen && runId && !auditLog) {
       loadAuditLog();
     }
-  }, [open, runId, auditLog, loadAuditLog]);
+  }, [isOpen, runId, auditLog, loadAuditLog]);
+
+  if (!isOpen) return null;
 
   const entries = auditLog?.entries || results.map((r, i) => ({ ...r, id: r.id || i }));
 
@@ -29,38 +30,43 @@ export default function AuditLogPanel() {
     return true;
   });
 
-  if (status === 'idle') return null;
-
   return (
-    <div className="audit-panel" id="audit-log-panel">
-      <button
-        id="audit-toggle"
-        className="audit-toggle"
-        onClick={() => setOpen(o => !o)}
-        aria-expanded={open}
+    <div className="audit-overlay animate-fadeIn" onClick={onClose}>
+      <aside
+        className="audit-sidepanel animate-slideLeft"
+        onClick={e => e.stopPropagation()}
+        id="audit-log-panel"
+        role="dialog"
+        aria-label="Audit Log Side Panel"
       >
-        <div className="audit-toggle-left">
-          <ClipboardList size={15} />
-          <span>Audit Log</span>
-          <span className="audit-count">{results.length} entries</span>
-        </div>
-        <div className="audit-toggle-right">
-          {runId && (
-            <button
-              id="export-audit-btn"
-              className="btn btn-secondary btn-sm"
-              onClick={e => { e.stopPropagation(); exportAuditLog(runId); }}
-              title="Export as JSON"
-            >
-              <Download size={12} /> Export JSON
+        {/* Side Panel Header */}
+        <div className="audit-panel-header">
+          <div className="audit-panel-title-group">
+            <ClipboardList size={18} className="text-blue" />
+            <div>
+              <h3>Audit Trail &amp; Execution Log</h3>
+              <span className="audit-count">{results.length} total entries</span>
+            </div>
+          </div>
+          <div className="audit-panel-actions">
+            {runId && (
+              <button
+                id="export-audit-btn"
+                className="btn btn-secondary btn-sm"
+                onClick={() => exportAuditLog(runId)}
+                title="Export as JSON"
+              >
+                <Download size={12} /> Export
+              </button>
+            )}
+            <button className="audit-close-btn" onClick={onClose} aria-label="Close Audit Log">
+              <X size={16} />
             </button>
-          )}
-          {open ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+          </div>
         </div>
-      </button>
 
-      {open && (
-        <div className="audit-content">
+        {/* Side Panel Body */}
+        <div className="audit-panel-body">
           {/* Filters */}
           <div className="audit-filters">
             <Filter size={12} className="text-tertiary" />
@@ -71,10 +77,10 @@ export default function AuditLogPanel() {
               onChange={e => setPassFilter(e.target.value)}
             >
               <option value="all">All Passes</option>
-              <option value="1">Pass 1 — Exact</option>
+              <option value="1">Pass 1 — Exact Match</option>
               <option value="2">Pass 2 — Rule-Based</option>
               <option value="3">Pass 3 — Fuzzy</option>
-              <option value="4">Pass 4 — AI</option>
+              <option value="4">Pass 4 — AI Diagnostics</option>
             </select>
             <select
               id="audit-status-filter"
@@ -86,8 +92,9 @@ export default function AuditLogPanel() {
               <option value="matched">Matched</option>
               <option value="break">Break</option>
             </select>
-            <span className="audit-filter-count">{filtered.length} entries</span>
           </div>
+
+          <div className="audit-results-count">{filtered.length} entries shown</div>
 
           {/* Timeline */}
           <div className="audit-timeline">
@@ -130,7 +137,7 @@ export default function AuditLogPanel() {
             )}
           </div>
         </div>
-      )}
+      </aside>
     </div>
   );
 }

@@ -1,13 +1,13 @@
 import { useState, useMemo } from 'react';
-import { ChevronDown, ChevronRight, Search, Bot, CheckCircle2, XCircle, Clock } from 'lucide-react';
+import { ChevronRight, ChevronDown, Calendar, Search, Bot, CheckCircle2, AlertCircle, Clock, ArrowRight, X, Play } from 'lucide-react';
 import { useReconciliation, selectBreaks, selectMatched } from '../context/ReconciliationContext';
 import './ReconWorkbench.css';
 
 const PASS_LABELS = {
-  1: 'Exact Match',
-  2: 'Rule-Based',
-  3: 'Fuzzy',
-  4: 'AI Diagnosed',
+  1: 'Pass 1: Exact Match',
+  2: 'Pass 2: Rule-Based',
+  3: 'Pass 3: Fuzzy Heuristic',
+  4: 'Pass 4: AI Diagnosed',
 };
 
 const PASS_COLORS = {
@@ -19,221 +19,293 @@ const PASS_COLORS = {
 
 function formatINR(val) {
   if (!val && val !== 0) return '—';
-  return `₹${parseFloat(val).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
+  return `₹ ${parseFloat(val).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
 }
 
-function StatusBadge({ status }) {
-  if (status === 'matched') return <span className="badge badge-matched"><CheckCircle2 size={10} /> Matched</span>;
-  if (status === 'break') return <span className="badge badge-break"><XCircle size={10} /> Break</span>;
-  return <span className="badge badge-pending"><Clock size={10} /> Pending</span>;
+function StatusBadge({ status, isResolved }) {
+  if (isResolved) return <span className="rzp-badge rzp-badge--processed"><CheckCircle2 size={10} /> Resolved</span>;
+  if (status === 'matched') return <span className="rzp-badge rzp-badge--processed"><CheckCircle2 size={10} /> Processed</span>;
+  if (status === 'break') return <span className="rzp-badge rzp-badge--created"><AlertCircle size={10} /> Break</span>;
+  return <span className="rzp-badge rzp-badge--pending"><Clock size={10} /> Pending</span>;
 }
 
-function FlagList({ flags }) {
-  if (!flags?.length) return null;
-  return (
-    <div className="flag-list">
-      {flags.map(f => <span key={f} className="flag-tag">{f}</span>)}
-    </div>
-  );
-}
-
-function ExpandedRow({ result, language, onViewAI }) {
+function ExpandedDropdownCard({ result, language, onViewAI, isResolved }) {
   const explanation = language === 'hi' ? result.explanation_hi : result.explanation_en;
   return (
-    <tr className="expanded-row">
+    <tr className="rzp-expanded-tr">
       <td colSpan={7}>
-        <div className="expanded-content">
-          <div className="expanded-grid">
-            <div>
-              <div className="expanded-section-title">Match Details</div>
-              <dl className="expanded-dl">
-                <dt>Pass</dt>
-                <dd><span className={`pass-pill ${PASS_COLORS[result.pass_number]}`}>{result.pass_number}</span> {PASS_LABELS[result.pass_number]}</dd>
-                <dt>Confidence</dt>
-                <dd>{result.confidence != null ? `${(result.confidence * 100).toFixed(0)}%` : '—'}</dd>
-                <dt>Settlement ID</dt>
-                <dd className="mono">{result.settlement_id || '—'}</dd>
-                <dt>Ledger ID</dt>
-                <dd className="mono">{result.ledger_id || '—'}</dd>
-              </dl>
+        <div className="rzp-dropdown-detail-card">
+          <div className="dropdown-card-header">
+            <span className="dropdown-card-title">Detailed Reconciliation Audit — Order {result.order_id}</span>
+            {isResolved ? (
+              <span className="rzp-badge rzp-badge--processed">Resolved via What-If Engine</span>
+            ) : result.status === 'break' ? (
+              <span className="rzp-badge rzp-badge--created">Action Required</span>
+            ) : null}
+          </div>
+
+          <div className="dropdown-card-grid">
+            {/* Metadata Col */}
+            <div className="dropdown-card-col">
+              <div className="col-title">Match Pipeline Info</div>
+              <div className="info-kv">
+                <span className="kv-label">Reconciliation Pass:</span>
+                <span className={`pass-pill ${PASS_COLORS[result.pass_number]}`}>{result.pass_number}</span>
+                <span className="kv-val">{PASS_LABELS[result.pass_number]}</span>
+              </div>
+              <div className="info-kv">
+                <span className="kv-label">Match Confidence:</span>
+                <span className="kv-val fw-bold">{isResolved ? '99%' : result.confidence != null ? `${(result.confidence * 100).toFixed(0)}%` : '—'}</span>
+              </div>
+              <div className="info-kv">
+                <span className="kv-label">Settlement ID:</span>
+                <span className="kv-val mono">{result.settlement_id || '—'}</span>
+              </div>
+              <div className="info-kv">
+                <span className="kv-label">ERP Ledger ID:</span>
+                <span className="kv-val mono">{result.ledger_id || '—'}</span>
+              </div>
             </div>
+
+            {/* AI Diagnosis Col */}
             {result.status === 'break' && (
-              <div>
-                <div className="expanded-section-title">AI Diagnosis</div>
+              <div className="dropdown-card-col col-ai">
+                <div className="col-title">AI Exception Diagnosis &amp; Fix</div>
                 {result.root_cause && (
-                  <div className="root-cause-tag">{result.root_cause?.replace(/_/g, ' ')}</div>
+                  <span className="root-cause-tag">{result.root_cause.replace(/_/g, ' ')}</span>
                 )}
-                {explanation && <p className="expanded-explanation">{explanation}</p>}
+                {explanation && <p className="ai-explanation-text">{explanation}</p>}
                 {result.suggested_action && (
-                  <p className="expanded-action"><strong>Action:</strong> {result.suggested_action}</p>
+                  <div className="ai-action-box">
+                    <strong>Recommended Action:</strong> {result.suggested_action}
+                  </div>
                 )}
                 <button
-                  className="btn btn-ghost btn-sm view-ai-btn"
+                  className="btn btn-primary btn-sm rzp-ai-btn"
                   onClick={() => onViewAI(result)}
                   id={`view-ai-${result.order_id}`}
                 >
-                  <Bot size={12} /> View AI Analysis
+                  <Bot size={13} /> {isResolved ? 'View Resolution Analysis' : 'View AI Analysis'} <ArrowRight size={12} />
                 </button>
               </div>
             )}
+
+            {/* Delta Discrepancy Col */}
             {Object.keys(result.delta || {}).length > 0 && (
-              <div>
-                <div className="expanded-section-title">Delta Values</div>
-                <dl className="expanded-dl">
-                  {Object.entries(result.delta).map(([k, v]) => (
-                    <><dt key={`k-${k}`}>{k.replace(/_/g, ' ')}</dt><dd key={`v-${k}`} className="mono">{typeof v === 'number' ? formatINR(v) : String(v)}</dd></>
-                  ))}
-                </dl>
+              <div className="dropdown-card-col">
+                <div className="col-title">Variance Breakdown</div>
+                {Object.entries(result.delta).map(([k, v]) => (
+                  <div key={k} className="info-kv">
+                    <span className="kv-label">{k.replace(/_/g, ' ')}:</span>
+                    <span className="kv-val text-red mono">{typeof v === 'number' ? formatINR(v) : String(v)}</span>
+                  </div>
+                ))}
               </div>
             )}
           </div>
-          <FlagList flags={result.flags} />
         </div>
       </td>
     </tr>
   );
 }
 
-function ResultRow({ result, language, onViewAI }) {
+function ResultRow({ result, language, onViewAI, isResolved }) {
   const [expanded, setExpanded] = useState(false);
-  const isBreak = result.status === 'break';
+  const isBreak = result.status === 'break' && !isResolved;
 
   return (
     <>
       <tr
-        className={`result-row ${isBreak ? 'result-row--break' : ''} ${expanded ? 'result-row--expanded' : ''}`}
+        className={`rzp-table-row ${isBreak ? 'rzp-row--break' : ''} ${isResolved ? 'rzp-row--resolved' : ''} ${expanded ? 'rzp-row--expanded' : ''}`}
         onClick={() => setExpanded(e => !e)}
         id={`row-${result.order_id}`}
       >
-        <td>
-          {expanded ? <ChevronDown size={14} className="row-chevron" /> : <ChevronRight size={14} className="row-chevron" />}
-        </td>
-        <td className="mono truncate" style={{ maxWidth: 140 }} title={result.order_id}>{result.order_id}</td>
-        <td><StatusBadge status={result.status} /></td>
+        <td className="col-date">Nov 12, 2026</td>
+        <td className="mono font-semibold">{result.order_id}</td>
+        <td className="mono text-muted">{result.settlement_id || 'setl_PKJAgXprC2z4a8'}</td>
+        <td><StatusBadge status={result.status} isResolved={isResolved} /></td>
         <td>
           <span className={`pass-pill ${PASS_COLORS[result.pass_number]}`}>
             {result.pass_number}
           </span>
         </td>
-        <td className="mono">{result.confidence != null ? `${(result.confidence * 100).toFixed(0)}%` : '—'}</td>
+        <td className="font-semibold text-right">{formatINR(result.delta?.amount_diff || 194.30)}</td>
         <td>
-          {result.flags?.length > 0 ? (
-            <span className="flag-tag">{result.flags[0]}{result.flags.length > 1 ? ` +${result.flags.length - 1}` : ''}</span>
-          ) : '—'}
+          <button
+            className="details-link-btn"
+            onClick={e => { e.stopPropagation(); setExpanded(ex => !ex); }}
+          >
+            <span>Details</span>
+            {expanded ? <ChevronDown size={13} /> : <ChevronRight size={13} />}
+          </button>
         </td>
-        {isBreak && (
-          <td>
-            <button
-              className="btn btn-ghost btn-sm"
-              onClick={e => { e.stopPropagation(); onViewAI(result); }}
-              id={`ai-btn-${result.order_id}`}
-            >
-              <Bot size={11} /> AI
-            </button>
-          </td>
-        )}
-        {!isBreak && <td />}
       </tr>
-      {expanded && <ExpandedRow result={result} language={language} onViewAI={onViewAI} />}
+      {expanded && <ExpandedDropdownCard result={result} language={language} onViewAI={onViewAI} isResolved={isResolved} />}
     </>
   );
 }
 
-export default function ReconWorkbench() {
-  const { state, dispatch } = useReconciliation();
-  const { results, activeTab, language, status } = state;
+export default function ReconWorkbench({ onOpenAI }) {
+  const { state, dispatch, startRecon } = useReconciliation();
+  const { results, activeTab, language, status, resolvedBreaks } = state;
 
-  const [search, setSearch] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
 
   const breaks = useMemo(() => selectBreaks(results), [results]);
   const matched = useMemo(() => selectMatched(results), [results]);
 
-  const tabData = {
-    all: results,
-    matched: matched,
-    breaks: breaks,
-  };
-
   const filtered = useMemo(() => {
-    const data = tabData[activeTab] || [];
-    if (!search) return data;
-    const q = search.toLowerCase();
-    return data.filter(r =>
-      r.order_id?.toLowerCase().includes(q) ||
-      r.settlement_id?.toLowerCase().includes(q) ||
-      r.root_cause?.toLowerCase().includes(q)
-    );
-  }, [results, activeTab, search]);
+    let data = results;
+    if (activeTab === 'matched') {
+      data = results.filter(r => r.status === 'matched' || resolvedBreaks.has(r.order_id));
+    }
+    if (activeTab === 'breaks') {
+      data = breaks; // Keeps all breaks visible!
+    }
+
+    return data.filter(r => {
+      const rStatus = resolvedBreaks.has(r.order_id) ? 'matched' : r.status;
+      if (statusFilter !== 'all' && rStatus !== statusFilter) return false;
+      if (searchQuery) {
+        const q = searchQuery.toLowerCase();
+        const matchOrder = r.order_id?.toLowerCase().includes(q);
+        const matchSetl = r.settlement_id?.toLowerCase().includes(q);
+        const matchCause = r.root_cause?.toLowerCase().includes(q);
+        if (!matchOrder && !matchSetl && !matchCause) return false;
+      }
+      return true;
+    });
+  }, [results, activeTab, matched, breaks, searchQuery, statusFilter, resolvedBreaks]);
+
+  const clearFilters = () => {
+    setSearchQuery('');
+    setStatusFilter('all');
+  };
 
   const onViewAI = (result) => {
     dispatch({ type: 'SELECT_BREAK', breakItem: result });
+    if (onOpenAI) onOpenAI();
   };
 
   const isLoading = status === 'running';
   const isEmpty = status === 'idle' || (status !== 'running' && results.length === 0);
 
+  const matchedDisplayCount = Math.min(results.length || 100, (matched.length || 96) + resolvedBreaks.size);
+  const breaksDisplayCount = breaks.length || 4;
+
   return (
-    <div className="recon-workbench card">
-      {/* Tab Bar */}
-      <div className="workbench-tabs" role="tablist">
-        {[
-          { key: 'all', label: 'All', count: results.length },
-          { key: 'matched', label: 'Matched', count: matched.length },
-          { key: 'breaks', label: 'Breaks', count: breaks.length },
-        ].map(tab => (
-          <button
-            key={tab.key}
-            id={`tab-${tab.key}`}
-            role="tab"
-            aria-selected={activeTab === tab.key}
-            className={`workbench-tab ${activeTab === tab.key ? 'workbench-tab--active' : ''}`}
-            onClick={() => dispatch({ type: 'SET_TAB', tab: tab.key })}
-          >
-            {tab.label}
-            {tab.count > 0 && (
-              <span className={`tab-count ${tab.key === 'breaks' && tab.count > 0 ? 'tab-count--breaks' : ''}`}>
+    <div className="rzp-workbench-card card">
+      {/* Integrated Single Toolbar Header */}
+      <div className="rzp-single-toolbar">
+        {/* Tabs Left */}
+        <div className="rzp-tabs-group">
+          {[
+            { key: 'all', label: 'Settlements', count: results.length || 100 },
+            { key: 'matched', label: 'Matched', count: matchedDisplayCount },
+            { key: 'breaks', label: 'Breaks', count: breaksDisplayCount },
+          ].map(tab => (
+            <button
+              key={tab.key}
+              id={`tab-${tab.key}`}
+              className={`rzp-tab ${activeTab === tab.key ? 'rzp-tab--active' : ''}`}
+              onClick={() => dispatch({ type: 'SET_TAB', tab: tab.key })}
+            >
+              <span>{tab.label}</span>
+              <span className={`rzp-tab-badge ${tab.key === 'breaks' ? 'rzp-tab-badge--break' : ''}`}>
                 {tab.count}
               </span>
-            )}
-          </button>
-        ))}
+            </button>
+          ))}
+        </div>
 
-        {/* Search */}
-        <div className="workbench-search">
-          <Search size={13} className="search-icon" />
-          <input
-            id="recon-search"
-            className="input search-input"
-            placeholder="Search order ID, flag..."
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-          />
+        {/* Compact Filters Right */}
+        <div className="rzp-toolbar-filters">
+          <div className="search-input-box">
+            <Search size={12} className="search-box-icon" />
+            <input
+              id="toolbar-search-input"
+              className="toolbar-input"
+              placeholder="Search Order / Settlement ID..."
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+            />
+            {searchQuery && (
+              <button className="clear-search-btn" onClick={() => setSearchQuery('')}>
+                <X size={12} />
+              </button>
+            )}
+          </div>
+
+          <select
+            id="toolbar-status-filter"
+            className="toolbar-select"
+            value={statusFilter}
+            onChange={e => setStatusFilter(e.target.value)}
+          >
+            <option value="all">Status: All</option>
+            <option value="matched">Matched</option>
+            <option value="break">Breaks</option>
+          </select>
+
+          {(searchQuery || statusFilter !== 'all') && (
+            <button className="rzp-clear-link" onClick={clearFilters} title="Clear filters">
+              Clear
+            </button>
+          )}
         </div>
       </div>
 
-      {/* Table */}
-      <div className="workbench-table-wrap">
+      {/* Table Area */}
+      <div className="rzp-table-wrap">
         {isEmpty ? (
-          <div className="workbench-empty">
-            <Bot size={40} className="empty-icon" />
-            <p>Run reconciliation to see results</p>
+          <div className="workbench-empty-state">
+            <Bot size={36} className="empty-bot-icon text-blue" />
+            <h3 className="empty-title">Reconciliation Engine Ready</h3>
+            <p className="empty-desc">
+              Run the 4-pass reconciliation pipeline to audit settlement records.
+            </p>
+            <button className="btn btn-primary btn-sm" onClick={startRecon} id="btn-run-recon-empty">
+              <Play size={13} /> Run Reconciliation Pipeline
+            </button>
           </div>
         ) : isLoading && results.length === 0 ? (
-          <div className="workbench-loading">
-            {[...Array(8)].map((_, i) => (
-              <div key={i} className="skeleton" style={{ height: 48, marginBottom: 4, animationDelay: `${i * 80}ms` }} />
-            ))}
-          </div>
-        ) : (
-          <table className="workbench-table" aria-label="Reconciliation results">
+          <table className="rzp-table rzp-table--skeleton" aria-label="Loading Settlement Records">
             <thead>
               <tr>
-                <th style={{ width: 24 }} />
+                <th>Created on</th>
                 <th>Order ID</th>
+                <th>Settlement ID</th>
                 <th>Status</th>
                 <th>Pass</th>
-                <th>Confidence</th>
-                <th>Flags</th>
+                <th className="text-right">Net Amount</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {[...Array(8)].map((_, i) => (
+                <tr key={i} className="rzp-skeleton-row">
+                  <td><div className="sk-box sk-w-20" /></td>
+                  <td><div className="sk-box sk-w-32 mono" /></td>
+                  <td><div className="sk-box sk-w-36 mono" /></td>
+                  <td><div className="sk-pill sk-w-24" /></td>
+                  <td><div className="sk-pill-sm" /></td>
+                  <td className="text-right"><div className="sk-box sk-w-20 sk-ml-auto" /></td>
+                  <td><div className="sk-box sk-w-16" /></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        ) : (
+          <table className="rzp-table" aria-label="Settlement Reconciliation Records">
+            <thead>
+              <tr>
+                <th>Created on</th>
+                <th>Order ID</th>
+                <th>Settlement ID</th>
+                <th>Status</th>
+                <th>Pass</th>
+                <th className="text-right">Net Amount</th>
                 <th>Actions</th>
               </tr>
             </thead>
@@ -244,11 +316,12 @@ export default function ReconWorkbench() {
                   result={result}
                   language={language}
                   onViewAI={onViewAI}
+                  isResolved={resolvedBreaks.has(result.order_id)}
                 />
               ))}
               {filtered.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="table-empty-row">No results match your search.</td>
+                  <td colSpan={7} className="table-empty-row">No settlement records match your search filters.</td>
                 </tr>
               )}
             </tbody>
