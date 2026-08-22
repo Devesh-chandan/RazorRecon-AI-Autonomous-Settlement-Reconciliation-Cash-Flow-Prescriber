@@ -1,0 +1,50 @@
+"""Configuration management via Pydantic Settings."""
+from functools import lru_cache
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+class Settings(BaseSettings):
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        extra="ignore",
+    )
+
+    # ── LLM ──────────────────────────────────────────────────────────────────
+    GROQ_API_KEY: str = ""
+    GROQ_MODEL: str = "groq/compound-mini"
+    GROQ_TEMPERATURE: float = 0.1
+
+    # ── Database ─────────────────────────────────────────────────────────────
+    DATABASE_URL: str = "postgresql://razorrecon:razorrecon@localhost:5432/razorrecon"
+
+    # ── Redis ─────────────────────────────────────────────────────────────────
+    REDIS_URL: str = "redis://localhost:6379/0"
+    CACHE_TTL: int = 300  # 5 minutes
+
+    # ── MDR rates by payment method (per RBI mandate) ─────────────────────────
+    MDR_RATES: dict = {
+        "upi": 0.0000,
+        "card": 0.0200,
+        "netbanking": 0.0175,
+        "wallet": 0.0250,
+    }
+
+    # ── Reconciliation tolerances ─────────────────────────────────────────────
+    MDR_FEE_TOLERANCE: float = 5.00      # ₹5 fee variance
+    AMOUNT_TOLERANCE_PCT: float = 0.02   # ±2% amount mismatch
+    GST_ROUNDING_TOLERANCE: float = 0.02 # ₹0.02 GST rounding
+    SETTLEMENT_WINDOW_DAYS: int = 3      # T+1 to T+3 settlement window
+
+    # ── CORS origins ─────────────────────────────────────────────────────────
+    ALLOWED_ORIGINS: list = [
+        "http://localhost:5173",
+        "http://localhost:3000",
+        "http://127.0.0.1:5173",
+        "http://127.0.0.1:3000",
+    ]
+
+
+@lru_cache
+def get_settings() -> Settings:
+    return Settings()

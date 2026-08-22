@@ -1,0 +1,136 @@
+.cashflow-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.cashflow-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: var(--space-4) var(--space-5) var(--space-3);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.cashflow-title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-base);
+  font-weight: var(--fw-bold);
+  color: var(--text-primary);
+}
+
+.cashflow-subtitle {
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+  margin-top: 2px;
+  padding-left: 22px;
+}
+
+.cashflow-totals {
+  display: flex;
+  gap: var(--space-3);
+  flex-shrink: 0;
+}
+
+.cashflow-total {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--text-xs);
+  font-weight: var(--fw-bold);
+  padding: 3px 8px;
+  border-radius: var(--radius-full);
+}
+
+.cashflow-total--confirmed {
+  background: var(--success-light);
+  color: var(--success);
+}
+.cashflow-total--disputed {
+  background: var(--warning-light);
+  color: var(--warning);
+}
+
+.cashflow-total-label {
+  font-weight: var(--fw-medium);
+  opacity: 0.8;
+}
+
+/* What-If Banner */
+.whatif-banner {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-5);
+  background: var(--primary-light);
+  color: var(--primary);
+  font-size: var(--text-xs);
+  font-weight: var(--fw-medium);
+  border-bottom: 1px solid var(--border);
+  animation: fadeIn 0.3s ease;
+}
+
+/* Chart Area */
+.cashflow-chart-area {
+  flex: 1;
+  padding: var(--space-4) var(--space-5) var(--space-4) var(--space-3);
+  min-height: 0;
+}
+
+.cashflow-empty {
+  height: 200px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-tertiary);
+  font-size: var(--text-sm);
+  gap: var(--space-2);
+}
+
+.cashflow-empty .empty-icon {
+  opacity: 0.25;
+}
+
+/* Custom tooltip */
+.chart-tooltip {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  box-shadow: var(--shadow-md);
+  font-size: var(--text-xs);
+  min-width: 160px;
+}
+
+.chart-tooltip-date {
+  font-weight: var(--fw-semibold);
+  color: var(--text-primary);
+  margin-bottom: var(--space-2);
+  font-size: var(--text-sm);
+}
+
+.chart-tooltip-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 2px 0;
+  color: var(--text-secondary);
+}
+
+.chart-tooltip-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.chart-tooltip-val {
+  margin-left: auto;
+  font-weight: var(--fw-bold);
+  font-family: var(--font-mono);
+}

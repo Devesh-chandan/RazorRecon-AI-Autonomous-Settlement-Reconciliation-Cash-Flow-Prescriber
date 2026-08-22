@@ -1,0 +1,138 @@
+.audit-panel {
+  background: var(--bg-surface);
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.audit-toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-3) var(--space-6);
+  background: var(--bg-surface-alt);
+  border: none;
+  cursor: pointer;
+  transition: background var(--transition-fast);
+  border-top: 1px solid var(--border);
+}
+.audit-toggle:hover { background: var(--bg-surface-hover); }
+
+.audit-toggle-left,
+.audit-toggle-right {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-size: var(--text-sm);
+  font-weight: var(--fw-semibold);
+  color: var(--text-secondary);
+}
+
+.audit-count {
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+  font-weight: var(--fw-normal);
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  padding: 1px 6px;
+  border-radius: var(--radius-full);
+}
+
+.audit-content {
+  max-height: 320px;
+  overflow-y: auto;
+  padding: var(--space-4) var(--space-6);
+  animation: fadeIn 0.2s ease;
+}
+
+.audit-filters {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+  flex-wrap: wrap;
+}
+
+.audit-select {
+  width: auto;
+  min-width: 140px;
+  height: 28px;
+  padding: 0 var(--space-2);
+  font-size: var(--text-xs);
+}
+
+.audit-filter-count {
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+  margin-left: auto;
+}
+
+/* Timeline */
+.audit-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.audit-entry {
+  display: flex;
+  gap: var(--space-3);
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--border);
+}
+.audit-entry:last-child { border-bottom: none; }
+.audit-entry--break .audit-entry-body { border-left: 2px solid var(--error); padding-left: var(--space-2); }
+
+.audit-entry-pass {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.audit-entry-line {
+  width: 1px;
+  flex: 1;
+  background: var(--border);
+  min-height: 8px;
+}
+
+.audit-entry-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.audit-entry-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: 4px;
+  flex-wrap: wrap;
+}
+
+.audit-order-id {
+  font-size: var(--text-xs);
+  color: var(--text-primary);
+  font-weight: var(--fw-medium);
+}
+
+.audit-conf {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  margin-left: auto;
+}
+
+.audit-entry-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.audit-empty {
+  text-align: center;
+  color: var(--text-tertiary);
+  font-size: var(--text-sm);
+  padding: var(--space-4);
+}
