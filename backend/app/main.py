@@ -1,14 +1,21 @@
-"""FastAPI application factory — assembles routes, CORS, and lifespan."""
+"""FastAPI application factory — assembles routes, CORS, rate limiting, and lifespan."""
 import logging
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIMiddleware
+from slowapi.util import get_remote_address
 from sqlalchemy import text
 
 from app.config import get_settings
 from app.database import engine, SessionLocal
 from app.routes import recon, cashflow, audit, health
+from app.routes import auth as auth_routes
+from app.routes import ingestion
 
 logging.basicConfig(
     level=logging.INFO,
@@ -16,6 +23,13 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 settings = get_settings()
+
+# ── Rate Limiter ───────────────────────────────────────────────────────────────
+# Key = client IP address. Limit configured via RATE_LIMIT_PER_MINUTE env var.
+limiter = Limiter(
+    key_func=get_remote_address,
+    default_limits=[f"{settings.RATE_LIMIT_PER_MINUTE}/minute"],
+)
 
 
 @asynccontextmanager
@@ -47,6 +61,15 @@ async def lifespan(app: FastAPI):
     else:
         logger.warning("⚠️  GROQ_API_KEY not set — LLM pass will use fallback diagnostics")
 
+    # Warn if webhook secret is not configured
+    if not settings.RAZORPAY_WEBHOOK_SECRET:
+        logger.warning("⚠️  RAZORPAY_WEBHOOK_SECRET not set — webhook signatures will NOT be verified")
+
+    # Warn if default JWT secret is in use
+    if settings.JWT_SECRET_KEY == "change-me-in-production-use-openssl-rand-hex-32":
+        logger.warning("⚠️  Using default JWT_SECRET_KEY — replace with `openssl rand -hex 32` in production")
+
+    logger.info(f"🛡️  Rate limit: {settings.RATE_LIMIT_PER_MINUTE} req/min per IP")
     logger.info("✅ RazorRecon & Flow API ready")
     yield
 
@@ -57,11 +80,16 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="RazorRecon & Flow",
     description="LLM-Powered Settlement Reconciliation & Cash-Flow Prescriber",
-    version="1.0.0",
+    version="2.0.0",
     docs_url="/docs",
     redoc_url="/redoc",
     lifespan=lifespan,
 )
+
+# ── Rate Limiting Middleware ───────────────────────────────────────────────────
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+app.add_middleware(SlowAPIMiddleware)
 
 # ── CORS ───────────────────────────────────────────────────────────────────────
 app.add_middleware(
@@ -77,13 +105,18 @@ app.include_router(recon.router)
 app.include_router(cashflow.router)
 app.include_router(audit.router)
 app.include_router(health.router)
+app.include_router(auth_routes.router)
+app.include_router(ingestion.router)
 
 
 @app.get("/")
 async def root():
     return {
         "app": "RazorRecon & Flow",
-        "version": "1.0.0",
+        "version": "2.0.0",
         "docs": "/docs",
         "health": "/api/health",
+        "auth": "/api/auth/token",
+        "webhook": "/api/webhooks/razorpay",
+        "upload": "/api/recon/upload",
     }

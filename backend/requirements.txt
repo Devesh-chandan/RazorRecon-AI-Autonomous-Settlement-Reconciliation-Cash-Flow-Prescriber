@@ -1,13 +1,49 @@
+# ── Core Framework ────────────────────────────────────────────────────────────
 fastapi==0.115.*
 uvicorn[standard]==0.34.*
+
+# ── Production ASGI Server ────────────────────────────────────────────────────
+gunicorn==22.*
+
+# ── Database ──────────────────────────────────────────────────────────────────
 sqlalchemy==2.0.*
 alembic==1.14.*
 psycopg2-binary==2.9.*
+
+# ── Cache ─────────────────────────────────────────────────────────────────────
 redis==5.2.*
+
+# ── LLM ───────────────────────────────────────────────────────────────────────
 groq==0.15.*
+
+# ── Data Processing ───────────────────────────────────────────────────────────
 pandas==2.2.*
 numpy==2.1.*
-pydantic==2.10.*
+openpyxl==3.1.*          # Excel (.xlsx) support for CSV importer
+
+# ── Pydantic / Settings ───────────────────────────────────────────────────────
+pydantic[email]==2.10.*
 pydantic-settings==2.7.*
+
+# ── SSE ───────────────────────────────────────────────────────────────────────
 sse-starlette==2.2.*
+
+# ── Auth & Security ───────────────────────────────────────────────────────────
+python-jose[cryptography]==3.3.*   # JWT generation & verification
+passlib[bcrypt]==1.7.*             # Password hashing (bcrypt)
+python-multipart==0.0.*            # Multipart form / file upload support
+
+# ── Rate Limiting ─────────────────────────────────────────────────────────────
+slowapi==0.1.*
+
+# ── HTTP Client ───────────────────────────────────────────────────────────────
+httpx==0.28.*                      # Async HTTP for Razorpay API calls
+
+# ── Environment ───────────────────────────────────────────────────────────────
 python-dotenv==1.0.*
+
+# ── Testing & Load ────────────────────────────────────────────────────────────
+pytest==8.*
+pytest-asyncio==0.24.*
+locust==2.32.*
+bandit==1.8.*

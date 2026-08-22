@@ -16,11 +16,26 @@ class Settings(BaseSettings):
     GROQ_TEMPERATURE: float = 0.1
 
     # ── Database ─────────────────────────────────────────────────────────────
+    # For production use: postgresql://user:pass@host:5432/db?sslmode=require
     DATABASE_URL: str = "postgresql://razorrecon:razorrecon@localhost:5432/razorrecon"
 
     # ── Redis ─────────────────────────────────────────────────────────────────
+    # For production TLS use: rediss://:password@host:6380/0
     REDIS_URL: str = "redis://localhost:6379/0"
     CACHE_TTL: int = 300  # 5 minutes
+
+    # ── Razorpay Webhook ──────────────────────────────────────────────────────
+    # Found in Razorpay Dashboard → Settings → Webhooks → Secret
+    RAZORPAY_WEBHOOK_SECRET: str = ""
+
+    # ── JWT Authentication ────────────────────────────────────────────────────
+    # Generate a strong secret: openssl rand -hex 32
+    JWT_SECRET_KEY: str = "change-me-in-production-use-openssl-rand-hex-32"
+    JWT_ALGORITHM: str = "HS256"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 8  # 8 hours
+
+    # ── Rate Limiting ─────────────────────────────────────────────────────────
+    RATE_LIMIT_PER_MINUTE: int = 60   # requests/minute per IP
 
     # ── MDR rates by payment method (per RBI mandate) ─────────────────────────
     MDR_RATES: dict = {
@@ -42,6 +57,7 @@ class Settings(BaseSettings):
         "http://localhost:3000",
         "http://127.0.0.1:5173",
         "http://127.0.0.1:3000",
+        "https://localhost",           # production Nginx
     ]
 
 

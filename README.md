@@ -23,10 +23,12 @@ Razorpay merchants receive daily **net settlements** that lump captured orders, 
 - ⚠️ **Error-Prone**: Human error leads to unrecorded breaks, missed tax deductions, and duplicate ledger entries.
 - 🌫️ **Cash Opaque**: Unresolved breaks obscure usable operating capital and forward liquidity.
 
-**RazorRecon & Flow** addresses this with an autonomous dual-engine architecture:
-1. **Multi-Pass Reconciliation Pipeline**: Achieves **>90% automated match rate** across complex 100-record synthetic settlement batches containing real-world edge cases.
-2. **Bilingual AI Exception Diagnostics**: Uses **Llama 3.3 70B via Groq** (~500 tok/s) to diagnose root causes and prescribe resolution steps in plain **English & Hinglish**.
-3. **7-Day Forward Cash-Flow Prescriber**: Computes expected daily settlement inflows and updates forward liquidity in real-time as settlement breaks are resolved via "What-If" simulation.
+**RazorRecon & Flow** addresses this with an autonomous enterprise architecture:
+1. **Real-World Production Data Ingestion**: Ingests live Razorpay Webhooks (`payment.captured`, `settlement.processed`, `refund.processed`) with HMAC-SHA256 signature verification AND batch CSV/Excel importer for Razorpay Settlement Reports & Tally / Zoho Books sales ledgers.
+2. **Multi-Pass Reconciliation Pipeline**: Achieves **>90% automated match rate** across complex synthetic & live settlement batches containing real-world edge cases.
+3. **Bilingual AI Exception Diagnostics**: Uses **Llama 3.3 70B via Groq** (~500 tok/s) to diagnose root causes and prescribe resolution steps in plain **English & Hinglish**.
+4. **Enterprise Auth & Rate Limiting**: OAuth2 / JWT Authentication with Role-Based Access Control (RBAC) and `slowapi` rate limiting.
+5. **7-Day Forward Cash-Flow Prescriber**: Computes expected daily settlement inflows and updates forward liquidity in real-time as settlement breaks are resolved via "What-If" simulation.
 
 ---
 
@@ -40,14 +42,21 @@ Below is the complete table of all ports and services configured across the proj
 | **`8000`** | **FastAPI Backend Server** | HTTP / SSE | [http://localhost:8000](http://localhost:8000) | REST API & Server-Sent Events progress stream |
 | **`8000`** | **Swagger OpenAPI Docs** | HTTP / UI | [http://localhost:8000/docs](http://localhost:8000/docs) | Interactive API documentation & live testing console |
 | **`8000`** | **ReDoc API Docs** | HTTP / UI | [http://localhost:8000/redoc](http://localhost:8000/redoc) | OpenAPI spec documentation view |
-| **`5432`** | **PostgreSQL Database** | TCP / SQL | `postgresql://localhost:5432` | Relational storage for orders, settlements & recon runs |
+| **`443`** | **Production Nginx TLS Proxy** | HTTPS | `https://localhost` | SSL reverse proxy for FastAPI & Static Frontend |
+| **`5432`** | **PostgreSQL Database** | TCP / SQL | `postgresql://localhost:5432` | Relational storage for orders, settlements, merchants & recon runs |
 | **`6379`** | **Redis Cache Server** | TCP / In-Memory | `redis://localhost:6379` | Fast caching layer for 7-day cash flow projections |
-| **`3000`** | **Alternative Frontend Port** | HTTP | `http://localhost:3000` | Configured fallback CORS origin for React/Next dev |
 
 ---
 
 ## 🔥 Key Features
 
+- **📡 Real-World Production Data Ingestion**:
+  - **Live Razorpay Webhook Handler** (`POST /api/webhooks/razorpay`): Validates `X-Razorpay-Signature` header using HMAC-SHA256 merchant secret. Parses `payment.captured`, `settlement.processed`, and `refund.processed` JSON payloads into PostgreSQL in real-time.
+  - **Batch CSV & Excel Importer** (`POST /api/recon/upload`): Auto-maps column headers (`Order ID`, `UTR`, `MDR Fee`, `GST`, `Net Credit`, `Recorded Amount`) from Razorpay Settlement Reports & Tally / Zoho Books sales ledgers with duplicate row skipping and detailed per-row error reporting.
+- **🔐 Enterprise Security & JWT Authentication**:
+  - OAuth2 / JWT Authentication (`POST /api/auth/register`, `POST /api/auth/token`, `GET /api/auth/me`) with `bcrypt` password hashing via `passlib`.
+  - Role-Based Access Control (RBAC) supporting `admin`, `finance`, and `auditor` user roles.
+  - Endpoint Rate Limiting (`slowapi`) preventing API flooding & brute force attacks (60 req/min per IP).
 - **⚡ 4-Pass Hybrid Reconciliation Engine**:
   - **Pass 1 (Exact Deterministic)**: Instant HashMap lookup matching `order_id` + `amount`.
   - **Pass 2 (Rule-Based Contextual)**: Handles T+1/T+2 date windows, MDR fee tolerances (±₹5), cross-midnight UTC/IST boundary shifts, and GST rounding differences.
@@ -60,144 +69,44 @@ Below is the complete table of all ports and services configured across the proj
   - Live "What-If" scenario engine updates cash curves instantaneously when breaks are resolved.
 - **📡 Real-Time SSE Streaming**:
   - Live Server-Sent Events (SSE) update the frontend UI pass-by-pass with animated progress counters.
-- **🎨 Razorpay Dashboard Fidelity**:
-  - Built with Razorpay's light design language (Mulish typography, brand color `#2D81E0`, crisp KPI cards, status badges, and interactive Recharts graphs).
 
 ---
 
 ## 🏗️ Architecture Overview
 
 ```
-┌──────────────────────────────────────────────────────────────────────┐
-│                        BROWSER (React 19 + Vite)                     │
-│                                                                      │
-│  ┌──────────┐ ┌─────────────┐ ┌──────────────┐ ┌────────────────┐   │
-│  │  Header   │ │  KPI Cards  │ │ Recon Table  │ │ Cash-Flow Chart│   │
-│  └──────────┘ └─────────────┘ └──────┬───────┘ └───────┬────────┘   │
-│                                      │                  │            │
-│  ┌───────────────────────────────────┐│ ┌───────────────┐            │
-│  │     AI Exception Drawer          ││ │  Audit Log    │            │
-│  └───────────────────────────────────┘│ └───────────────┘            │
-│                                       │                              │
-└───────────────────────────────────────┼──────────────────────────────┘
-                                        │ REST API + SSE Stream
-                                        ▼
-┌──────────────────────────────────────────────────────────────────────┐
-│                    BACKEND (Python 3.12 + FastAPI)                    │
-│                                                                      │
-│  ┌─────────────┐  ┌──────────────────┐  ┌────────────────────────┐  │
-│  │ API Routes  │  │  Recon Engine    │  │   LLM Service          │  │
-│  │ /api/recon  │──│  4-Pass Pipeline │──│   Groq + Llama 3.3     │  │
-│  │ /api/cash   │  │  Deterministic   │  │   Exception Diagnostics│  │
-│  │ /api/audit  │  │  + LLM Hybrid    │  │   Bilingual Narratives │  │
-│  └──────┬──────┘  └────────┬─────────┘  └────────────────────────┘  │
-│         │                  │                                         │
-│         ▼                  ▼                                         │
-│  ┌─────────────┐  ┌──────────────┐                                  │
-│  │  Redis 7    │  │ PostgreSQL 16│                                  │
-│  │  Cache +    │  │  Orders      │                                  │
-│  │  SSE State  │  │  Settlements │                                  │
-│  │             │  │  Recon Runs  │                                  │
-│  └─────────────┘  └──────────────┘                                  │
-│                                                                      │
-│         Docker Compose (postgres:16 + redis:7)                       │
-└──────────────────────────────────────────────────────────────────────┘
-```
-
-### Production Alignment Matrix
-
-| Razorpay Architecture | RazorRecon Equivalent | Alignment |
-|---|---|---|
-| Microservices on AWS EKS | Python 3.12 FastAPI Service | Containerized microservice pattern |
-| PostgreSQL / MySQL | PostgreSQL 16 | Direct match with Razorpay production DBs |
-| Redis Cache | Redis 7 (with DB fallback) | Cache layer for high-throughput recon runs |
-| Event-Driven Kafka Stream | Server-Sent Events (SSE) | Real-time live status updates to browser |
-| LLM / Agent Orchestration | Llama 3.3 70B via Groq Cloud API | Ultra-fast (~500 tok/s) open LLM inference |
-| Airflow Batch DAGs | Automated 4-Pass Pipeline | Simulated scheduled reconciliation DAG |
-
----
-
-## ⚙️ Reconciliation Pipeline (4-Pass Engine)
-
-```
-┌─────────────────────────────────────────────────────┐
-│                  INPUT (PostgreSQL)                 │
-│   orders + settlements + erp_ledger tables           │
-└──────────────────────┬──────────────────────────────┘
-                       │
-                       ▼
-              ┌────────────────┐
-              │  PASS 1: EXACT │   Match on order_id + payment_id
-              │  DETERMINISTIC │   + exact ₹ amount (50 clean matches)
-              └───────┬────────┘
-                      │ SSE progress update
-                      ▼
-              ┌────────────────┐
-              │  PASS 2: RULE  │   T+1/T+2 window, MDR tolerance (±₹5),
-              │  BASED         │   cross-midnight IST, GST rounding
-              └───────┬────────┘
-                      │ SSE progress update
-                      ▼
-              ┌────────────────┐
-              │  PASS 3: FUZZY │   Amount proximity (±2%), partial refund
-              │  HEURISTIC     │   net-matching, duplicate ERP detection
-              └───────┬────────┘
-                      │ SSE progress update
-                      ▼
-              ┌────────────────┐
-              │  PASS 4: LLM   │   Llama 3.3 70B analyzes remaining
-              │  DIAGNOSTICS   │   unmatched breaks with full context
-              └───────┬────────┘
-                      │ Final results cached in Redis & persisted to PostgreSQL
-                      ▼
-              ┌────────────────┐
-              │ Output Summary │   93% Match Rate | 7 Unresolved Breaks
-              └────────────────┘
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                           PRODUCTION CLOUD PIPELINE                         │
+│                                                                             │
+│ ┌──────────────────────┐      ┌──────────────────┐      ┌─────────────────┐ │
+│ │ Vercel / Cloudflare  │ ---> │ AWS ECS / Render │ ---> │ AWS RDS Postgres│ │
+│ │ React 19 Frontend    │      │ Gunicorn FastAPI │      │ SSL Managed DB  │ │
+│ └──────────────────────┘      └────────┬─────────┘      └─────────────────┘ │
+│                                        │                                    │
+│ ┌──────────────────────┐               │                ┌─────────────────┐ │
+│ │ Razorpay Webhooks    │ ──────────────┼──────────────> │ Upstash Redis   │ │
+│ │ Live Payment Events  │               │                │ Managed Cache   │ │
+│ └──────────────────────┘               ▼                └─────────────────┘ │
+│                               ┌──────────────────┐                          │
+│                               │ Groq Cloud API   │                          │
+│                               │ Llama 3.3 70B    │                          │
+│                               └──────────────────┘                          │
+└─────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 🧪 Synthetic Dataset Edge Cases (No Cherry-Picking)
-
-The benchmark dataset contains **100 records** seeded with real-world payment processing anomalies:
-
-| # | Edge Case | Seeded Behavior | Record Count |
-|---|---|---|---|
-| 1 | **MDR Rate Variance** | Gateway fee deviates ±₹0.50–₹5.00 from expected percentage | 8 |
-| 2 | **T+2 Timing Lag** | Settlement date delayed by 2 days; appears missing on T+1 audit | 10 |
-| 3 | **Cross-Midnight Boundary** | Created at 23:45 IST, captured at 00:02 IST next calendar day | 5 |
-| 4 | **Full Refunds** | Refund settlement with matching debit amount | 6 |
-| 5 | **Partial Refunds** | Net credit reflects partial refund deduction | 4 |
-| 6 | **Chargeback Holdbacks** | Adjustment entity with negative net credit; no ERP entry | 3 |
-| 7 | **Missing ERP Entry** | Gateway settlement exists but unrecorded in merchant ERP | 4 |
-| 8 | **Duplicate ERP Entry** | Same `order_id` recorded twice in ERP with different amounts | 2 |
-| 9 | **Amount Entry Typo** | ERP recorded amount differs by ≤2% from gateway credit | 5 |
-| 10 | **GST Rounding** | Tax calculation differs by ₹0.01 vs standard 18% MDR tax rate | 3 |
-| — | **Clean Exact Matches** | Perfect 1-to-1 match across Order, Settlement, and ERP | 50 |
-
----
-
-## 🧰 Tech Stack
-
-- **Backend**: Python 3.12, FastAPI, SQLAlchemy 2.0, Alembic, Pydantic v2, `sse-starlette`
-- **Database & Caching**: PostgreSQL 16, Redis 7 (Docker Compose)
-- **AI / LLM**: Groq Cloud API (`groq` SDK) running `llama-3.3-70b-versatile`
-- **Frontend**: React 19, Vite 6, Recharts, Lucide React icons, Native EventSource API
-- **Styling**: Vanilla CSS with custom design tokens, Mulish typography, JetBrains Mono
-
----
-
-## 🚀 Quick Start Guide
+## 🚀 Step-by-Step Execution Guide
 
 ### Prerequisites
-- [Docker Desktop](https://www.docker.com/products/docker-desktop/) installed & running
 - [Python 3.12+](https://www.python.org/)
 - [Node.js 20+](https://nodejs.org/)
-- A free Groq Cloud API Key from [consolegroq.com](https://console.groq.com)
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/) (for containerized DB & Redis)
+- A free Groq Cloud API Key from [console.groq.com](https://console.groq.com)
 
 ---
 
-### 1. Clone & Infrastructure Setup
+### Step 1: Clone & Infrastructure Setup
 
 ```bash
 git clone https://github.com/Devesh-chandan/RazorRecon-AI-Autonomous-Settlement-Reconciliation-Cash-Flow-Prescriber.git
@@ -209,89 +118,179 @@ docker compose up -d
 
 ---
 
-### 2. Backend Setup
+### Step 2: Backend Setup & Database Migration
 
 ```bash
-# Navigate to backend directory
 cd backend
 
-# Create & activate virtual environment (Windows PowerShell / CMD)
+# Create & activate virtual environment (Windows PowerShell)
 python -m venv .venv
 .venv\Scripts\activate
 
 # Install Python dependencies
 pip install -r requirements.txt
 
-# Create environment configuration file
+# Create environment file from template
 copy ..\.env.example .env
+```
 
-# ⚠️ Edit .env and set your GROQ_API_KEY
-# GROQ_API_KEY=gsk_your_actual_key_here
+Edit `backend/.env` and update your keys:
+```env
+GROQ_API_KEY=gsk_your_groq_api_key_here
+RAZORPAY_WEBHOOK_SECRET=rzp_whsec_9f8e7d6c5b4a3f2e1d0c9b8a7f6e5d4c
+JWT_SECRET_KEY=242fdbce944b413db89346b5206bf59fdaef94ee0483ccb467662353050b9ddd
+```
 
-# Run database migrations
+Run database migrations & seed initial data:
+```bash
+# Run database migrations (creates orders, settlements, erp_ledger, merchants, recon_runs tables)
 alembic upgrade head
 
-# Seed 100 synthetic records with built-in edge cases
+# Seed 100 synthetic benchmark records
 python -m app.seed
 
-# Launch the FastAPI dev server
+# Start FastAPI dev server
 uvicorn app.main:app --reload --port 8000
 ```
 
 ---
 
-### 3. Frontend Setup
+### Step 3: Frontend Setup
 
 In a new terminal:
-
 ```bash
-# Navigate to frontend directory
 cd frontend
-
-# Install Node dependencies
 npm install
-
-# Start Vite development server
 npm run dev
 ```
 
-Open your browser and navigate to **`http://localhost:5173`**.
+Open **`http://localhost:5173`** in your browser.
 
 ---
 
-## 🔑 Environment Variables
+### Step 4: Setup Live Razorpay Webhooks (Local Tunneling)
 
-### Backend Configuration (`backend/.env`)
+Since Razorpay servers need a public HTTPS endpoint to send webhook notifications to your local laptop:
 
-```ini
-# Groq Cloud API Key for Llama 3.3 70B inference
-GROQ_API_KEY=gsk_your_groq_api_key_here
+#### Using `ngrok`:
+```bash
+cd C:\Users\HP\Downloads\ngrok-v3-stable-windows-amd64
+.\ngrok.exe http 8000
+```
+*Copy the forwarding URL (e.g. `https://pursuit-parcel-coat.ngrok-free.dev`).*
 
-# PostgreSQL Database Connection URL
-DATABASE_URL=postgresql://razorrecon:razorrecon@localhost:5432/razorrecon
-
-# Redis Cache Connection URL
-REDIS_URL=redis://localhost:6379/0
+#### Alternative (using `localtunnel` — no signup required):
+```bash
+npx localtunnel --port 8000
 ```
 
-### Frontend Configuration (`frontend/.env`)
+#### Configure Razorpay Dashboard:
+1. Go to **Razorpay Dashboard ➔ Account & Settings ➔ Webhooks**.
+2. Click **+ Add New Webhook**.
+3. Set Webhook URL to: `https://<your-tunnel-subdomain>.ngrok-free.dev/api/webhooks/razorpay`
+4. Enter Secret: `rzp_whsec_9f8e7d6c5b4a3f2e1d0c9b8a7f6e5d4c` (matches `RAZORPAY_WEBHOOK_SECRET` in `.env`).
+5. Select Active Events:
+   - `payment.captured`
+   - `settlement.processed`
+   - `refund.processed`
+6. Save. Live events will now be parsed, verified, and saved to PostgreSQL automatically!
 
-```ini
-# Backend API Base URL
-VITE_API_URL=http://localhost:8000
+---
+
+## 📥 Production Data Ingestion Pipelines
+
+### 1. Live Webhook Listener (`POST /api/webhooks/razorpay`)
+- Verifies `X-Razorpay-Signature` using HMAC-SHA256.
+- Automatically handles:
+  - `payment.captured` ➔ Inserts into `orders`.
+  - `settlement.processed` ➔ Inserts into `settlements`.
+  - `refund.processed` ➔ Updates order status to `refunded`.
+
+### 2. Batch CSV & Excel Importer (`POST /api/recon/upload`)
+- Ingests official Razorpay Settlement Reports (`.csv`, `.xlsx`) or ERP ledgers.
+- Accepts `multipart/form-data` with `file` and `source` (`razorpay_settlement` or `erp_ledger`).
+- Auto-maps headers, skips duplicate rows, and returns JSON summary:
+  ```json
+  {
+    "source": "razorpay_settlement",
+    "rows_read": 500,
+    "rows_imported": 498,
+    "rows_skipped": 2,
+    "errors": []
+  }
+  ```
+
+---
+
+## 🔐 Enterprise Authentication Endpoints
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `POST` | `/api/auth/register` | Creates a new merchant account with hashed password (`bcrypt`). |
+| `POST` | `/api/auth/token` | OAuth2 login endpoint. Returns JWT token valid for 8 hours. |
+| `GET` | `/api/auth/me` | Returns current authenticated merchant profile (requires `Bearer <token>`). |
+
+---
+
+## 🐳 Production Deployment (Docker Compose + Gunicorn + Nginx)
+
+For multi-worker high-availability deployment:
+
+1. Generate self-signed SSL certificate (or use Let's Encrypt):
+   ```powershell
+   New-Item -ItemType Directory -Force -Path ".\nginx\ssl"
+   openssl req -x509 -newkey rsa:4096 -sha256 -days 365 -nodes -keyout .\nginx\ssl\selfsigned.key -out .\nginx\ssl\selfsigned.crt -subj "/CN=localhost/O=RazorRecon/C=IN"
+   ```
+
+2. Build and launch production stack:
+   ```bash
+   docker-compose -f docker-compose.prod.yml up --build -d
+   ```
+
+This launches:
+- **`backend`**: Gunicorn running 4 Uvicorn worker processes (`gunicorn -w 4 -k uvicorn.workers.UvicornWorker app.main:app`).
+- **`nginx`**: HTTPS reverse proxy on port 443 with TLS 1.2/1.3, security headers, gzip, and 60MB upload limit.
+- **`postgres`**: Internal PostgreSQL container with health checks.
+- **`redis`**: Internal Redis 7 container with password auth.
+
+---
+
+## 🧪 Testing & Quality Assurance
+
+### Run Unit & Integration Tests
+```bash
+# Run pytest across webhook signature verification and CSV importer logic
+pytest tests/ -v
+```
+
+### Run Security Vulnerability Audit
+```bash
+# Run bandit security scanner across backend
+bandit -r backend/
+```
+
+### Run Load & Concurrency Benchmark
+```bash
+# Run Locust load test (simulates 100-500 concurrent users)
+locust -f tests/locustfile.py --headless -u 100 -r 10 --run-time 60s --host http://localhost:8000
 ```
 
 ---
 
-## 🔌 API Reference & Endpoints
+## 🔌 Complete API Endpoint Reference
 
 Interactive Swagger documentation is available at **`http://localhost:8000/docs`** when the backend is running.
 
 | Method | Endpoint | Description |
 |---|---|---|
+| `POST` | `/api/webhooks/razorpay` | **Live Webhook Listener** — Ingests Razorpay payment, settlement & refund events with HMAC-SHA256 signature check. |
+| `POST` | `/api/recon/upload` | **Batch Importer** — Ingests `.csv` or `.xlsx` Razorpay settlement reports or ERP ledgers. |
+| `POST` | `/api/auth/register` | Registers new merchant user account. |
+| `POST` | `/api/auth/token` | OAuth2 password login, returns JWT token. |
+| `GET` | `/api/auth/me` | Gets current authenticated user profile. |
 | `POST` | `/api/recon/run` | Triggers a new 4-pass reconciliation run. Returns `run_id`. |
 | `GET` | `/api/recon/stream/{run_id}` | **SSE Stream** — Streams real-time pass completion events. |
-| `GET` | `/api/recon/results/{run_id}` | Retrieves detailed results for all 100 records from Redis/DB. |
+| `GET` | `/api/recon/results/{run_id}` | Retrieves detailed results for all records from Redis/DB. |
 | `GET` | `/api/recon/stats/{run_id}` | Returns aggregated KPIs (Match rate %, net payout, break count). |
 | `GET` | `/api/cashflow/{run_id}` | Returns 7-day forward cash-flow projection curve. |
 | `POST` | `/api/cashflow/whatif` | Simulates resolving a break and returns updated cash curve. |
@@ -307,7 +306,12 @@ Interactive Swagger documentation is available at **`http://localhost:8000/docs`
 RazorRecon-AI/
 ├── backend/
 │   ├── alembic/              # Database migration scripts
+│   │   └── versions/         # Migration revisions (0001_initial, 0002_add_merchants)
 │   ├── app/
+│   │   ├── auth/             # JWT auth, bcrypt password hashing, RBAC dependencies
+│   │   │   ├── jwt.py
+│   │   │   ├── dependencies.py
+│   │   │   └── models.py
 │   │   ├── engine/           # 4-Pass Reconciliation Core
 │   │   │   ├── pass1_exact.py
 │   │   │   ├── pass2_rules.py
@@ -316,14 +320,20 @@ RazorRecon-AI/
 │   │   │   ├── cashflow.py
 │   │   │   └── reconcile.py
 │   │   ├── llm/              # Groq client & diagnostic prompts
-│   │   ├── routes/           # FastAPI REST & SSE routers
+│   │   ├── routes/           # FastAPI routers (recon, cashflow, audit, auth, ingestion, health)
+│   │   │   ├── auth.py
+│   │   │   ├── ingestion.py
+│   │   │   ├── recon.py
+│   │   │   ├── cashflow.py
+│   │   │   ├── audit.py
+│   │   │   └── health.py
 │   │   ├── config.py         # Settings & environment variables
 │   │   ├── database.py       # SQLAlchemy database session manager
 │   │   ├── models.py         # DB ORM Schema definitions
 │   │   ├── schemas.py        # Pydantic request/response schemas
 │   │   ├── cache.py          # Redis caching implementation
-│   │   ├── seed.py           # Synthetic dataset seeder (100 records)
-│   │   └── main.py           # FastAPI Application Entrypoint
+│   │   ├── seed.py           # Synthetic dataset seeder
+│   │   └── main.py           # FastAPI Entrypoint + slowapi rate limiting
 │   ├── alembic.ini
 │   └── requirements.txt
 ├── frontend/
@@ -331,13 +341,22 @@ RazorRecon-AI/
 │   ├── src/
 │   │   ├── api/              # API REST & SSE client
 │   │   ├── components/       # Header, KPIRow, ReconWorkbench, CashFlowChart, AIExceptionDrawer, AuditLogPanel, Sidebar
-│   │   ├── context/          # Reconciliation State Context
+      │   │   ├── context/          # Reconciliation State Context
 │   │   ├── App.jsx
 │   │   └── index.css         # Razorpay Design System tokens & styles
 │   └── package.json
-├── docker-compose.yml        # PostgreSQL 16 & Redis 7 Docker services
+├── nginx/                    # Nginx TLS proxy configuration & SSL cert instructions
+│   ├── nginx.conf
+│   └── README.md
+├── tests/                    # Pytest & Locust test suite
+│   ├── test_webhook.py
+│   ├── test_csv_importer.py
+│   └── locustfile.py
+├── Dockerfile                # Multi-stage Gunicorn ASGI production container
+├── docker-compose.yml        # Development PostgreSQL 16 & Redis 7
+├── docker-compose.prod.yml   # Production stack (backend + nginx + postgres + redis)
+├── pytest.ini
 ├── .env.example
-├── implementation_plan.md    # Detailed architectural design document
 └── README.md
 ```
 
