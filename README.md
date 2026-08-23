@@ -5,14 +5,38 @@
 
 ---
 
+### 🛠️ Technology Stack & Infrastructure Ecosystem
+
+#### 🧠 Artificial Intelligence & Inference Engine
+[![Llama 3.3 70B](https://img.shields.io/badge/LLM-Llama_3.3_70B-0467DF?style=for-the-badge&logo=meta&logoColor=white)](https://groq.com/)
+[![Groq Cloud API](https://img.shields.io/badge/Inference-Groq_Cloud_API-F05032?style=for-the-badge&logo=speedtest&logoColor=white)](https://groq.com/)
+
+#### ⚡ Backend Core & Security
 [![Python 3.12](https://img.shields.io/badge/Python-3.12-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
+[![SQLAlchemy 2.0](https://img.shields.io/badge/SQLAlchemy-2.0-D71F00?style=for-the-badge&logo=sqlalchemy&logoColor=white)](https://www.sqlalchemy.org/)
+[![Pydantic v2](https://img.shields.io/badge/Pydantic-v2-E92063?style=for-the-badge&logo=pydantic&logoColor=white)](https://docs.pydantic.dev/)
+[![JWT Auth](https://img.shields.io/badge/Security-JWT_OAuth2_RBAC-000000?style=for-the-badge&logo=jsonwebtokens&logoColor=white)](https://jwt.io/)
+[![Uvicorn / Gunicorn](https://img.shields.io/badge/ASGI-Uvicorn_%2F_Gunicorn-499848?style=for-the-badge&logo=gunicorn&logoColor=white)](https://www.uvicorn.org/)
+
+#### 🎨 Frontend & Design System
 [![React 19](https://img.shields.io/badge/React-19.0-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev/)
 [![Vite 6](https://img.shields.io/badge/Vite-6.0-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vitejs.dev/)
+[![JavaScript ES6+](https://img.shields.io/badge/JavaScript-ES6+-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)](https://developer.mozilla.org/)
+[![CSS3 / Tokens](https://img.shields.io/badge/Styling-Vanilla_CSS3_Tokens-1572B6?style=for-the-badge&logo=css3&logoColor=white)](https://developer.mozilla.org/)
+[![Lucide Icons](https://img.shields.io/badge/Icons-Lucide_React-F56565?style=for-the-badge&logo=feather&logoColor=white)](https://lucide.dev/)
+
+#### 🗄️ Relational DB & High-Speed Cache
 [![PostgreSQL 16](https://img.shields.io/badge/PostgreSQL-16-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
 [![Redis 7](https://img.shields.io/badge/Redis-7.0-DC382D?style=for-the-badge&logo=redis&logoColor=white)](https://redis.io/)
-[![Llama 3.3 70B](https://img.shields.io/badge/LLM-Llama_3.3_70B-0467DF?style=for-the-badge&logo=meta&logoColor=white)](https://groq.com/)
-[![Groq Cloud API](https://img.shields.io/badge/Inference-Groq_Cloud-F05032?style=for-the-badge&logo=speedtest&logoColor=white)](https://groq.com/)
+[![Alembic](https://img.shields.io/badge/Migrations-Alembic-6DB33F?style=for-the-badge&logo=python&logoColor=white)](https://alembic.sqlalchemy.org/)
+
+#### 🐳 Cloud Infrastructure, DevOps & QA
+[![Docker Compose](https://img.shields.io/badge/Containers-Docker_Compose-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
+[![Nginx SSL Proxy](https://img.shields.io/badge/Reverse_Proxy-Nginx_TLS_1.3-009639?style=for-the-badge&logo=nginx&logoColor=white)](https://nginx.org/)
+[![Ngrok Tunnel](https://img.shields.io/badge/Tunneling-ngrok_v3-1F1E33?style=for-the-badge&logo=ngrok&logoColor=white)](https://ngrok.com/)
+[![Pytest](https://img.shields.io/badge/Unit_Tests-Pytest-0A9EDC?style=for-the-badge&logo=pytest&logoColor=white)](https://docs.pytest.org/)
+[![Locust Benchmark](https://img.shields.io/badge/Load_Testing-Locust-000000?style=for-the-badge&logo=python&logoColor=white)](https://locust.io/)
 
 > **RazorRecon & Flow** is an autonomous AI financial controller built for Razorpay merchants that ingests real-time payment webhooks and bulk settlement CSVs, automatically reconciles net bank payout credits against internal ERP order ledgers using a 4-pass hybrid engine, diagnoses complex settlement breaks in plain English and Hinglish using Llama 3.3 70B via Groq Cloud, and projects 7-day forward cash flow with real-time "What-If" capital recovery simulations.
 
