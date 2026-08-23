@@ -36,3 +36,8 @@ Thumbs.db
 .idea/
 *.swp
 *.swo
+
+# Temporary setup assets
+readme-samples/
+readme-ss/
+
