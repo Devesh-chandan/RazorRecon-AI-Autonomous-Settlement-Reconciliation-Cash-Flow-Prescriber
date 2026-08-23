@@ -140,9 +140,9 @@ export function ReconciliationProvider({ children }) {
   const [state, dispatch] = useReducer(reducer, initialState);
 
   // ── Start Reconciliation ──────────────────────────────────────────────────
-  const startRecon = useCallback(async () => {
+  const startRecon = useCallback(async (scope = 'all') => {
     try {
-      const { run_id } = await triggerRecon();
+      const { run_id } = await triggerRecon(scope);
       dispatch({ type: 'RUN_RECON', runId: run_id });
 
       // Subscribe to SSE stream

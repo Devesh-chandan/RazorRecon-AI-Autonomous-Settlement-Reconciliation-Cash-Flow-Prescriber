@@ -130,4 +130,4 @@ class HealthResponse(BaseModel):
     database: dict[str, str]
     redis: dict[str, str]
     groq: dict[str, str]
-    version: str = "1.0.0"
+    version: str = "2.0.0"

@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import {
-  Layers, TrendingUp, Bot, ClipboardList, Download, HelpCircle, ChevronLeft, ChevronRight
+  Layers, TrendingUp, Bot, ClipboardList, Download, HelpCircle, ChevronLeft, ChevronRight, UploadCloud
 } from 'lucide-react';
 import { useReconciliation } from '../context/ReconciliationContext';
 import { exportAuditLog } from '../api/client';
 import './Sidebar.css';
 
-export default function Sidebar({ onOpenAI, onOpenAudit, width = 220, isCollapsed = false, onToggleCollapse }) {
+export default function Sidebar({ onOpenAI, onOpenAudit, onOpenUpload, width = 220, isCollapsed = false, onToggleCollapse }) {
   const { state } = useReconciliation();
   const { runId, results, resolvedBreaks } = state;
 
@@ -38,6 +38,7 @@ export default function Sidebar({ onOpenAI, onOpenAudit, width = 220, isCollapse
       items: [
         { name: 'Settlements & Recon', icon: Layers },
         { name: 'Cash Flow Forecast', icon: TrendingUp },
+        { name: 'Import CSV / Excel', icon: UploadCloud, action: onOpenUpload },
       ]
     },
     {

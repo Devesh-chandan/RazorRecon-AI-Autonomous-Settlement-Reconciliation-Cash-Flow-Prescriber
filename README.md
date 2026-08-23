@@ -14,6 +14,8 @@
 [![Llama 3.3 70B](https://img.shields.io/badge/LLM-Llama_3.3_70B-0467DF?style=for-the-badge&logo=meta&logoColor=white)](https://groq.com/)
 [![Groq Cloud API](https://img.shields.io/badge/Inference-Groq_Cloud-F05032?style=for-the-badge&logo=speedtest&logoColor=white)](https://groq.com/)
 
+> **RazorRecon & Flow** is an autonomous AI financial controller built for Razorpay merchants that ingests real-time payment webhooks and bulk settlement CSVs, automatically reconciles net bank payout credits against internal ERP order ledgers using a 4-pass hybrid engine, diagnoses complex settlement breaks in plain English and Hinglish using Llama 3.3 70B via Groq Cloud, and projects 7-day forward cash flow with real-time "What-If" capital recovery simulations.
+
 ---
 
 ## 📌 Executive Summary & Problem Recap
@@ -29,6 +31,12 @@ Razorpay merchants receive daily **net settlements** that lump captured orders, 
 3. **Bilingual AI Exception Diagnostics**: Uses **Llama 3.3 70B via Groq** (~500 tok/s) to diagnose root causes and prescribe resolution steps in plain **English & Hinglish**.
 4. **Enterprise Auth & Rate Limiting**: OAuth2 / JWT Authentication with Role-Based Access Control (RBAC) and `slowapi` rate limiting.
 5. **7-Day Forward Cash-Flow Prescriber**: Computes expected daily settlement inflows and updates forward liquidity in real-time as settlement breaks are resolved via "What-If" simulation.
+
+---
+
+## 📘 Troubleshooting & Problem Log
+
+For a complete record of all technical issues faced during integration, webhook troubleshooting, and their exact solutions, see **[`PROBLEMS_AND_SOLUTIONS.md`](file:///c:/Users/HP/Downloads/RazorRecon%20AI/PROBLEMS_AND_SOLUTIONS.md)**.
 
 ---
 
@@ -52,12 +60,14 @@ Below is the complete table of all ports and services configured across the proj
 
 - **📡 Real-World Production Data Ingestion**:
   - **Live Razorpay Webhook Handler** (`POST /api/webhooks/razorpay`): Validates `X-Razorpay-Signature` header using HMAC-SHA256 merchant secret. Parses `payment.captured`, `settlement.processed`, and `refund.processed` JSON payloads into PostgreSQL in real-time.
-  - **Batch CSV & Excel Importer** (`POST /api/recon/upload`): Auto-maps column headers (`Order ID`, `UTR`, `MDR Fee`, `GST`, `Net Credit`, `Recorded Amount`) from Razorpay Settlement Reports & Tally / Zoho Books sales ledgers with duplicate row skipping and detailed per-row error reporting.
+  - **Batch CSV & Excel Drag & Drop Importer** (`POST /api/recon/upload`): Interactive UI modal accepting official Razorpay Settlement Reports (`.csv`, `.xlsx`) or Tally / Zoho Books sales ledgers with auto-order linking, deduplication, and row warning logs.
+  - **Sample Test Datasets Included**: Pre-packaged [`sample_razorpay_settlements.csv`](file:///c:/Users/HP/Downloads/RazorRecon%20AI/sample_razorpay_settlements.csv) and [`sample_erp_ledger.csv`](file:///c:/Users/HP/Downloads/RazorRecon%20AI/sample_erp_ledger.csv) ready for 1-click batch testing.
 - **🔐 Enterprise Security & JWT Authentication**:
   - OAuth2 / JWT Authentication (`POST /api/auth/register`, `POST /api/auth/token`, `GET /api/auth/me`) with `bcrypt` password hashing via `passlib`.
   - Role-Based Access Control (RBAC) supporting `admin`, `finance`, and `auditor` user roles.
   - Endpoint Rate Limiting (`slowapi`) preventing API flooding & brute force attacks (60 req/min per IP).
 - **⚡ 4-Pass Hybrid Reconciliation Engine**:
+  - **Scoped Audit Execution**: Supports auditing all DB records (`scope=all`) OR isolating newly imported CSV batches (`scope=imported`).
   - **Pass 1 (Exact Deterministic)**: Instant HashMap lookup matching `order_id` + `amount`.
   - **Pass 2 (Rule-Based Contextual)**: Handles T+1/T+2 date windows, MDR fee tolerances (±₹5), cross-midnight UTC/IST boundary shifts, and GST rounding differences.
   - **Pass 3 (Fuzzy Heuristics)**: Detects net partial refund adjustments, data entry typos within 2% variance, chargeback holdbacks, and duplicate ERP entries.
@@ -146,8 +156,18 @@ Run database migrations & seed initial data:
 # Run database migrations (creates orders, settlements, erp_ledger, merchants, recon_runs tables)
 alembic upgrade head
 
-# Seed 100 synthetic benchmark records
+# Reset database back to clean 100 benchmark dataset (clears previous data)
 python -m app.seed
+
+# Append N additional realistic records WITHOUT clearing existing DB data
+python -m app.seed_append 50     # Appends 50 new records
+python -m app.seed_append 500    # Appends 500 new records
+
+# Clear ALL records from database completely (0 records state)
+python -m app.reset
+
+# Simulate live HMAC-SHA256 signed Razorpay webhooks over ngrok
+python -m app.send_test_webhook
 
 # Start FastAPI dev server
 uvicorn app.main:app --reload --port 8000
@@ -194,6 +214,61 @@ npx localtunnel --port 8000
    - `settlement.processed`
    - `refund.processed`
 6. Save. Live events will now be parsed, verified, and saved to PostgreSQL automatically!
+
+#### Quick Live Webhook Test (Simulator):
+To test live webhook ingestion over ngrok with valid HMAC-SHA256 signatures at any time without manual Razorpay payments, run:
+```bash
+python -m app.send_test_webhook
+```
+
+---
+
+## 🗄️ Database & Cache Inspection Guide (PostgreSQL & Redis)
+
+### 🐘 PostgreSQL Database (Port `5432`)
+
+- **Host**: `localhost` (or `127.0.0.1`)
+- **Port**: `5432`
+- **Database**: `razorrecon`
+- **User**: `razorrecon`
+- **Password**: `razorrecon`
+
+#### Method A: Command Line (`psql` via Docker)
+```bash
+docker exec -it razorrecon_postgres psql -U razorrecon -d razorrecon
+```
+*Useful SQL Queries*:
+```sql
+SELECT count(*) FROM orders;
+SELECT count(*) FROM settlements;
+SELECT run_id, status, match_rate, created_at FROM recon_runs ORDER BY created_at DESC LIMIT 5;
+```
+
+#### Method B: GUI Desktop Tools (TablePlus / DBeaver / pgAdmin / VS Code)
+1. Open your GUI client (e.g. **TablePlus**, **DBeaver**, **pgAdmin**, or **VS Code Database Client extension**).
+2. Create a new **PostgreSQL** connection with:
+   - **Host**: `localhost` | **Port**: `5432` | **Database**: `razorrecon` | **User**: `razorrecon` | **Password**: `razorrecon`
+3. Click **Connect** to inspect all tables (`orders`, `settlements`, `erp_ledger`, `recon_runs`, `recon_results`, `merchants`).
+
+---
+
+### 🔴 Redis In-Memory Cache (Port `6379`)
+
+- **Host**: `localhost` | **Port**: `6379` | **URL**: `redis://localhost:6379/0`
+
+#### Method A: Command Line (`redis-cli` via Docker)
+```bash
+docker exec -it razorrecon_redis redis-cli
+```
+*Useful Redis Commands*:
+```redis
+PING                           # Returns PONG
+KEYS razorrecon:*              # Inspect all cached reconciliation runs
+GET razorrecon:results:<run_id> # Retrieve cached JSON result for a run
+```
+
+#### Method B: GUI Desktop Tools (RedisInsight)
+Open **[RedisInsight](https://redis.io/insight/)** ➔ Add Database ➔ Host: `localhost` | Port: `6379` to inspect cached keys in real-time.
 
 ---
 
@@ -288,7 +363,7 @@ Interactive Swagger documentation is available at **`http://localhost:8000/docs`
 | `POST` | `/api/auth/register` | Registers new merchant user account. |
 | `POST` | `/api/auth/token` | OAuth2 password login, returns JWT token. |
 | `GET` | `/api/auth/me` | Gets current authenticated user profile. |
-| `POST` | `/api/recon/run` | Triggers a new 4-pass reconciliation run. Returns `run_id`. |
+| `POST` | `/api/recon/run?scope=all` | **Trigger Recon Engine** — Runs 4-pass pipeline on all DB records (`scope=all`) or imported CSV only (`scope=imported`). Returns `run_id`. |
 | `GET` | `/api/recon/stream/{run_id}` | **SSE Stream** — Streams real-time pass completion events. |
 | `GET` | `/api/recon/results/{run_id}` | Retrieves detailed results for all records from Redis/DB. |
 | `GET` | `/api/recon/stats/{run_id}` | Returns aggregated KPIs (Match rate %, net payout, break count). |
@@ -332,7 +407,10 @@ RazorRecon-AI/
 │   │   ├── models.py         # DB ORM Schema definitions
 │   │   ├── schemas.py        # Pydantic request/response schemas
 │   │   ├── cache.py          # Redis caching implementation
-│   │   ├── seed.py           # Synthetic dataset seeder
+│   │   ├── seed.py           # Benchmark dataset seeder (100 records, 10 edge cases)
+│   │   ├── seed_append.py    # Bulk data append script (adds N records without clearing DB)
+│   │   ├── send_test_webhook.py # Live HMAC-SHA256 signed webhook simulation script
+│   │   ├── reset.py          # Database reset script (clears all records completely)
 │   │   └── main.py           # FastAPI Entrypoint + slowapi rate limiting
 │   ├── alembic.ini
 │   └── requirements.txt
@@ -340,8 +418,8 @@ RazorRecon-AI/
 │   ├── public/
 │   ├── src/
 │   │   ├── api/              # API REST & SSE client
-│   │   ├── components/       # Header, KPIRow, ReconWorkbench, CashFlowChart, AIExceptionDrawer, AuditLogPanel, Sidebar
-      │   │   ├── context/          # Reconciliation State Context
+│   │   ├── components/       # Header, KPIRow, ReconWorkbench, CashFlowChart, AIExceptionDrawer, AuditLogPanel, CSVImportModal, Sidebar
+│   │   ├── context/          # Reconciliation State Context
 │   │   ├── App.jsx
 │   │   └── index.css         # Razorpay Design System tokens & styles
 │   └── package.json
@@ -355,6 +433,9 @@ RazorRecon-AI/
 ├── Dockerfile                # Multi-stage Gunicorn ASGI production container
 ├── docker-compose.yml        # Development PostgreSQL 16 & Redis 7
 ├── docker-compose.prod.yml   # Production stack (backend + nginx + postgres + redis)
+├── sample_razorpay_settlements.csv  # Sample Razorpay Settlement report for batch testing
+├── sample_erp_ledger.csv     # Sample ERP Sales Ledger file for batch testing
+├── PROBLEMS_AND_SOLUTIONS.md # Complete problem, root-cause & solution log
 ├── pytest.ini
 ├── .env.example
 └── README.md

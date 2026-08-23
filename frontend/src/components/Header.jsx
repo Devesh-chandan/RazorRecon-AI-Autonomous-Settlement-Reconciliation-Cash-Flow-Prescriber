@@ -1,8 +1,8 @@
-import { Play, RefreshCw, Activity, Search, User, ChevronDown } from 'lucide-react';
+import { Play, RefreshCw, Activity, Search, User, ChevronDown, UploadCloud } from 'lucide-react';
 import { useReconciliation } from '../context/ReconciliationContext';
 import './Header.css';
 
-export default function Header({ onOpenAudit }) {
+export default function Header({ onOpenAudit, onOpenUpload }) {
   const { state, dispatch, startRecon } = useReconciliation();
   const { status, progress, language, results } = state;
 
@@ -71,29 +71,29 @@ export default function Header({ onOpenAudit }) {
             <ChevronDown size={12} className="text-tertiary" />
           </div>
 
-
-
-          {/* API Docs Button */}
-          <button
-            className="icon-btn user-avatar-btn"
-            title="API Documentation (Swagger)"
-            aria-label="API Documentation"
-            onClick={() => window.open('http://localhost:8000/docs', '_blank')}
-          >
-            <User size={15} />
-          </button>
-
-          {/* Language Toggle */}
-          <button
+          {/* Language Segmented Pill Toggle */}
+          <div
             id="language-toggle"
-            className={`lang-toggle ${language === 'hi' ? 'lang-toggle--active' : ''}`}
+            className="lang-toggle-pill"
             onClick={toggleLanguage}
-            title={language === 'en' ? 'Switch to Hinglish' : 'Switch to English'}
+            title={language === 'en' ? 'Switch to Hinglish (HI)' : 'Switch to English (EN)'}
+            role="button"
+            tabIndex={0}
             aria-label="Toggle language"
           >
-            <span className={`lang-option ${language === 'en' ? 'active' : ''}`}>EN</span>
-            <span className="lang-divider">|</span>
-            <span className={`lang-option ${language === 'hi' ? 'active' : ''}`}>HI</span>
+            <span className={`lang-segment ${language === 'en' ? 'lang-segment--active' : ''}`}>EN</span>
+            <span className={`lang-segment ${language === 'hi' ? 'lang-segment--active' : ''}`}>HI</span>
+          </div>
+
+          {/* Import CSV Secondary Button */}
+          <button
+            id="import-csv-btn"
+            className="btn btn-secondary header-cta"
+            onClick={onOpenUpload}
+            title="Import CSV or Excel Batch Report"
+          >
+            <UploadCloud size={13} />
+            <span>Import CSV</span>
           </button>
 
           {/* Run Recon Primary Button */}
@@ -115,6 +115,17 @@ export default function Header({ onOpenAudit }) {
                 {status === 'complete' ? 'Re-run Recon' : 'Run Recon'}
               </>
             )}
+          </button>
+
+          {/* Profile / Merchant Avatar Icon at VERY RIGHT END */}
+          <button
+            id="profile-avatar-btn"
+            className="profile-avatar-btn"
+            title="Merchant Profile & API Docs"
+            aria-label="Merchant Profile"
+            onClick={() => window.open('http://localhost:8000/docs', '_blank')}
+          >
+            <User size={15} />
           </button>
         </div>
       </header>

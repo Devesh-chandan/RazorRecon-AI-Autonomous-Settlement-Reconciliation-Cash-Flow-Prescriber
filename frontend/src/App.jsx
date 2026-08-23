@@ -8,9 +8,10 @@ import ReconWorkbench from './components/ReconWorkbench';
 import CashFlowChart from './components/CashFlowChart';
 import AIExceptionDrawer from './components/AIExceptionDrawer';
 import AuditLogPanel from './components/AuditLogPanel';
+import CSVImportModal from './components/CSVImportModal';
 
 export default function App() {
-  const [activeOverlay, setActiveOverlay] = useState(null); // null | 'ai' | 'audit'
+  const [activeOverlay, setActiveOverlay] = useState(null); // null | 'ai' | 'audit' | 'upload'
 
   // Resizable left sidebar state
   const [sidebarWidth, setSidebarWidth] = useState(220);
@@ -87,6 +88,7 @@ export default function App() {
           onToggleCollapse={toggleSidebar}
           onOpenAI={() => setActiveOverlay('ai')}
           onOpenAudit={() => setActiveOverlay('audit')}
+          onOpenUpload={() => setActiveOverlay('upload')}
         />
 
         {/* Resizable Sidebar Drag Handle Splitter */}
@@ -104,6 +106,7 @@ export default function App() {
           {/* Header */}
           <Header
             onOpenAudit={() => setActiveOverlay('audit')}
+            onOpenUpload={() => setActiveOverlay('upload')}
           />
 
           {/* Main Single-Viewport Body */}
@@ -153,6 +156,11 @@ export default function App() {
 
         <AuditLogPanel
           isOpen={activeOverlay === 'audit'}
+          onClose={() => setActiveOverlay(null)}
+        />
+
+        <CSVImportModal
+          isOpen={activeOverlay === 'upload'}
           onClose={() => setActiveOverlay(null)}
         />
       </div>

@@ -21,9 +21,9 @@ async function apiFetch(path, options = {}) {
 
 // ── Reconciliation ────────────────────────────────────────────────────────────
 
-/** POST /api/recon/run — triggers a new reconciliation run */
-export async function triggerRecon() {
-  return apiFetch('/api/recon/run', { method: 'POST' });
+/** POST /api/recon/run — triggers a new reconciliation run (scope: 'all' | 'imported') */
+export async function triggerRecon(scope = 'all') {
+  return apiFetch(`/api/recon/run?scope=${scope}`, { method: 'POST' });
 }
 
 /**
@@ -107,3 +107,28 @@ export function exportAuditLog(runId) {
 export async function checkHealth() {
   return apiFetch('/api/health');
 }
+
+// ── Ingestion / Batch Importer ────────────────────────────────────────────────
+
+/**
+ * POST /api/recon/upload — upload CSV or XLSX report file
+ * @param {File} file
+ * @param {'razorpay_settlement' | 'erp_ledger'} source
+ */
+export async function uploadCSVFile(file, source) {
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('source', source);
+
+  const res = await fetch(`${BASE_URL}/api/recon/upload`, {
+    method: 'POST',
+    body: formData,
+  });
+
+  if (!res.ok) {
+    const errorText = await res.text();
+    throw new Error(`Upload failed (${res.status}): ${errorText}`);
+  }
+  return res.json();
+}
+

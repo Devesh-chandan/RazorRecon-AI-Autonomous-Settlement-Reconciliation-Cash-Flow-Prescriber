@@ -38,4 +38,5 @@ async def health_check(db: Session = Depends(get_db)):
         database=db_status,
         redis=redis_status,
         groq=groq_status,
+        version="2.0.0",
     )

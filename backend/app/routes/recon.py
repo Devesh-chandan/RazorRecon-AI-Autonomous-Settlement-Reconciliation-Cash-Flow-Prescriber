@@ -20,8 +20,16 @@ logger = logging.getLogger(__name__)
 
 
 @router.post("/run", response_model=ReconRunResponse)
-async def trigger_recon(background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
-    """Trigger a new reconciliation run. Returns run_id immediately; progress via SSE."""
+async def trigger_recon(
+    background_tasks: BackgroundTasks,
+    scope: str = "all",
+    db: Session = Depends(get_db),
+):
+    """Trigger a new reconciliation run. Returns run_id immediately; progress via SSE.
+    
+    Query Params:
+        scope: 'all' (audits all DB records) or 'imported' (audits imported/bulk records only).
+    """
     run_id = str(uuid.uuid4())
 
     recon_run = ReconRun(run_id=run_id, status="running")
@@ -34,7 +42,7 @@ async def trigger_recon(background_tasks: BackgroundTasks, db: Session = Depends
     async def _run():
         bg_db = SessionLocal()
         try:
-            await run_reconciliation(run_id, bg_db)
+            await run_reconciliation(run_id, bg_db, scope=scope)
         except Exception as e:
             logger.error(f"Background recon failed: {e}", exc_info=True)
         finally:

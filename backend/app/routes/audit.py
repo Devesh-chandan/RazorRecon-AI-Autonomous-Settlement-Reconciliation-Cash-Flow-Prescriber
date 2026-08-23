@@ -2,6 +2,7 @@
 import json
 import logging
 from datetime import datetime
+from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import Response
@@ -16,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 
 @router.get("/{run_id}", response_model=AuditLogResponse)
-async def get_audit_log(run_id: str, pass_number: int = None, status: str = None, db: Session = Depends(get_db)):
+async def get_audit_log(run_id: str, pass_number: Optional[int] = None, status: Optional[str] = None, db: Session = Depends(get_db)):
     """Full audit log for a reconciliation run."""
     recon_run = db.query(ReconRun).filter(ReconRun.run_id == run_id).first()
     if not recon_run:

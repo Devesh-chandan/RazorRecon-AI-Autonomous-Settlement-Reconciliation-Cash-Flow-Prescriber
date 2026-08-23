@@ -6,21 +6,46 @@ from typing import Any
 logger = logging.getLogger(__name__)
 
 _redis_client = None
+_redis_failed = False   # track whether last connection attempt failed
 
 
 def _get_redis():
-    global _redis_client
-    if _redis_client is None:
+    """
+    Return a connected Redis client, or None if unavailable.
+
+    Unlike a simple singleton, this retries the connection each call if the
+    previous attempt failed — so the app recovers automatically when Redis
+    comes back online without needing a restart.
+    """
+    global _redis_client, _redis_failed
+    if _redis_client is not None:
+        # Verify the connection is still alive; reset on failure so we retry next call.
         try:
-            import redis
-            from app.config import get_settings
-            settings = get_settings()
-            _redis_client = redis.from_url(settings.REDIS_URL, decode_responses=True)
             _redis_client.ping()
-        except Exception as e:
-            logger.warning(f"Redis unavailable: {e}. Caching disabled — falling back to DB reads.")
+            return _redis_client
+        except Exception:
+            logger.warning("Redis connection dropped — will retry on next request.")
             _redis_client = None
-    return _redis_client
+            _redis_failed = True
+
+    # Attempt (re)connection
+    try:
+        import redis
+        from app.config import get_settings
+        settings = get_settings()
+        client = redis.from_url(settings.REDIS_URL, decode_responses=True)
+        client.ping()
+        _redis_client = client
+        if _redis_failed:
+            logger.info("Redis reconnected successfully.")
+        _redis_failed = False
+        return _redis_client
+    except Exception as e:
+        if not _redis_failed:
+            logger.warning(f"Redis unavailable: {e}. Caching disabled — falling back to DB reads.")
+        _redis_failed = True
+        _redis_client = None
+        return None
 
 
 def cache_results(run_id: str, data: Any, ttl: int = 300) -> bool:

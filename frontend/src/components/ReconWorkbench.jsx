@@ -22,6 +22,33 @@ function formatINR(val) {
   return `₹ ${parseFloat(val).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
 }
 
+/**
+ * Format a UTC/ISO date string into a short readable form.
+ * Returns '—' if the value is null/undefined.
+ */
+function formatDate(isoStr) {
+  if (!isoStr) return '—';
+  try {
+    return new Date(isoStr).toLocaleDateString('en-IN', {
+      month: 'short', day: 'numeric', year: 'numeric',
+    });
+  } catch {
+    return '—';
+  }
+}
+
+/**
+ * Extract the first meaningful numeric value from a delta dict.
+ * Returns null if the delta is empty.
+ */
+function firstDeltaValue(delta) {
+  if (!delta || typeof delta !== 'object') return null;
+  for (const val of Object.values(delta)) {
+    if (typeof val === 'number') return val;
+  }
+  return null;
+}
+
 function StatusBadge({ status, isResolved }) {
   if (isResolved) return <span className="rzp-badge rzp-badge--processed"><CheckCircle2 size={10} /> Resolved</span>;
   if (status === 'matched') return <span className="rzp-badge rzp-badge--processed"><CheckCircle2 size={10} /> Processed</span>;
@@ -120,16 +147,21 @@ function ResultRow({ result, language, onViewAI, isResolved }) {
         onClick={() => setExpanded(e => !e)}
         id={`row-${result.order_id}`}
       >
-        <td className="col-date">Nov 12, 2026</td>
+        <td className="col-date">{formatDate(result.created_at)}</td>
         <td className="mono font-semibold">{result.order_id}</td>
-        <td className="mono text-muted">{result.settlement_id || 'setl_PKJAgXprC2z4a8'}</td>
+        <td className="mono text-muted">{result.settlement_id || '—'}</td>
         <td><StatusBadge status={result.status} isResolved={isResolved} /></td>
         <td>
           <span className={`pass-pill ${PASS_COLORS[result.pass_number]}`}>
             {result.pass_number}
           </span>
         </td>
-        <td className="font-semibold text-right">{formatINR(result.delta?.amount_diff || 194.30)}</td>
+        <td className="font-semibold text-right">
+          {(() => {
+            const dv = firstDeltaValue(result.delta);
+            return dv !== null ? formatINR(dv) : '—';
+          })()}
+        </td>
         <td>
           <button
             className="details-link-btn"
@@ -176,7 +208,7 @@ export default function ReconWorkbench({ onOpenAI }) {
       }
       return true;
     });
-  }, [results, activeTab, matched, breaks, searchQuery, statusFilter, resolvedBreaks]);
+  }, [results, activeTab, breaks, searchQuery, statusFilter, resolvedBreaks]);
 
   const clearFilters = () => {
     setSearchQuery('');

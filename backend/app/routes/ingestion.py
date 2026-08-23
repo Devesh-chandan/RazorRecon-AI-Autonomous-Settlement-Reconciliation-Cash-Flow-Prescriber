@@ -99,14 +99,10 @@ async def razorpay_webhook(
             "RAZORPAY_WEBHOOK_SECRET not configured — skipping signature check (dev mode)"
         )
 
-    # ── Parse JSON payload ────────────────────────────────────────────────────
-    try:
-        payload = await request.json()
-    except Exception:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Webhook payload must be valid JSON",
-        )
+    # ── Use already-parsed JSON payload (body stream already consumed above) ──
+    # FastAPI injects `body` as the parsed dict from the request body parameter.
+    # Do NOT call request.json() again — the body stream is already consumed.
+    payload: dict = body  # injected by FastAPI from Body(...)
 
     event: str = payload.get("event", "unknown")
     entity: dict = payload.get("payload", {})
@@ -383,6 +379,25 @@ def _import_settlements(df: pd.DataFrame, db: Session):
                 order_id=str(data.get("order_id", "") or ""),
             )
             db.add(record)
+
+            # Auto-create Order record if missing so Pass 1 & 2 match it immediately
+            order_id = str(data.get("order_id", "") or "").strip()[:20]
+            payment_id = str(data.get("entity_id", "") or f"pay_{order_id}")[:20]
+            if order_id and not db.query(Order).filter(Order.order_id == order_id).first():
+                db.add(Order(
+                    order_id=order_id,
+                    payment_id=payment_id,
+                    amount=float(data.get("amount") or 0),
+                    currency="INR",
+                    status="captured",
+                    method="card",
+                    created_at=settled_at,
+                    captured_at=settled_at,
+                    customer_email="csv_import@merchant.com",
+                    description="Imported from Settlement CSV Report",
+                    refund_amount=0.0,
+                ))
+
             imported += 1
         except Exception as exc:
             errors.append(f"Row {idx}: {exc}")
@@ -406,7 +421,7 @@ def _import_erp_ledger(df: pd.DataFrame, db: Session):
     for idx, row in df.iterrows():
         try:
             data = _normalise_row(row, _ERP_LEDGER_COLUMNS)
-            ledger_id = str(data.get("ledger_id", "")).strip()
+            ledger_id = str(data.get("ledger_id", "")).strip()[:20]
             if not ledger_id:
                 skipped += 1
                 errors.append(f"Row {idx}: missing ledger_id — skipped")
@@ -424,16 +439,36 @@ def _import_erp_ledger(df: pd.DataFrame, db: Session):
 
             record = ErpLedger(
                 ledger_id=ledger_id,
-                invoice_id=str(data.get("invoice_id", "") or ""),
-                order_id=str(data.get("order_id", "") or ""),
+                invoice_id=str(data.get("invoice_id", "") or "")[:30],
+                order_id=str(data.get("order_id", "") or "")[:20],
                 expected_amount=float(data.get("expected_amount") or 0),
                 recorded_amount=float(data.get("recorded_amount") or 0),
-                payment_method=str(data.get("payment_method", "unknown") or "unknown"),
+                payment_method=str(data.get("payment_method", "unknown") or "unknown")[:20],
                 entry_date=entry_date,
-                status=str(data.get("status", "pending") or "pending"),
+                status=str(data.get("status", "pending") or "pending")[:20],
                 notes=str(data.get("notes", "") or ""),
             )
             db.add(record)
+
+            # Auto-create Order record if missing so Pass 1 & 2 match it immediately
+            order_id = str(data.get("order_id", "") or "").strip()[:20]
+            payment_id = f"pay_{order_id}"[:20]
+            if order_id and not db.query(Order).filter(Order.order_id == order_id).first():
+                created_dt = datetime.combine(entry_date, datetime.min.time(), tzinfo=timezone.utc)
+                db.add(Order(
+                    order_id=order_id,
+                    payment_id=payment_id,
+                    amount=float(data.get("expected_amount") or 0),
+                    currency="INR",
+                    status="captured",
+                    method=str(data.get("payment_method", "card") or "card")[:20],
+                    created_at=created_dt,
+                    captured_at=created_dt,
+                    customer_email="csv_import@merchant.com",
+                    description="Imported from ERP Ledger CSV",
+                    refund_amount=0.0,
+                ))
+
             imported += 1
         except Exception as exc:
             errors.append(f"Row {idx}: {exc}")

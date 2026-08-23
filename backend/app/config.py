@@ -10,9 +10,9 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
-    # ── LLM ──────────────────────────────────────────────────────────────────
+    # ── LLM ────────────────────────────────────────────────────────────────
     GROQ_API_KEY: str = ""
-    GROQ_MODEL: str = "groq/compound-mini"
+    GROQ_MODEL: str = "llama-3.3-70b-versatile"   # valid Groq model name (no prefix)
     GROQ_TEMPERATURE: float = 0.1
 
     # ── Database ─────────────────────────────────────────────────────────────

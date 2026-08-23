@@ -92,33 +92,48 @@
 }
 
 /* Utility controls */
+/* Utility controls container */
 .header-utility-controls {
   display: flex;
   align-items: center;
   gap: 10px;
+  flex-shrink: 0;
+  flex-wrap: nowrap;
 }
 
-/* Live System Status Badge */
+/* Live System Status Badge — Fixed 120px width, zero shape shift */
 .system-status-badge {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  justify-content: center;
+  gap: 8px;
+  height: 32px;
+  min-height: 32px;
+  max-height: 32px;
+  width: 120px;
+  min-width: 120px;
+  max-width: 120px;
+  padding: 0 10px;
   background: #f0fdf4;
   border: 1px solid #bbf7d0;
-  padding: 4px 10px;
-  border-radius: 16px;
-  font-size: 12px;
+  border-radius: 8px;
+  font-size: 11px;
   font-weight: 700;
   color: #15803d;
   user-select: none;
+  box-sizing: border-box;
+  flex-shrink: 0;
+  white-space: nowrap;
+  transition: background 150ms ease, border-color 150ms ease;
 }
 
 .system-status-dot {
-  width: 8px;
-  height: 8px;
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
   background: #22c55e;
   box-shadow: 0 0 6px rgba(34, 197, 94, 0.6);
+  flex-shrink: 0;
 }
 
 .system-status-dot--busy {
@@ -126,27 +141,44 @@
   box-shadow: 0 0 6px rgba(59, 130, 246, 0.6);
 }
 
-/* Test Mode badge */
+/* Test Mode badge — Fixed 105px width, zero shape shift */
 .test-mode-badge {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
+  height: 32px;
+  min-height: 32px;
+  max-height: 32px;
+  width: 105px;
+  min-width: 105px;
+  max-width: 105px;
+  padding: 0 10px;
   background: #fffbe6;
   border: 1px solid #ffe58f;
-  padding: 4px 10px;
-  border-radius: 16px;
-  font-size: 12px;
+  border-radius: 8px;
+  font-size: 11px;
   font-weight: 700;
   color: #d48806;
   cursor: pointer;
   user-select: none;
+  box-sizing: border-box;
+  flex-shrink: 0;
+  white-space: nowrap;
+  transition: all 150ms ease;
+}
+
+.test-mode-badge:hover {
+  background: #fff1b8;
+  border-color: #ffd591;
 }
 
 .test-mode-dot {
-  width: 8px;
-  height: 8px;
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
   background: #faad14;
+  flex-shrink: 0;
 }
 
 /* Audit Stream Header Button */
@@ -209,44 +241,129 @@
 }
 
 .user-avatar-btn {
-  background: #e2e8f0;
-  color: #0f172a;
+  background: #ffffff;
+  color: #1e293b;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
 }
 
-/* Lang toggle */
-.lang-toggle {
+.user-avatar-btn:hover {
+  background: #f8fafc;
+  border-color: #0b72e7;
+  color: #0b72e7;
+}
+
+/* Language Segmented Pill Toggle */
+.lang-toggle-pill {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  padding: 4px 8px;
+  height: 32px;
+  min-height: 32px;
+  max-height: 32px;
+  padding: 2px;
   background: #f1f5f9;
   border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  cursor: pointer;
+  user-select: none;
+  flex-shrink: 0;
+  white-space: nowrap;
+  transition: all 150ms ease;
+}
+
+.lang-toggle-pill:hover {
+  border-color: #0b72e7;
+}
+
+.lang-segment {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 10px;
+  height: 100%;
   border-radius: 6px;
   font-size: 11px;
   font-weight: 700;
   color: #64748b;
-  cursor: pointer;
+  transition: all 150ms ease;
 }
 
-.lang-option.active {
-  color: #0b72e7;
-}
-
-.lang-divider {
-  color: #cbd5e1;
+.lang-segment--active {
+  background: #0b72e7;
+  color: #ffffff;
+  box-shadow: 0 1px 3px rgba(11, 114, 231, 0.3);
 }
 
 .header-cta {
-  height: 34px;
+  height: 32px;
+  min-height: 32px;
+  max-height: 32px;
   padding: 0 14px;
   background: #0b72e7;
   color: #ffffff;
   font-size: 12px;
   font-weight: 700;
-  border-radius: 6px;
+  border-radius: 8px;
   box-shadow: 0 1px 3px rgba(11, 114, 231, 0.3);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: none;
+  cursor: pointer;
+  flex-shrink: 0;
+  white-space: nowrap;
+  transition: all 150ms ease;
 }
 
 .header-cta:hover {
   background: #095ec2;
+  box-shadow: 0 2px 6px rgba(11, 114, 231, 0.4);
+}
+
+/* Dedicated secondary styling for Import CSV header button */
+#import-csv-btn {
+  background: #ffffff;
+  color: #1e293b;
+  border: 1px solid #cbd5e1;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+#import-csv-btn:hover {
+  background: #f8fafc;
+  border-color: #0b72e7;
+  color: #0b72e7;
+  box-shadow: 0 2px 5px rgba(11, 114, 231, 0.15);
+}
+
+#import-csv-btn svg {
+  color: #0b72e7;
+  transition: transform 150ms ease;
+}
+
+#import-csv-btn:hover svg {
+  transform: translateY(-1px);
+}
+
+/* Profile Avatar Button at Far Right */
+.profile-avatar-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #0b72e7 0%, #034ea2 100%);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid #ffffff;
+  box-shadow: 0 2px 5px rgba(11, 114, 231, 0.35);
+  cursor: pointer;
+  transition: all 150ms ease;
+  flex-shrink: 0;
+  margin-left: 4px;
+}
+
+.profile-avatar-btn:hover {
+  transform: scale(1.06);
+  box-shadow: 0 3px 8px rgba(11, 114, 231, 0.45);
 }

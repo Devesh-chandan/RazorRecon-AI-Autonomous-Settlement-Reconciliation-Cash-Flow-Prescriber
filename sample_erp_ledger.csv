@@ -1,0 +1,21 @@
+Ledger ID,Invoice ID,Order ID,Expected Amount,Recorded Amount,Payment Method,Entry Date,Status,Notes
+LED-CSV-001,INV-CSV-001,order_csv_001,5000.00,5000.00,card,2026-08-23,received,Exact match test
+LED-CSV-002,INV-CSV-002,order_csv_002,12000.00,12000.00,card,2026-08-23,received,Exact match test
+LED-CSV-003,INV-CSV-003,order_csv_003,2500.00,2500.00,netbanking,2026-08-23,received,Netbanking test
+LED-CSV-004,INV-CSV-004,order_csv_004,1500.00,-1500.00,upi,2026-08-23,received,Refund record test
+LED-CSV-005,INV-CSV-005,order_csv_005,8500.00,8500.00,card,2026-08-23,received,Exact match test
+LED-CSV-006,INV-CSV-006,order_csv_006,3499.00,3499.00,upi,2026-08-22,received,UPI exact match
+LED-CSV-007,INV-CSV-007,order_csv_007,14999.00,14999.00,card,2026-08-22,received,Card exact match
+LED-CSV-008,INV-CSV-008,order_csv_008,750.00,750.00,netbanking,2026-08-22,received,Netbanking exact match
+LED-CSV-009,INV-CSV-009,order_csv_009,6200.00,6200.00,card,2026-08-22,received,Card exact match
+LED-CSV-010,INV-CSV-010,order_csv_010,999.00,999.00,upi,2026-08-22,received,UPI exact match
+LED-CSV-011,INV-CSV-011,order_csv_011,18500.00,18500.00,card,2026-08-21,received,Card exact match
+LED-CSV-012,INV-CSV-012,order_csv_012,4200.00,4200.00,netbanking,2026-08-21,received,Netbanking test
+LED-CSV-013,INV-CSV-013,order_csv_013,2150.00,2150.00,card,2026-08-21,received,Card exact match
+LED-CSV-014,INV-CSV-014,order_csv_014,9500.00,9500.00,card,2026-08-21,received,Card exact match
+LED-CSV-015,INV-CSV-015,order_csv_015,1250.00,1250.00,upi,2026-08-21,received,UPI exact match
+LED-CSV-016,INV-CSV-016,order_csv_016,28900.00,28900.00,card,2026-08-20,received,High value card match
+LED-CSV-017,INV-CSV-017,order_csv_017,3100.00,3100.00,netbanking,2026-08-20,received,Netbanking test
+LED-CSV-018,INV-CSV-018,order_csv_018,7800.00,7800.00,card,2026-08-20,received,Card exact match
+LED-CSV-019,INV-CSV-019,order_csv_019,2000.00,-2000.00,upi,2026-08-20,received,Refund record test
+LED-CSV-020,INV-CSV-020,order_csv_020,11200.00,11200.00,card,2026-08-20,received,Card exact match

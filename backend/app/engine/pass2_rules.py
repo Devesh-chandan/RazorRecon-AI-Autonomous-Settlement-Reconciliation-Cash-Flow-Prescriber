@@ -5,7 +5,7 @@ Applies 5 rules to unmatched residuals from Pass 1.
 Expected yield: ~25 records.
 """
 from decimal import Decimal
-from datetime import timedelta
+from datetime import timedelta, datetime
 from typing import Any
 from app.config import get_settings
 
@@ -97,14 +97,24 @@ def run_pass2(
             flags = []
             confidence = None
 
-            # ── Rule 2A: T+1/T+2 Date Window ─────────────────────────────────
+            # ── Rule 2A: T+1/T+2 Date Window ────────────────────────────────────
             if order and order.get("captured_at"):
-                captured_at = order["captured_at"]
-                settled_at = settlement["settled_at"]
-                if hasattr(captured_at, "replace"):
-                    window_start = captured_at
+                def _parse_dt(val):
+                    """Parse a datetime or ISO string into a datetime object."""
+                    if isinstance(val, datetime):
+                        return val
+                    if isinstance(val, str):
+                        try:
+                            return datetime.fromisoformat(val.replace("Z", "+00:00"))
+                        except Exception:
+                            return None
+                    return None
+
+                captured_at = _parse_dt(order["captured_at"])
+                settled_at = _parse_dt(settlement.get("settled_at"))
+                if captured_at and settled_at and s_amt == e_amt:
                     window_end = captured_at + timedelta(days=SETTLEMENT_WINDOW_DAYS)
-                    if window_start <= settled_at <= window_end and s_amt == e_amt:
+                    if captured_at <= settled_at <= window_end:
                         flags.append("timing_lag")
                         confidence = 0.95
 

@@ -53,10 +53,15 @@ def _model_to_dict(obj) -> dict:
     return d
 
 
-async def run_reconciliation(run_id: str, db: Session) -> None:
+async def run_reconciliation(run_id: str, db: Session, scope: str = "all") -> None:
     """
     Full 4-pass reconciliation pipeline.
     Posts SSE events to the run_id queue as passes complete.
+    
+    Args:
+        run_id: Unique UUID string for this run.
+        db: SQLAlchemy DB session.
+        scope: "all" (audits all DB records) or "imported" (audits only CSV/bulk imported records).
     """
     queue = _get_or_create_queue(run_id)
     start_ms = int(datetime.now(timezone.utc).timestamp() * 1000)
@@ -68,10 +73,25 @@ async def run_reconciliation(run_id: str, db: Session) -> None:
         await queue.put({"event": event_type, "data": data})
 
     try:
-        # ── Load all data from DB ──────────────────────────────────────────────
+        # ── Load data from DB (scoped by parameter) ────────────────────────────
         orders_raw = db.query(Order).all()
-        settlements_raw = db.query(Settlement).all()
         erp_raw = db.query(ErpLedger).all()
+
+        if scope == "imported":
+            from sqlalchemy import or_
+            settlements_raw = db.query(Settlement).filter(
+                or_(
+                    Settlement.settlement_id.ilike("%csv%"),
+                    Settlement.settlement_id.ilike("%bulk%"),
+                    Settlement.order_id.ilike("%csv%"),
+                    Settlement.order_id.ilike("%bulk%"),
+                )
+            ).all()
+            if not settlements_raw:
+                # Fallback to all if no specific csv/bulk prefix found
+                settlements_raw = db.query(Settlement).all()
+        else:
+            settlements_raw = db.query(Settlement).all()
 
         orders = [_model_to_dict(o) for o in orders_raw]
         settlements = [_model_to_dict(s) for s in settlements_raw]
@@ -151,7 +171,7 @@ async def run_reconciliation(run_id: str, db: Session) -> None:
         })
 
         # Run LLM in thread pool to avoid blocking event loop
-        loop = asyncio.get_event_loop()
+        loop = asyncio.get_running_loop()
         p4_results = await loop.run_in_executor(None, run_pass4, p3["breaks"])
         break_count = len(p4_results)
 
