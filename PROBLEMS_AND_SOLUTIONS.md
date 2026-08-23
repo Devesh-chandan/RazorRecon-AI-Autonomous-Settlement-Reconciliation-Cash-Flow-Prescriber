@@ -174,3 +174,46 @@ When auto-creating matching `Order` records during CSV import, `payment_id` was 
 1. Truncated all dynamically constructed `order_id` and `payment_id` string variables to a maximum of 20 characters (`order_id[:20]`, `payment_id[:20]`) inside `ingestion.py`.
 2. Updated sample CSV files (`sample_razorpay_settlements.csv` and `sample_erp_ledger.csv`) to use clean short IDs (`order_csv_001`, `pay_csv_001`, `setl_csv_001`) that fit PostgreSQL column limits.
 
+---
+
+### 11. CORS Preflight Error on OPTIONS Requests (`400 Bad Request`)
+
+#### ❌ Problem
+The React frontend sending POST requests to `/api/recon/run?scope=all` triggered `OPTIONS /api/recon/run?scope=all 400 Bad Request` in FastAPI backend logs.
+
+#### 🔍 Root Cause
+Starlette/FastAPI executes middleware in reverse registration order. Rate-limiting middleware (`SlowAPIMiddleware`) intercepted `OPTIONS` preflight requests before CORS middleware could respond, or local dev origins (`http://127.0.0.1:5173`) were rejected.
+
+#### ✅ Solution
+1. Added an explicit HTTP preflight middleware in `main.py` to intercept `OPTIONS` requests and return an immediate `200 OK` with CORS headers (`Access-Control-Allow-Origin`, `Access-Control-Allow-Methods`, `Access-Control-Allow-Headers`).
+2. Added `allow_origin_regex=r"https?://.*"` to `CORSMiddleware` in `main.py`.
+
+---
+
+### 12. Test Database Pollution (`134 Settlements / 17 Breaks`)
+
+#### ❌ Problem
+Running `pytest tests/test_csv_importer.py` caused total dashboard settlements to jump from 122 to 134 and unmatched breaks from 6 to 17.
+
+#### 🔍 Root Cause
+FastAPI `TestClient(app)` shared the live database session during unit test execution. The test suite inserted 12 temporary CSV settlement rows (`setl_u_*`) into PostgreSQL. Because these test rows lacked corresponding ERP ledger entries, running reconciliation counted them as 11 extra breaks.
+
+#### ✅ Solution
+1. Added an `@pytest.fixture(autouse=True)` in `tests/test_csv_importer.py` to auto-clean all `setl_u_*` and `led_u_*` test rows from PostgreSQL immediately after test execution.
+2. Re-seeded the database (`python -m app.seed`) to restore the clean 122 benchmark dataset.
+
+---
+
+### 13. Pytest & Linter Module Import Error (`Cannot find module app...`)
+
+#### ❌ Problem
+Running `pytest` from the root directory or inspecting test files in VS Code raised `ModuleNotFoundError: No module named 'app'`.
+
+#### 🔍 Root Cause
+Test files imported `from app.engine...`, but `app` is located inside `backend/app`. Root-level execution did not automatically include `backend/` in Python's module search path (`sys.path`).
+
+#### ✅ Solution
+1. Configured `pythonpath = backend` inside `pytest.ini`.
+2. Created `tests/conftest.py` that prepends `backend/` to `sys.path` automatically for IDE linters (Pylance/Pyright) and pytest runners.
+
+
