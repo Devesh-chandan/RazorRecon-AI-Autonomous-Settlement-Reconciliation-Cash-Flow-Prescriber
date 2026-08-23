@@ -348,7 +348,7 @@ def _import_settlements(df: pd.DataFrame, db: Session):
         try:
             data = _normalise_row(row, _RAZORPAY_SETTLEMENT_COLUMNS)
             settlement_id = str(data.get("settlement_id", "")).strip()
-            if not settlement_id:
+            if not settlement_id or settlement_id.lower() in ("nan", "none", "null"):
                 skipped += 1
                 errors.append(f"Row {idx}: missing settlement_id — skipped")
                 continue
@@ -422,7 +422,7 @@ def _import_erp_ledger(df: pd.DataFrame, db: Session):
         try:
             data = _normalise_row(row, _ERP_LEDGER_COLUMNS)
             ledger_id = str(data.get("ledger_id", "")).strip()[:20]
-            if not ledger_id:
+            if not ledger_id or ledger_id.lower() in ("nan", "none", "null"):
                 skipped += 1
                 errors.append(f"Row {idx}: missing ledger_id — skipped")
                 continue

@@ -4,6 +4,7 @@ Run:
     pytest tests/test_csv_importer.py -v
 """
 import io
+import uuid
 import pytest
 from fastapi.testclient import TestClient
 
@@ -23,6 +24,24 @@ def _make_csv(rows: list[dict], columns: list[str]) -> bytes:
     return "\n".join(lines).encode("utf-8")
 
 
+@pytest.fixture(autouse=True)
+def cleanup_test_data():
+    """Clean up test records after tests complete so live DB stays untouched."""
+    yield
+    from app.database import SessionLocal
+    from app.models import Settlement, ErpLedger, Order
+    db = SessionLocal()
+    try:
+        db.query(Settlement).filter(Settlement.settlement_id.ilike("setl_u_%")).delete(synchronize_session=False)
+        db.query(ErpLedger).filter(ErpLedger.ledger_id.ilike("led_u_%")).delete(synchronize_session=False)
+        db.query(Order).filter(Order.customer_email == "csv_import@merchant.com").delete(synchronize_session=False)
+        db.commit()
+    except Exception:
+        db.rollback()
+    finally:
+        db.close()
+
+
 # ── Razorpay Settlement CSV tests ─────────────────────────────────────────────
 
 _SETTLEMENT_COLUMNS = [
@@ -30,41 +49,45 @@ _SETTLEMENT_COLUMNS = [
     "Credit", "Debit", "Settlement UTR", "Settled At", "Order ID",
 ]
 
-_SETTLEMENT_ROWS = [
-    {
-        "Settlement ID": "setl_aaa111",
-        "Entity ID": "pay_abc001",
-        "Type": "payment",
-        "Amount": "5000",
-        "Fee": "100",
-        "Tax": "18",
-        "Credit": "4882",
-        "Debit": "0",
-        "Settlement UTR": "UTR000000000001",
-        "Settled At": "2024-07-01 12:00:00",
-        "Order ID": "order_xyz001",
-    },
-    {
-        "Settlement ID": "setl_aaa222",
-        "Entity ID": "pay_abc002",
-        "Type": "payment",
-        "Amount": "15000",
-        "Fee": "300",
-        "Tax": "54",
-        "Credit": "14646",
-        "Debit": "0",
-        "Settlement UTR": "UTR000000000002",
-        "Settled At": "2024-07-02 08:30:00",
-        "Order ID": "order_xyz002",
-    },
-]
+def _get_fresh_settlement_rows():
+    uid1 = uuid.uuid4().hex[:8]
+    uid2 = uuid.uuid4().hex[:8]
+    return [
+        {
+            "Settlement ID": f"setl_u_{uid1}",
+            "Entity ID": f"pay_{uid1}",
+            "Type": "payment",
+            "Amount": "5000",
+            "Fee": "100",
+            "Tax": "18",
+            "Credit": "4882",
+            "Debit": "0",
+            "Settlement UTR": "UTR000000000001",
+            "Settled At": "2024-07-01 12:00:00",
+            "Order ID": f"order_{uid1}",
+        },
+        {
+            "Settlement ID": f"setl_u_{uid2}",
+            "Entity ID": f"pay_{uid2}",
+            "Type": "payment",
+            "Amount": "15000",
+            "Fee": "300",
+            "Tax": "54",
+            "Credit": "14646",
+            "Debit": "0",
+            "Settlement UTR": "UTR000000000002",
+            "Settled At": "2024-07-02 08:30:00",
+            "Order ID": f"order_{uid2}",
+        },
+    ]
 
 
 class TestSettlementCSVImport:
 
     def test_valid_csv_import(self):
         """Two-row settlement CSV should import 2 records."""
-        csv_bytes = _make_csv(_SETTLEMENT_ROWS, _SETTLEMENT_COLUMNS)
+        rows = _get_fresh_settlement_rows()
+        csv_bytes = _make_csv(rows, _SETTLEMENT_COLUMNS)
         response = client.post(
             "/api/recon/upload",
             data={"source": "razorpay_settlement"},
@@ -79,7 +102,14 @@ class TestSettlementCSVImport:
 
     def test_duplicate_rows_skipped(self):
         """Re-importing the same file should skip existing records."""
-        csv_bytes = _make_csv(_SETTLEMENT_ROWS, _SETTLEMENT_COLUMNS)
+        rows = _get_fresh_settlement_rows()
+        csv_bytes = _make_csv(rows, _SETTLEMENT_COLUMNS)
+        # First import
+        client.post(
+            "/api/recon/upload",
+            data={"source": "razorpay_settlement"},
+            files={"file": ("settlements.csv", io.BytesIO(csv_bytes), "text/csv")},
+        )
         # Second import of same data
         response = client.post(
             "/api/recon/upload",
@@ -88,7 +118,7 @@ class TestSettlementCSVImport:
         )
         assert response.status_code == 200
         data = response.json()
-        assert data["rows_skipped"] >= 0  # already inserted in previous test or skipped
+        assert data["rows_skipped"] == 2
 
     def test_missing_settlement_id_skipped(self):
         """Rows without settlement_id should be counted in rows_skipped."""
@@ -114,7 +144,8 @@ class TestSettlementCSVImport:
 
     def test_invalid_source_rejected(self):
         """Unknown source value should return 422."""
-        csv_bytes = _make_csv(_SETTLEMENT_ROWS, _SETTLEMENT_COLUMNS)
+        rows = _get_fresh_settlement_rows()
+        csv_bytes = _make_csv(rows, _SETTLEMENT_COLUMNS)
         response = client.post(
             "/api/recon/upload",
             data={"source": "unknown_source"},
@@ -130,26 +161,29 @@ _LEDGER_COLUMNS = [
     "Recorded Amount", "Payment Method", "Entry Date", "Status", "Notes",
 ]
 
-_LEDGER_ROWS = [
-    {
-        "Ledger ID": "led_001",
-        "Invoice ID": "inv_abc001",
-        "Order ID": "order_xyz001",
-        "Expected Amount": "5000",
-        "Recorded Amount": "5000",
-        "Payment Method": "upi",
-        "Entry Date": "2024-07-01",
-        "Status": "received",
-        "Notes": "On time",
-    },
-]
+def _get_fresh_ledger_rows():
+    uid = uuid.uuid4().hex[:8]
+    return [
+        {
+            "Ledger ID": f"led_u_{uid}",
+            "Invoice ID": f"inv_{uid}",
+            "Order ID": f"order_{uid}",
+            "Expected Amount": "5000",
+            "Recorded Amount": "5000",
+            "Payment Method": "upi",
+            "Entry Date": "2024-07-01",
+            "Status": "received",
+            "Notes": "On time",
+        },
+    ]
 
 
 class TestERPLedgerCSVImport:
 
     def test_valid_ledger_csv_import(self):
         """Single-row ERP ledger CSV should import 1 record."""
-        csv_bytes = _make_csv(_LEDGER_ROWS, _LEDGER_COLUMNS)
+        rows = _get_fresh_ledger_rows()
+        csv_bytes = _make_csv(rows, _LEDGER_COLUMNS)
         response = client.post(
             "/api/recon/upload",
             data={"source": "erp_ledger"},

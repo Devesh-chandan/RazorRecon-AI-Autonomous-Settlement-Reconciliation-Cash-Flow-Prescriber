@@ -25,6 +25,7 @@
 <p align="center">
   <a href="https://github.com/Devesh-chandan/RazorRecon-AI-Autonomous-Settlement-Reconciliation-Cash-Flow-Prescriber"><img src="https://img.shields.io/badge/Hackathon-Razorpay_Buildathon_2026-0467DF?style=flat-square" alt="Razorpay Buildathon 2026"></a>
   <a href="https://github.com/Devesh-chandan/RazorRecon-AI-Autonomous-Settlement-Reconciliation-Cash-Flow-Prescriber"><img src="https://img.shields.io/badge/Track-04_AI_Finance_Controller-F05032?style=flat-square" alt="Track 04"></a>
+  <a href="https://github.com/Devesh-chandan/RazorRecon-AI-Autonomous-Settlement-Reconciliation-Cash-Flow-Prescriber/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/Devesh-chandan/RazorRecon-AI-Autonomous-Settlement-Reconciliation-Cash-Flow-Prescriber/ci.yml?branch=main&style=flat-square&label=build%20%26%20tests" alt="CI Status"></a>
   <a href="https://github.com/Devesh-chandan/RazorRecon-AI-Autonomous-Settlement-Reconciliation-Cash-Flow-Prescriber/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-MIT-green?style=flat-square" alt="MIT License"></a>
 </p>
 
@@ -497,21 +498,15 @@ locust -f tests/locustfile.py --headless -u 100 -r 10 --run-time 60s --host http
 
 ```
 RazorRecon-AI/
+├── .github/
+│   └── workflows/
+│       └── ci.yml            # GitHub Actions automated test & build pipeline
 ├── backend/
 │   ├── alembic/              # Database migration scripts
 │   │   └── versions/         # Migration revisions (0001_initial, 0002_add_merchants)
 │   ├── app/
 │   │   ├── auth/             # JWT auth, bcrypt password hashing, RBAC dependencies
-│   │   │   ├── jwt.py
-│   │   │   ├── dependencies.py
-│   │   │   └── models.py
-│   │   ├── engine/           # 4-Pass Reconciliation Core
-│   │   │   ├── pass1_exact.py
-│   │   │   ├── pass2_rules.py
-│   │   │   ├── pass3_fuzzy.py
-│   │   │   ├── pass4_llm.py
-│   │   │   ├── cashflow.py
-│   │   │   └── reconcile.py
+│   │   ├── engine/           # 4-Pass Reconciliation Core (pass1-4, cashflow, reconcile)
 │   │   ├── llm/              # Groq client & diagnostic prompts
 │   │   ├── routes/           # FastAPI routers (recon, cashflow, audit, auth, ingestion, health)
 │   │   ├── config.py         # Settings & environment variables
@@ -520,30 +515,31 @@ RazorRecon-AI/
 │   │   ├── schemas.py        # Pydantic request/response schemas
 │   │   ├── cache.py          # Redis caching implementation
 │   │   ├── seed.py           # Benchmark dataset seeder (100 records, 10 edge cases)
-│   │   ├── seed_append.py    # Bulk data append script
-│   │   ├── send_test_webhook.py # Live HMAC-SHA256 signed webhook simulation
-│   │   ├── reset.py          # Database reset script
-│   │   └── main.py           # FastAPI Entrypoint + slowapi rate limiting
+│   │   └── main.py           # FastAPI Entrypoint + slowapi rate limiting + CORS preflight
 │   ├── alembic.ini
 │   └── requirements.txt
 ├── frontend/
-│   ├── public/
 │   ├── src/
 │   │   ├── api/              # API REST & SSE client
-│   │   ├── components/       # Header, KPIRow, ReconWorkbench, CashFlowChart, AIExceptionDrawer, AuditLogPanel, CSVImportModal, Sidebar
-│   │   ├── context/          # Reconciliation State Context
+│   │   ├── components/       # Workbench, CashFlowChart, AIExceptionDrawer, AuditLog, Modal
 │   │   ├── App.jsx
 │   │   └── index.css         # Razorpay Design System tokens & styles
 │   └── package.json
-├── nginx/                    # Nginx TLS proxy configuration & SSL cert instructions
 ├── tests/                    # Pytest & Locust test suite
-│   ├── test_webhook.py
-│   ├── test_csv_importer.py
-│   └── locustfile.py
-├── docs/images/              # README screenshots
+│   ├── conftest.py           # Path resolver for IDEs & test runners
+│   ├── test_pass1_exact.py   # Unit tests for Pass 1 Exact Match logic
+│   ├── test_reconcile.py     # Unit tests for Pass 2-3 & multi-pass engine pipeline
+│   ├── test_webhook.py       # Unit tests for HMAC-SHA256 webhook verification
+│   ├── test_csv_importer.py  # Unit tests for CSV/Excel batch importer (with autouse cleanup)
+│   └── locustfile.py        # Concurrency & load benchmark suite
+├── nginx/                    # Nginx TLS proxy configuration & SSL cert instructions
+├── docs/images/              # README screenshots & architecture diagrams
 ├── Dockerfile                # Multi-stage Gunicorn ASGI production container
 ├── docker-compose.yml        # Development PostgreSQL 16 & Redis 7
 ├── docker-compose.prod.yml   # Production stack (backend + nginx + postgres + redis)
+├── Makefile                  # Developer & judge command shortcuts (make dev, make test)
+├── quickstart.sh             # 1-click automated setup script for judges
+├── LICENSE                   # MIT License
 ├── sample_razorpay_settlements.csv  # Sample Razorpay Settlement report for batch testing
 ├── sample_erp_ledger.csv     # Sample ERP Sales Ledger file for batch testing
 ├── PROBLEMS_AND_SOLUTIONS.md # Complete problem, root-cause & solution log
