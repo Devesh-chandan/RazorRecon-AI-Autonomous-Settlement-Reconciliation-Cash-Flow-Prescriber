@@ -14,6 +14,12 @@ This document logs all technical challenges, edge-case bugs, webhook integration
 7. [Broken Locust Load Test Endpoint (`/api/cashflow/forecast`)](#7-broken-locust-load-test-endpoint-apicashflowforecast)
 8. [Deprecated `asyncio.get_event_loop()` in Python 3.10+](#8-deprecated-asyncioget_event_loop-in-python-310)
 9. [Hardcoded Mock Values in Frontend Table Component](#9-hardcoded-mock-values-in-frontend-table-component)
+10. [Database Truncation Error During CSV Auto-Creation (`StringDataRightTruncation`)](#10-database-truncation-error-during-csv-auto-creation-stringdatarighttruncation)
+11. [CORS Preflight Error on OPTIONS Requests (`400 Bad Request`)](#11-cors-preflight-error-on-options-requests-400-bad-request)
+12. [Test Database Pollution (`134 Settlements / 17 Breaks`)](#12-test-database-pollution-134-settlements--17-breaks)
+13. [Pytest & Linter Module Import Error (`Cannot find module app...`)](#13-pytest--linter-module-import-error-cannot-find-module-app)
+14. [Pytest Suite Failures on Clean Database (`UndefinedTable` / `rows_imported == 0`)](#14-pytest-suite-failures-on-clean-database-undefinedtable--rows_imported--0)
+15. [IDE Static Analysis Import Resolution Error (`Cannot find module app.database`)](#15-ide-static-analysis-import-resolution-error-cannot-find-module-appdatabase)
 
 ---
 
@@ -215,5 +221,34 @@ Test files imported `from app.engine...`, but `app` is located inside `backend/a
 #### ✅ Solution
 1. Configured `pythonpath = backend` inside `pytest.ini`.
 2. Created `tests/conftest.py` that prepends `backend/` to `sys.path` automatically for IDE linters (Pylance/Pyright) and pytest runners.
+
+---
+
+### 14. Pytest Suite Failures on Clean Database (`UndefinedTable` / `rows_imported == 0`)
+
+#### ❌ Problem
+Running `pytest tests/ -v` on fresh database instances (e.g. CI runner with a clean PostgreSQL container) caused 5 out of 21 tests to fail. Webhook tests failed with `(psycopg2.errors.UndefinedTable) relation "orders"/"settlements" does not exist` (500 Error), while CSV import tests failed with `assert 0 == 2` and `assert 0 == 1`.
+
+#### 🔍 Root Cause
+Database ORM models (`Order`, `Settlement`, `ErpLedger`, `ReconRun`, `ReconResult`) were defined in `backend/app/models.py`, but `Base.metadata.create_all(bind=engine)` was only executed inside `backend/app/seed.py`. Without explicit table creation before running tests or app startup, fresh databases lacked required tables.
+
+#### ✅ Solution
+1. Added an `autouse=True` session-scoped fixture `setup_test_database()` in `tests/conftest.py` executing `Base.metadata.create_all(bind=engine)`.
+2. Added `Base.metadata.create_all(bind=engine)` to FastAPI's startup `lifespan` handler in `backend/app/main.py`.
+
+---
+
+### 15. IDE Static Analysis Import Resolution Error (`Cannot find module app.database`)
+
+#### ❌ Problem
+IDE static analysis engines (Pyright, Pylance, Pyrefly) displayed static diagnostics such as `Cannot find module app.database` and `Cannot find module app.models` when opening test files like `tests/conftest.py`.
+
+#### 🔍 Root Cause
+Static type checkers analyze top-level module imports at analysis time before dynamic `sys.path.insert()` logic executes at runtime. Because `app` is located inside `backend/app/`, static analysis looking from the workspace root failed to locate `app`.
+
+#### ✅ Solution
+1. Deferred `app.*` imports inside the `setup_test_database()` fixture function in `tests/conftest.py` so dynamic `sys.path` modifications run prior to module resolution.
+2. Created `pyrightconfig.json` and `pyproject.toml` with `extraPaths = ["backend"]` and `pythonpath = ["backend"]` to statically declare `backend/` as an additional top-level search path for IDE linters.
+
 
 

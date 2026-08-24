@@ -12,7 +12,8 @@ from slowapi.util import get_remote_address
 from sqlalchemy import text
 
 from app.config import get_settings
-from app.database import engine, SessionLocal
+from app.database import engine, SessionLocal, Base
+import app.models  # noqa: F401
 from app.routes import recon, cashflow, audit, health
 from app.routes import auth as auth_routes
 from app.routes import ingestion
@@ -38,12 +39,13 @@ async def lifespan(app: FastAPI):
     # ── Startup ───────────────────────────────────────────────────────────────
     logger.info("🚀 RazorRecon & Flow API starting up...")
 
-    # Verify DB connection
+    # Verify DB connection & ensure tables exist
     try:
+        Base.metadata.create_all(bind=engine)
         db = SessionLocal()
         db.execute(text("SELECT 1"))
         db.close()
-        logger.info("✅ Database connection OK")
+        logger.info("✅ Database connection & tables OK")
     except Exception as e:
         logger.error(f"❌ Database connection failed: {e}")
 

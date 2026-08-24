@@ -12,3 +12,17 @@ backend_dir = root_dir / "backend"
 
 if str(backend_dir) not in sys.path:
     sys.path.insert(0, str(backend_dir))
+
+import pytest
+
+
+@pytest.fixture(scope="session", autouse=True)
+def setup_test_database():
+    """Ensure all database tables are created before running tests."""
+    from app.database import engine, Base
+    import app.models  # noqa: F401 Ensure all models are registered with Base.metadata
+
+    Base.metadata.create_all(bind=engine)
+    yield
+
+
