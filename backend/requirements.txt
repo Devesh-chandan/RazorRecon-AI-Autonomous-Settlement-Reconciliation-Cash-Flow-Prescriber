@@ -22,8 +22,8 @@ numpy==2.1.*
 openpyxl==3.1.*          # Excel (.xlsx) support for CSV importer
 
 # ── Pydantic / Settings ───────────────────────────────────────────────────────
-pydantic[email]==2.10.*
-pydantic-settings==2.7.*
+pydantic[email]>=2.10.0,<3.0.0
+pydantic-settings>=2.7.0,<3.0.0
 
 # ── SSE ───────────────────────────────────────────────────────────────────────
 sse-starlette==2.2.*
