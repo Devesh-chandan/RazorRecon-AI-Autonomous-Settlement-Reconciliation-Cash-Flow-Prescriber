@@ -2,6 +2,7 @@
   "name": "razorrecon-ai",
   "version": "1.0.0",
   "private": true,
+  "homepage": "https://razor-recon-ai-autonomous-settlemen.vercel.app/",
   "scripts": {
     "backend": "cd backend && .venv\\Scripts\\python.exe -m uvicorn app.main:app --reload --port 8000",
     "frontend": "cd frontend && npm run dev",

@@ -12,6 +12,8 @@
     Ingest live Razorpay webhooks and bulk settlement CSVs. Reconcile net bank payouts against internal ERP ledgers using a 4-pass hybrid engine. Diagnose complex breaks in English & Hinglish with Llama 3.3 70B. Project 7-day forward cash flow with real-time "What-If" simulations.
     <br />
     <br />
+    <a href="https://razor-recon-ai-autonomous-settlemen.vercel.app/" target="_blank"><strong>🌐 Live Demo</strong></a>
+    ·
     <a href="#-see-razorrecon-in-action"><strong>See it in action ↓</strong></a>
     ·
     <a href="#-step-by-step-execution-guide"><strong>Get started</strong></a>
@@ -23,6 +25,7 @@
 </div>
 
 <p align="center">
+  <a href="https://razor-recon-ai-autonomous-settlemen.vercel.app/" target="_blank"><img src="https://img.shields.io/badge/Live_Demo-Vercel-000000?style=flat-square&logo=vercel&logoColor=white" alt="Live Demo on Vercel"></a>
   <a href="https://github.com/Devesh-chandan/RazorRecon-AI-Autonomous-Settlement-Reconciliation-Cash-Flow-Prescriber"><img src="https://img.shields.io/badge/Hackathon-Razorpay_Buildathon_2026-0467DF?style=flat-square" alt="Razorpay Buildathon 2026"></a>
   <a href="https://github.com/Devesh-chandan/RazorRecon-AI-Autonomous-Settlement-Reconciliation-Cash-Flow-Prescriber"><img src="https://img.shields.io/badge/Track-04_AI_Finance_Controller-F05032?style=flat-square" alt="Track 04"></a>
   <a href="https://github.com/Devesh-chandan/RazorRecon-AI-Autonomous-Settlement-Reconciliation-Cash-Flow-Prescriber/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/Devesh-chandan/RazorRecon-AI-Autonomous-Settlement-Reconciliation-Cash-Flow-Prescriber/ci.yml?branch=main&style=flat-square&label=build%20%26%20tests" alt="CI Status"></a>
@@ -560,6 +563,7 @@ For a complete record of all technical issues faced during integration, webhook 
 
 | Field | Value |
 |---|---|
+| **Live Demo** | [https://razor-recon-ai-autonomous-settlemen.vercel.app/](https://razor-recon-ai-autonomous-settlemen.vercel.app/) |
 | **Track** | Razorpay Buildathon 2026 — Track 04 (AI Finance Controller) |
 | **Model** | Llama 3.3 70B Versatile (via Groq Cloud API) |
 | **License** | MIT |
