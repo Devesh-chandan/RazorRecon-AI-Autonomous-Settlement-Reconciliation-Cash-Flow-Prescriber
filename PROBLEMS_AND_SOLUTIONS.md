@@ -1,6 +1,6 @@
-# RazorRecon AI — Problems & Solutions Log 🛠️
+# RazorRecon — Problems & Solutions Log 🛠️
 
-This document logs all technical challenges, edge-case bugs, webhook integration issues, and troubleshooting steps faced during development, testing, and integration of RazorRecon AI, along with their exact solutions.
+This document logs all technical challenges, edge-case bugs, webhook integration issues, and troubleshooting steps faced during development, testing, and integration of RazorRecon, along with their exact solutions.
 
 ---
 
@@ -20,6 +20,10 @@ This document logs all technical challenges, edge-case bugs, webhook integration
 13. [Pytest & Linter Module Import Error (`Cannot find module app...`)](#13-pytest--linter-module-import-error-cannot-find-module-app)
 14. [Pytest Suite Failures on Clean Database (`UndefinedTable` / `rows_imported == 0`)](#14-pytest-suite-failures-on-clean-database-undefinedtable--rows_imported--0)
 15. [IDE Static Analysis Import Resolution Error (`Cannot find module app.database`)](#15-ide-static-analysis-import-resolution-error-cannot-find-module-appdatabase)
+16. [Docker Container Name Conflicts & Connection Refused (`500 Internal Server Error`)](#16-docker-container-name-conflicts--connection-refused-500-internal-server-error)
+17. [Obsolete Docker Compose `version` Attribute Warning](#17-obsolete-docker-compose-version-attribute-warning)
+18. [Pyrefly Linter Exception Handler Type Mismatch (`bad-argument-type`)](#18-pyrefly-linter-exception-handler-type-mismatch-bad-argument-type)
+19. [Product Name Mismatches across Frontend, Backend, Docs, and Scripts](#19-product-name-mismatches-across-frontend-backend-docs-and-scripts)
 
 ---
 
@@ -249,6 +253,73 @@ Static type checkers analyze top-level module imports at analysis time before dy
 #### ✅ Solution
 1. Deferred `app.*` imports inside the `setup_test_database()` fixture function in `tests/conftest.py` so dynamic `sys.path` modifications run prior to module resolution.
 2. Created `pyrightconfig.json` and `pyproject.toml` with `extraPaths = ["backend"]` and `pythonpath = ["backend"]` to statically declare `backend/` as an additional top-level search path for IDE linters.
+
+---
+
+### 16. Docker Container Name Conflicts & Connection Refused (`500 Internal Server Error`)
+
+#### ❌ Problem
+Running `docker compose up -d` failed with `Conflict. The container name "/razorrecon_postgres" is already in use by container "..."`. Because services failed to start up, triggering `/api/recon/run` returned HTTP 500 with `psycopg2.OperationalError: connection to server at "localhost", port 5432 failed: Connection refused`.
+
+#### 🔍 Root Cause
+Pre-existing stopped container instances created under the same container names (`razorrecon_postgres`, `razorrecon_redis`) occupied Docker's container name registry, preventing Docker Compose from creating and launching fresh containers.
+
+#### ✅ Solution
+Force-removed stale container instances and re-launched Docker Compose:
+```bash
+docker rm -f razorrecon_postgres razorrecon_redis
+docker compose up -d
+$env:PYTHONIOENCODING="utf-8"; python -m app.seed
+```
+
+---
+
+### 17. Obsolete Docker Compose `version` Attribute Warning
+
+#### ❌ Problem
+Running `docker compose` commands emitted warning messages:
+`level=warning msg="C:\...\docker-compose.yml: the attribute 'version' is obsolete, it will be ignored, please remove it to avoid potential confusion"`.
+
+#### 🔍 Root Cause
+Docker Compose v2 deprecated top-level `version: "3.x"` declarations in compose files as part of the unified Compose Specification standard.
+
+#### ✅ Solution
+Removed `version: "3.9"` from both `docker-compose.yml` and `docker-compose.prod.yml`.
+
+---
+
+### 18. Pyrefly Linter Exception Handler Type Mismatch (`bad-argument-type`)
+
+#### ❌ Problem
+IDE static type checker (Pyrefly) highlighted `app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)` in `backend/app/main.py` with `bad-argument-type`.
+
+#### 🔍 Root Cause
+Starlette's `add_exception_handler` expects a callback with signature `(Request, Exception) -> Response`. SlowAPI's `_rate_limit_exceeded_handler` explicitly types its parameter as `(Request, RateLimitExceeded) -> Response`. Static type checkers enforce parameter contravariance, flagging the subtype requirement.
+
+#### ✅ Solution
+Wrapped the invocation in a type-safe handler function accepting `exc: Exception`:
+```python
+def rate_limit_handler(request: Request, exc: Exception) -> Response:
+    if isinstance(exc, RateLimitExceeded):
+        return _rate_limit_exceeded_handler(request, exc)
+    return JSONResponse(status_code=429, content={"detail": "Rate limit exceeded"})
+
+app.add_exception_handler(RateLimitExceeded, rate_limit_handler)
+```
+
+---
+
+### 19. Product Name Mismatches across Frontend, Backend, Docs, and Scripts
+
+#### ❌ Problem
+The project used inconsistent naming variations (`RazorRecon & Flow`, `RazorRecon AI`, `RazorRecon-AI`, `razorrecon-ai`) across HTML `<title>`, UI tooltips, FastAPI backend `title`, Makefile, shell scripts, and Markdown logs.
+
+#### 🔍 Root Cause
+Different features and documentation pages were written at different development phases using varying suffixes.
+
+#### ✅ Solution
+Standardized all user-facing product display titles to **`RazorRecon`** across `frontend/index.html`, `backend/app/main.py`, `Sidebar.jsx`, `quickstart.sh`, `Makefile`, and `README.md`, while preserving lowercase database and cache slugs (`razorrecon`).
+
 
 
 

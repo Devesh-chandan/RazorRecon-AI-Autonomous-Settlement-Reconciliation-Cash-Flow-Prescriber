@@ -1,5 +1,5 @@
 /**
- * RazorRecon & Flow — API Client
+ * RazorRecon — API Client
  * Handles REST + SSE communication with the FastAPI backend.
  */
 

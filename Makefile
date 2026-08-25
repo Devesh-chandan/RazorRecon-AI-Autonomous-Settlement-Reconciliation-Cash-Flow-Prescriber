@@ -1,9 +1,9 @@
-# RazorRecon & Flow — Developer & Hackathon Evaluation Makefile
+# RazorRecon — Developer & Hackathon Evaluation Makefile
 
 .PHONY: help dev docker-up seed test lint clean quickstart
 
 help:
-	@echo "RazorRecon & Flow Developer Commands:"
+	@echo "RazorRecon Developer Commands:"
 	@echo "  make dev         - Start PostgreSQL, Redis, backend (port 8000), and frontend (port 5173)"
 	@echo "  make docker-up   - Start PostgreSQL and Redis containers in background"
 	@echo "  make seed        - Reset database and seed 100 benchmark reconciliation records"
@@ -21,7 +21,7 @@ test:
 	$env:PYTHONPATH="backend"; pytest tests/ -v
 
 quickstart: docker-up seed test
-	@echo "RazorRecon & Flow setup complete! Run 'make dev' or launch backend/frontend to evaluate."
+	@echo "RazorRecon setup complete! Run 'make dev' or launch backend/frontend to evaluate."
 
 docker-prod:
 	docker-compose -f docker-compose.prod.yml up --build -d

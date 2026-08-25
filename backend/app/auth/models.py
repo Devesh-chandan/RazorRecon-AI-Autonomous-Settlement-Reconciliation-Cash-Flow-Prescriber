@@ -5,7 +5,7 @@ from app.database import Base
 
 
 class Merchant(Base):
-    """Represents a merchant / finance user who can log in to RazorRecon AI.
+    """Represents a merchant / finance user who can log in to RazorRecon.
 
     Roles:
         admin    — full access (seed data, manage users)

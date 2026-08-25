@@ -1,4 +1,4 @@
-"""Locust load test for RazorRecon AI API.
+"""Locust load test for RazorRecon API.
 
 Run:
     locust -f tests/locustfile.py --headless -u 100 -r 10 --run-time 60s --host http://localhost

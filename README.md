@@ -1,10 +1,10 @@
 <!-- PROJECT LOGO -->
 <div align="center">
   <a href="https://github.com/Devesh-chandan/RazorRecon-AI-Autonomous-Settlement-Reconciliation-Cash-Flow-Prescriber">
-    <img src="docs/images/04-recon-results-cashflow.png" alt="RazorRecon & Flow — Dashboard showing reconciliation results, 7-day cash flow chart, and settlement workbench">
+    <img src="docs/images/04-recon-results-cashflow.png" alt="RazorRecon — Dashboard showing reconciliation results, 7-day cash flow chart, and settlement workbench">
   </a>
 
-  <h1 align="center">RazorRecon & Flow ⚡</h1>
+  <h1 align="center">RazorRecon ⚡</h1>
 
   <p>
     <strong>LLM-Powered Autonomous Settlement Reconciliation & Cash-Flow Prescriber</strong>

@@ -4,7 +4,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
@@ -37,7 +37,7 @@ limiter = Limiter(
 async def lifespan(app: FastAPI):
     """Application lifespan — startup + shutdown."""
     # ── Startup ───────────────────────────────────────────────────────────────
-    logger.info("🚀 RazorRecon & Flow API starting up...")
+    logger.info("🚀 RazorRecon API starting up...")
 
     # Verify DB connection & ensure tables exist
     try:
@@ -72,15 +72,15 @@ async def lifespan(app: FastAPI):
         logger.warning("⚠️  Using default JWT_SECRET_KEY — replace with `openssl rand -hex 32` in production")
 
     logger.info(f"🛡️  Rate limit: {settings.RATE_LIMIT_PER_MINUTE} req/min per IP")
-    logger.info("✅ RazorRecon & Flow API ready")
+    logger.info("✅ RazorRecon API ready")
     yield
 
     # ── Shutdown ──────────────────────────────────────────────────────────────
-    logger.info("👋 RazorRecon & Flow API shutting down")
+    logger.info("👋 RazorRecon API shutting down")
 
 
 app = FastAPI(
-    title="RazorRecon & Flow",
+    title="RazorRecon",
     description="LLM-Powered Settlement Reconciliation & Cash-Flow Prescriber",
     version="2.0.0",
     docs_url="/docs",
@@ -90,7 +90,15 @@ app = FastAPI(
 
 # ── Rate Limiting Middleware ───────────────────────────────────────────────────
 app.state.limiter = limiter
-app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+
+def rate_limit_handler(request: Request, exc: Exception) -> Response:
+    if isinstance(exc, RateLimitExceeded):
+        return _rate_limit_exceeded_handler(request, exc)
+    return JSONResponse(status_code=429, content={"detail": "Rate limit exceeded"})
+
+
+app.add_exception_handler(RateLimitExceeded, rate_limit_handler)
 app.add_middleware(SlowAPIMiddleware)
 
 # ── CORS & Preflight Middleware ──────────────────────────────────────────────────
@@ -127,7 +135,7 @@ app.include_router(ingestion.router)
 @app.get("/")
 async def root():
     return {
-        "app": "RazorRecon & Flow",
+        "app": "RazorRecon",
         "version": "2.0.0",
         "docs": "/docs",
         "health": "/api/health",

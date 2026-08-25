@@ -4,7 +4,7 @@
 set -e
 
 echo "========================================================"
-echo "⚡ RazorRecon & Flow — Automated Judge Quickstart"
+echo "⚡ RazorRecon — Automated Judge Quickstart"
 echo "========================================================"
 
 echo "[1/4] Starting Docker infrastructure (PostgreSQL 16 + Redis 7)..."
@@ -23,7 +23,7 @@ PYTHONPATH=backend pytest tests/ -v
 
 echo ""
 echo "========================================================"
-echo "✅ RazorRecon & Flow is ready!"
+echo "✅ RazorRecon is ready!"
 echo "Backend URL:  http://localhost:8000"
 echo "Swagger Docs: http://localhost:8000/docs"
 echo "Frontend UI:  http://localhost:5173"

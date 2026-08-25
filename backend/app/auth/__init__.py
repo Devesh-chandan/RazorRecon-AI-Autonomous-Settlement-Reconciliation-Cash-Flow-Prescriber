@@ -1,1 +1,1 @@
-"""Enterprise Auth package for RazorRecon AI."""
+"""Enterprise Auth package for RazorRecon."""

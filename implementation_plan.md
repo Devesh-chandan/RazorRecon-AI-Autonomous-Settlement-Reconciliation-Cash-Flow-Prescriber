@@ -1,4 +1,4 @@
-# RazorRecon & Flow — Implementation Plan (v2)
+# RazorRecon — Implementation Plan (v2)
 
 > **LLM-Powered Settlement Reconciliation & Cash-Flow Prescriber**
 > Razorpay Buildathon · Track 04: AI Finance Controller
@@ -9,7 +9,7 @@
 
 Razorpay merchants receive daily **net settlements** that lump captured orders, MDR/gateway fees, 18% GST on MDR, refunds, and chargebacks into a single bank credit. Matching these against internal ERP order books across T+1/T+2 cycles is painful (20–40 hrs/week) and leads to breaks, tax errors, and poor cash visibility.
 
-**RazorRecon & Flow** is an AI agent that:
+**RazorRecon** is an AI agent that:
 1. Auto-reconciles a 100-record synthetic settlement batch (>90% match rate).
 2. Explains every mismatch in plain English + Hinglish via LLM.
 3. Projects a 7-day forward cash-flow curve and runs "What-If" break-resolution scenarios.

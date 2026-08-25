@@ -72,7 +72,7 @@ export default function Sidebar({ onOpenAI, onOpenAudit, onOpenUpload, width = 2
     >
       {/* Logo Header + Collapse Toggle Button */}
       <div className="sidebar-logo-area">
-        <div className="rzp-logo-badge" title="RazorRecon AI">
+        <div className="rzp-logo-badge" title="RazorRecon">
           <svg width="24" height="24" viewBox="0 0 32 32" fill="none">
             <rect width="32" height="32" rx="6" fill="#0B72E7"/>
             <path d="M8 10h10c2.2 0 4 1.8 4 4s-1.8 4-4 4h-6l5 4" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
