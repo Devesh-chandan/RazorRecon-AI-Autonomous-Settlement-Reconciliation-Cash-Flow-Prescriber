@@ -1,18 +1,22 @@
-# RazorRecon — Engineering Issues & Fixes
+# RazorRecon — Engineering Issues & Fixes 🛠️
 
-A running log of problems hit while building RazorRecon, why they happened, and how they were resolved. 33 entries across webhook ingestion, the database layer, the reconciliation/AI pipeline, the frontend, and CI/DevOps.
+A running log of 33 real technical failure modes encountered while building RazorRecon, why they happened (root cause analysis), and how they were resolved. Covers webhook ingestion, database state, reconciliation/AI core, frontend real-time streaming, and DevOps.
 
-## Summary by area
+---
 
-| Area | # of issues | Notes |
+## 📊 Summary by Area
+
+| Area | Solved Issues | Focus |
 |---|:---:|---|
-| Webhook security & ingestion | 4 | HMAC signature handling, request-body double-read, ngrok/SSL for local testing |
-| Database & schema | 10 | Auto-heal migrations on startup, Redis/UUID serialization, CSV dedup counters |
-| AI engine & streaming | 5 | SSE double-dispatch, cron endpoint compatibility, JSON/prompt handling |
-| Frontend UI & data flow | 8 | Stale fallback data, filter bugs, layout/pagination fixes |
-| DevOps, CI/CD & testing | 6 | Locust config, pytest DB pollution, Docker container conflicts |
+| 🔐 **Webhook Security & Ingestion** | 4 | HMAC signature handling, request-body double-read, ngrok/SSL local tunneling |
+| 🐘 **Database & Schema Hardening** | 10 | Auto-heal migrations on startup, Redis/UUID serialization, CSV dedup counters |
+| 🤖 **AI Engine & Streaming Reliability** | 5 | SSE double-dispatch, cron endpoint compatibility, JSON & prompt handling |
+| 🎨 **Frontend UI & Data Flow** | 8 | Stale fallback data, filter edge cases, layout clipping, pagination controls |
+| 🧪 **DevOps, CI/CD & Testing** | 6 | Locust load test endpoint, pytest DB pollution, Docker container conflicts |
 
-## Index
+---
+
+## 📍 Index
 
 1. [Webhook stream already consumed (`await request.json()`)](#1)
 2. [HMAC signature verification failure (401)](#2)
@@ -50,7 +54,8 @@ A running log of problems hit while building RazorRecon, why they happened, and 
 
 ---
 
-### 1. Webhook stream already consumed (`await request.json()`) {#1}
+<a id="1"></a>
+### 1. Webhook stream already consumed (`await request.json()`)
 
 **Symptom:** `await request.json()` inside `POST /api/webhooks/razorpay` returned an empty dict or threw an error.
 
@@ -64,7 +69,8 @@ payload: dict = body  # injected by FastAPI from Body(...)
 
 ---
 
-### 2. HMAC signature verification failure (401) {#2}
+<a id="2"></a>
+### 2. HMAC signature verification failure (401)
 
 **Symptom:** Manual webhook requests from Swagger UI or PowerShell got `{"detail": "Invalid X-Razorpay-Signature"}`.
 
@@ -85,7 +91,8 @@ payload: dict = body  # injected by FastAPI from Body(...)
 
 ---
 
-### 3. Webhook returns 200 but data doesn't show up after recon {#3}
+<a id="3"></a>
+### 3. Webhook returns 200 but data doesn't show up after recon
 
 **Symptom:** Sending a `payment.captured` event returned 200 OK, but the transaction never appeared in the Reconciliation Workbench after clicking **Run Recon**.
 
@@ -95,7 +102,8 @@ payload: dict = body  # injected by FastAPI from Body(...)
 
 ---
 
-### 4. Razorpay webhook fails against local Nginx over HTTPS {#4}
+<a id="4"></a>
+### 4. Razorpay webhook fails against local Nginx over HTTPS
 
 **Symptom:** Pointing the Razorpay webhook URL at the local Nginx HTTPS endpoint caused delivery failures on the dashboard.
 
@@ -109,7 +117,8 @@ ngrok's `*.ngrok-free.dev` cert is CA-signed and Razorpay accepts it.
 
 ---
 
-### 5. Bulk test data loading without wiping existing seed records {#5}
+<a id="5"></a>
+### 5. Bulk test data loading without wiping existing seed records
 
 **Symptom:** `python -m app.seed` deleted all existing rows before inserting the 100 benchmark records — no way to append more data for stress testing without losing what was there.
 
@@ -124,7 +133,8 @@ python -m app.reset            # explicit full wipe
 
 ---
 
-### 6. Windows PowerShell Unicode encoding error {#6}
+<a id="6"></a>
+### 6. Windows PowerShell Unicode encoding error
 
 **Symptom:** `UnicodeEncodeError: 'charmap' codec can't encode character '\U0001f680'` when running scripts from PowerShell.
 
@@ -134,7 +144,8 @@ python -m app.reset            # explicit full wipe
 
 ---
 
-### 7. Locust load test hitting the wrong endpoint {#7}
+<a id="7"></a>
+### 7. Locust load test hitting the wrong endpoint
 
 **Symptom:** Locust reported 100% 404s on the cashflow task.
 
@@ -144,7 +155,8 @@ python -m app.reset            # explicit full wipe
 
 ---
 
-### 8. Deprecated `asyncio.get_event_loop()` on Python 3.10+ {#8}
+<a id="8"></a>
+### 8. Deprecated `asyncio.get_event_loop()` on Python 3.10+
 
 **Symptom:** `DeprecationWarning: There is no current event loop` from background threadpool executors.
 
@@ -154,7 +166,8 @@ python -m app.reset            # explicit full wipe
 
 ---
 
-### 9. Hardcoded mock values in the frontend table {#9}
+<a id="9"></a>
+### 9. Hardcoded mock values in the frontend table
 
 **Symptom:** The Reconciliation Workbench table always showed the same static values (`"Nov 12, 2026"`, `"setl_PKJAgXprC2z4a8"`, `"₹194.30"`) regardless of what was actually in the DB.
 
@@ -164,7 +177,8 @@ python -m app.reset            # explicit full wipe
 
 ---
 
-### 10. CSV import truncation error (`StringDataRightTruncation`) {#10}
+<a id="10"></a>
+### 10. CSV import truncation error (`StringDataRightTruncation`)
 
 **Symptom:** Uploading ERP/settlement CSVs threw `psycopg2.errors.StringDataRightTruncation: value too long for type character varying(20)`.
 
@@ -176,7 +190,8 @@ python -m app.reset            # explicit full wipe
 
 ---
 
-### 11. CORS preflight 400 on OPTIONS requests {#11}
+<a id="11"></a>
+### 11. CORS preflight 400 on OPTIONS requests
 
 **Symptom:** POSTs from the React frontend to `/api/recon/run?scope=all` produced `OPTIONS ... 400 Bad Request` in the FastAPI logs.
 
@@ -188,7 +203,8 @@ python -m app.reset            # explicit full wipe
 
 ---
 
-### 12. Test suite polluting the live database {#12}
+<a id="12"></a>
+### 12. Test suite polluting the live database
 
 **Symptom:** Running `pytest tests/test_csv_importer.py` pushed dashboard settlement counts from 122 to 134 and unmatched breaks from 6 to 17.
 
@@ -200,7 +216,8 @@ python -m app.reset            # explicit full wipe
 
 ---
 
-### 13. Pytest/linter can't find the `app` module {#13}
+<a id="13"></a>
+### 13. Pytest/linter can't find the `app` module
 
 **Symptom:** `ModuleNotFoundError: No module named 'app'` when running pytest from the repo root, or in VS Code.
 
@@ -212,7 +229,8 @@ python -m app.reset            # explicit full wipe
 
 ---
 
-### 14. Pytest fails on a fresh database (`UndefinedTable`) {#14}
+<a id="14"></a>
+### 14. Pytest fails on a fresh database (`UndefinedTable`)
 
 **Symptom:** On a clean DB (e.g. a fresh CI Postgres container), 5 of 21 tests failed — webhook tests with `relation "orders"/"settlements" does not exist`, CSV tests with `assert 0 == 2` / `assert 0 == 1`.
 
@@ -224,7 +242,8 @@ python -m app.reset            # explicit full wipe
 
 ---
 
-### 15. IDE static analysis can't resolve `app.database` {#15}
+<a id="15"></a>
+### 15. IDE static analysis can't resolve `app.database`
 
 **Symptom:** Pyright/Pylance/Pyrefly flagged `Cannot find module app.database` and `Cannot find module app.models` when opening test files.
 
@@ -236,7 +255,8 @@ python -m app.reset            # explicit full wipe
 
 ---
 
-### 16. Docker container name conflicts → connection refused {#16}
+<a id="16"></a>
+### 16. Docker container name conflicts → connection refused
 
 **Symptom:** `docker compose up -d` failed with `Conflict. The container name "/razorrecon_postgres" is already in use`. Downstream, `/api/recon/run` returned 500 with `connection to server at "localhost", port 5432 failed: Connection refused`.
 
@@ -251,7 +271,8 @@ $env:PYTHONIOENCODING="utf-8"; python -m app.seed
 
 ---
 
-### 17. Obsolete `version` key in docker-compose.yml {#17}
+<a id="17"></a>
+### 17. Obsolete `version` key in docker-compose.yml
 
 **Symptom:** `the attribute 'version' is obsolete, it will be ignored` warning on every `docker compose` command.
 
@@ -261,7 +282,8 @@ $env:PYTHONIOENCODING="utf-8"; python -m app.seed
 
 ---
 
-### 18. Linter flags the SlowAPI exception handler signature {#18}
+<a id="18"></a>
+### 18. Linter flags the SlowAPI exception handler signature
 
 **Symptom:** Pyrefly flagged `app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)` in `main.py` with `bad-argument-type`.
 
@@ -271,7 +293,8 @@ $env:PYTHONIOENCODING="utf-8"; python -m app.seed
 
 ---
 
-### 19. Inconsistent product naming across the codebase {#19}
+<a id="19"></a>
+### 19. Inconsistent product naming across the codebase
 
 **Symptom:** The project name appeared as `RazorRecon & Flow`, `RazorRecon AI`, `RazorRecon-AI`, and `razorrecon-ai` across the HTML title, UI tooltips, FastAPI's `title`, the Makefile, shell scripts, and docs.
 
@@ -281,7 +304,8 @@ $env:PYTHONIOENCODING="utf-8"; python -m app.seed
 
 ---
 
-### 20. Dead space in the analytics chart panel {#20}
+<a id="20"></a>
+### 20. Dead space in the analytics chart panel
 
 **Symptom:** The 7-Day Cash Flow card stretched to match the table's height, leaving a large blank area at the top of the widget.
 
@@ -291,7 +315,8 @@ $env:PYTHONIOENCODING="utf-8"; python -m app.seed
 
 ---
 
-### 21. Table rows clipped, no pagination {#21}
+<a id="21"></a>
+### 21. Table rows clipped, no pagination
 
 **Symptom:** The settlements table rendered every record in one scrolling list, with the bottom row visually cut in half and no container bounds.
 
@@ -301,7 +326,8 @@ $env:PYTHONIOENCODING="utf-8"; python -m app.seed
 
 ---
 
-### 22. Badge styling causing visual fatigue {#22}
+<a id="22"></a>
+### 22. Badge styling causing visual fatigue
 
 **Symptom:** Every row showed the same bright green `Processed` pill and bright blue `Pass 1` tag, making it hard to spot actual break exceptions like `1 Break`.
 
@@ -311,7 +337,8 @@ $env:PYTHONIOENCODING="utf-8"; python -m app.seed
 
 ---
 
-### 23. Navbar progress bar cramped against the language switcher {#23}
+<a id="23"></a>
+### 23. Navbar progress bar cramped against the language switcher
 
 **Symptom:** During recon runs, the live progress indicator (`Pass 4 — AI Diagnostics: 96/100 matched`) was squeezed into the top navbar between the search box and status pill.
 
@@ -323,7 +350,8 @@ $env:PYTHONIOENCODING="utf-8"; python -m app.seed
 
 ---
 
-### 24. Inconsistent idle state across KPI cards {#24}
+<a id="24"></a>
+### 24. Inconsistent idle state across KPI cards
 
 **Symptom:** Before running a reconciliation, the `Current balance` card showed `₹ 0.00` while the other three showed `—` / `Awaiting Reconciliation`.
 
@@ -333,7 +361,8 @@ $env:PYTHONIOENCODING="utf-8"; python -m app.seed
 
 ---
 
-### 25. `hmac.new()` TypeError on every webhook {#25}
+<a id="25"></a>
+### 25. `hmac.new()` TypeError on every webhook
 
 **Symptom:** Every incoming webhook crashed with `TypeError: new() got an unexpected keyword argument 'key'` (HTTP 500).
 
@@ -350,7 +379,8 @@ expected = hmac.new(
 
 ---
 
-### 26. Redis cache missing `id`, UUID serialization failure {#26}
+<a id="26"></a>
+### 26. Redis cache missing `id`, UUID serialization failure
 
 **Symptom:** Reconciliation results pulled from Redis were missing `id` (causing React key warnings), and occasionally threw a Pydantic `ValidationError` when `run_id` came back as a raw UUID.
 
@@ -364,7 +394,8 @@ expected = hmac.new(
 
 ---
 
-### 27. SSE error handler firing twice on disconnect {#27}
+<a id="27"></a>
+### 27. SSE error handler firing twice on disconnect
 
 **Symptom:** Network drops during streaming caused duplicate `RECON_ERROR` dispatches, plus warnings from calling `.close()` on an already-closed `EventSource`.
 
@@ -383,7 +414,8 @@ const handleSseError = (data) => {
 
 ---
 
-### 28. Hardcoded 96.0% match rate on the breakdown page {#28}
+<a id="28"></a>
+### 28. Hardcoded 96.0% match rate on the breakdown page
 
 **Symptom:** The Reconciliation Breakdown page always showed `96.0% Match Accuracy`, regardless of the actual run's result (e.g. a run that was really 78% or 100%).
 
@@ -396,7 +428,8 @@ const handleSseError = (data) => {
 
 ---
 
-### 29. CSV-generated payment IDs truncated incorrectly {#29}
+<a id="29"></a>
+### 29. CSV-generated payment IDs truncated incorrectly
 
 **Symptom:** Settlement CSVs with long `entity_id` values produced `payment_id`s that didn't match the actual transaction IDs, breaking Pass 1 deterministic matching.
 
@@ -410,7 +443,8 @@ payment_id = (entity_id_raw if entity_id_raw else f"pay_{order_id}")[:20]
 
 ---
 
-### 30. What-If cashflow filter dropping CSV orders with null capture dates {#30}
+<a id="30"></a>
+### 30. What-If cashflow filter dropping CSV orders with null capture dates
 
 **Symptom:** `POST /api/cashflow/whatif` didn't reflect cash-flow gains for CSV-imported transactions when simulating AI break resolution.
 
@@ -420,7 +454,8 @@ payment_id = (entity_id_raw if entity_id_raw else f"pay_{order_id}")[:20]
 
 ---
 
-### 31. Cron pinger failing on oversized/wrong-method response {#31}
+<a id="31"></a>
+### 31. Cron pinger failing on oversized/wrong-method response
 
 **Symptom:** External cron triggers (cron-job.org) hitting `/api/recon/cron` failed with `Failed (output too large)`.
 
@@ -439,7 +474,8 @@ payment_id = (entity_id_raw if entity_id_raw else f"pay_{order_id}")[:20]
 
 ---
 
-### 32. Duplicate CSV rows not counted as skipped {#32}
+<a id="32"></a>
+### 32. Duplicate CSV rows not counted as skipped
 
 **Symptom:** Re-importing a settlement CSV with duplicate rows returned `rows_skipped == 0` instead of `2`; `test_duplicate_rows_skipped` in `test_csv_importer.py` failed with `assert 0 == 2`.
 
@@ -458,7 +494,8 @@ if existing:
 
 ---
 
-### 33. Production startup crash — missing `gateway` column {#33}
+<a id="33"></a>
+### 33. Production startup crash — missing `gateway` column
 
 **Symptom:** Deploying to production failed during seeding with `psycopg2.errors.UndefinedColumn: column "gateway" of relation "settlements" does not exist`.
 
