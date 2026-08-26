@@ -99,8 +99,11 @@ def seed(seed_val: Optional[int] = None):
     shuffle_idx = rng.permutation(100).tolist()
     gateway_map = [gateway_assignments[shuffle_idx[i]] for i in range(100)]
 
+    from app.database import auto_heal_schema
     Base.metadata.create_all(bind=engine)
+    auto_heal_schema(engine)
     db: Session = SessionLocal()
+
 
     try:
         db.query(ErpLedger).delete()

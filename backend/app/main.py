@@ -40,15 +40,18 @@ async def lifespan(app: FastAPI):
     # ── Startup ───────────────────────────────────────────────────────────────
     logger.info("🚀 RazorRecon API starting up...")
 
-    # Verify DB connection & ensure tables exist
+    # Verify DB connection & ensure tables exist & auto-heal missing columns
     try:
+        from app.database import auto_heal_schema
         Base.metadata.create_all(bind=engine)
+        auto_heal_schema(engine)
         db = SessionLocal()
         db.execute(text("SELECT 1"))
         db.close()
-        logger.info("✅ Database connection & tables OK")
+        logger.info("✅ Database connection, tables & schema columns OK")
     except Exception as e:
         logger.error(f"❌ Database connection failed: {e}")
+
 
     # Verify Redis
     from app.cache import check_redis_connectivity
