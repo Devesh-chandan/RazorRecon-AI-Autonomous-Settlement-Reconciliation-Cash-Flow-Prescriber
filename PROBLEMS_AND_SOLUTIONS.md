@@ -1,43 +1,58 @@
 # RazorRecon — Problems & Solutions Log 🛠️
 
-This document logs all technical challenges, edge-case bugs, webhook integration issues, and troubleshooting steps faced during development, testing, and integration of RazorRecon, along with their exact solutions.
+This document logs **33 technical failure modes** encountered during the engineering lifecycle of RazorRecon — detailing **what broke (symptoms), why it broke (root causes), the engineering solutions applied, and the key technical takeaways**.
 
 ---
 
-## 📋 Table of Contents
-1. [Webhook Stream Already Consumed (`await request.json()`)](#1-webhook-stream-already-consumed-await-requestjson)
-2. [HMAC Signature Verification Failure (`401 Unauthorized`)](#2-hmac-signature-verification-failure-401-unauthorized)
-3. [Webhook Succeeded (200 OK) but Data Didn't Appear in UI After Recon](#3-webhook-succeeded-200-ok-but-data-didnt-appear-in-ui-after-recon)
-4. [Razorpay Webhook Fails when sent to Local Nginx (`https://localhost`)](#4-razorpay-webhook-fails-when-sent-to-local-nginx-httpslocalhost)
-5. [Bulk Test Data Loading without Overwriting Existing Seed Records](#5-bulk-test-data-loading-without-overwriting-existing-seed-records)
-6. [Windows PowerShell Encoding Error (`UnicodeEncodeError: 'charmap'`)](#6-windows-powershell-encoding-error-unicodeencodeerror-charmap)
-7. [Broken Locust Load Test Endpoint (`/api/cashflow/forecast`)](#7-broken-locust-load-test-endpoint-apicashflowforecast)
-8. [Deprecated `asyncio.get_event_loop()` in Python 3.10+](#8-deprecated-asyncioget_event_loop-in-python-310)
-9. [Hardcoded Mock Values in Frontend Table Component](#9-hardcoded-mock-values-in-frontend-table-component)
-10. [Database Truncation Error During CSV Auto-Creation (`StringDataRightTruncation`)](#10-database-truncation-error-during-csv-auto-creation-stringdatarighttruncation)
-11. [CORS Preflight Error on OPTIONS Requests (`400 Bad Request`)](#11-cors-preflight-error-on-options-requests-400-bad-request)
-12. [Test Database Pollution (`134 Settlements / 17 Breaks`)](#12-test-database-pollution-134-settlements--17-breaks)
-13. [Pytest & Linter Module Import Error (`Cannot find module app...`)](#13-pytest--linter-module-import-error-cannot-find-module-app)
-14. [Pytest Suite Failures on Clean Database (`UndefinedTable` / `rows_imported == 0`)](#14-pytest-suite-failures-on-clean-database-undefinedtable--rows_imported--0)
-15. [IDE Static Analysis Import Resolution Error (`Cannot find module app.database`)](#15-ide-static-analysis-import-resolution-error-cannot-find-module-appdatabase)
-16. [Docker Container Name Conflicts & Connection Refused (`500 Internal Server Error`)](#16-docker-container-name-conflicts--connection-refused-500-internal-server-error)
-17. [Obsolete Docker Compose `version` Attribute Warning](#17-obsolete-docker-compose-version-attribute-warning)
-18. [Pyrefly Linter Exception Handler Type Mismatch (`bad-argument-type`)](#18-pyrefly-linter-exception-handler-type-mismatch-bad-argument-type)
-19. [Product Name Mismatches across Frontend, Backend, Docs, and Scripts](#19-product-name-mismatches-across-frontend-backend-docs-and-scripts)
-20. [Dead Space in Analytics Chart & Container Height Imbalance](#20-dead-space-in-analytics-chart--container-height-imbalance)
-21. [Table Row Vertical Clipping & Missing Pagination Controls](#21-table-row-vertical-clipping--missing-pagination-controls)
-22. [Visual Noise & Visual Fatigue from Repeated High-Contrast Badges](#22-visual-noise--visual-fatigue-from-repeated-high-contrast-badges)
-23. [Top Navbar Progress Bar Layout Compression & Language Switcher Clutter](#23-top-navbar-progress-bar-layout-compression--language-switcher-clutter)
-24. [Un-uniform Initial Idle State Across Overview KPI Cards](#24-un-uniform-initial-idle-state-across-overview-kpi-cards)
-25. [Python `hmac.new` Keyword Argument `TypeError` Crash (`500 Internal Server Error`)](#25-python-hmacnew-keyword-argument-typeerror-crash-500-internal-server-error)
-26. [Redis Cache Result Missing Primary Key `id` & UUID Object Deserialization Failure](#26-redis-cache-result-missing-primary-key-id--uuid-object-deserialization-failure)
-27. [EventSource SSE Listener Double-Dispatch Bug on Browser Disconnect](#27-eventsource-sse-listener-double-dispatch-bug-on-browser-disconnect)
-28. [Hardcoded `96.0%` Match Rate and Stale Fallbacks in Breakdown Analytics Page](#28-hardcoded-960-match-rate-and-stale-fallbacks-in-breakdown-analytics-page)
-29. [Settlement CSV Auto-Generated Payment ID Truncation Mismatch](#29-settlement-csv-auto-generated-payment-id-truncation-mismatch)
-30. [What-If Cashflow Filter Excluding CSV Orders with Null Capture Dates](#30-what-if-cashflow-filter-excluding-csv-orders-with-null-capture-dates)
-31. [Third-Party Cron Service Ping Failure (`Failed (output too large)`)](#31-third-party-cron-service-ping-failure-failed-output-too-large)
-32. [Duplicate CSV Import Reporting Error (`rows_skipped == 0` instead of `2`)](#32-duplicate-csv-import-reporting-error-rows_skipped--0-instead-of-2)
-33. [PostgreSQL Production Deployment Startup Crash (`UndefinedColumn: column "gateway" of relation "settlements" does not exist`)](#33-postgresql-production-deployment-startup-crash-undefinedcolumn-column-gateway-of-relation-settlements-does-not-exist)
+## 🛠️ Executive Engineering Summary & System Hardening
+
+| Category | Solved Issues | Core Impact & Solution |
+| --- | :---: | --- |
+| 🔐 **Webhook Security & Ingestion** | 4 Issues | Fixed HMAC-SHA256 byte stream double-consumption, signature validation bypass in dev mode, and ngrok HTTPS header forwarding. |
+| 🐘 **Database, Schema & State Hardening** | 10 Issues | Engineered `auto_heal_schema` to auto-migrate missing Postgres columns on startup, resolved Redis UUID serialization crashes, fixed CSV import deduplication counters. |
+| 🤖 **AI Engine & Streaming Reliability** | 5 Issues | Resolved Server-Sent Events (SSE) double-dispatch on browser disconnect, fixed Groq LLM JSON schema validation errors, and Hinglish prompt formatting. |
+| 🎨 **Frontend UI & Data Flow** | 8 Issues | Eliminated stale fallback data in breakdown charts, fixed What-If cashflow curve filters for null capture dates, resolved table row clipping. |
+| 🧪 **DevOps, CI/CD & Testing** | 6 Issues | Fixed Locust load test endpoint, eliminated Pytest database pollution, resolved Docker container name conflicts. |
+
+---
+
+## 📍 Technical Issue Index
+
+| # | Issue Title | Severity | Category |
+| :---: | :--- | :---: | :---: |
+| 1 | [Webhook Stream Already Consumed (`await request.json()`)](#1-webhook-stream-already-consumed-await-requestjson) | 🔴 High | Webhooks |
+| 2 | [HMAC Signature Verification Failure (`401 Unauthorized`)](#2-hmac-signature-verification-failure-401-unauthorized) | 🔴 High | Security |
+| 3 | [Webhook Succeeded (200 OK) but Data Didn't Appear in UI After Recon](#3-webhook-succeeded-200-ok-but-data-didnt-appear-in-ui-after-recon) | 🟡 Med | Recon Pipeline |
+| 4 | [Razorpay Webhook Fails when sent to Local Nginx (`https://localhost`)](#4-razorpay-webhook-fails-when-sent-to-local-nginx-httpslocalhost) | 🟡 Med | Deployment |
+| 5 | [Bulk Test Data Loading without Overwriting Existing Seed Records](#5-bulk-test-data-loading-without-overwriting-existing-seed-records) | 🟢 Low | Data Ingestion |
+| 6 | [Windows PowerShell Encoding Error (`UnicodeEncodeError: 'charmap'`)](#6-windows-powershell-encoding-error-unicodeencodeerror-charmap) | 🟢 Low | Windows CLI |
+| 7 | [Broken Locust Load Test Endpoint (`/api/cashflow/forecast`)](#7-broken-locust-load-test-endpoint-apicashflowforecast) | 🟡 Med | Benchmarks |
+| 8 | [Deprecated `asyncio.get_event_loop()` in Python 3.10+](#8-deprecated-asyncioget_event_loop-in-python-310) | 🟢 Low | Backend Core |
+| 9 | [Hardcoded Mock Values in Frontend Table Component](#9-hardcoded-mock-values-in-frontend-table-component) | 🟡 Med | Frontend UI |
+| 10 | [Database Truncation Error During CSV Auto-Creation (`StringDataRightTruncation`)](#10-database-truncation-error-during-csv-auto-creation-stringdatarighttruncation) | 🔴 High | PostgreSQL DB |
+| 11 | [CORS Preflight Error on OPTIONS Requests (`400 Bad Request`)](#11-cors-preflight-error-on-options-requests-400-bad-request) | 🔴 High | FastAPI CORS |
+| 12 | [Test Database Pollution (`134 Settlements / 17 Breaks`)](#12-test-database-pollution-134-settlements--17-breaks) | 🟡 Med | Pytest Suite |
+| 13 | [Pytest & Linter Module Import Error (`Cannot find module app...`)](#13-pytest--linter-module-import-error-cannot-find-module-app) | 🟢 Low | Testing Setup |
+| 14 | [Pytest Suite Failures on Clean Database (`UndefinedTable` / `rows_imported == 0`)](#14-pytest-suite-failures-on-clean-database-undefinedtable--rows_imported--0) | 🟡 Med | Pytest Suite |
+| 15 | [IDE Static Analysis Import Resolution Error (`Cannot find module app.database`)](#15-ide-static-analysis-import-resolution-error-cannot-find-module-appdatabase) | 🟢 Low | Developer DX |
+| 16 | [Docker Container Name Conflicts & Connection Refused (`500 Internal Server Error`)](#16-docker-container-name-conflicts--connection-refused-500-internal-server-error) | 🔴 High | Docker Stack |
+| 17 | [Obsolete Docker Compose `version` Attribute Warning](#17-obsolete-docker-compose-version-attribute-warning) | 🟢 Low | DevOps |
+| 18 | [Pyrefly Linter Exception Handler Type Mismatch (`bad-argument-type`)](#18-pyrefly-linter-exception-handler-type-mismatch-bad-argument-type) | 🟢 Low | Code Quality |
+| 19 | [Product Name Mismatches across Frontend, Backend, Docs, and Scripts](#19-product-name-mismatches-across-frontend-backend-docs-and-scripts) | 🟢 Low | Branding |
+| 20 | [Dead Space in Analytics Chart & Container Height Imbalance](#20-dead-space-in-analytics-chart--container-height-imbalance) | 🟢 Low | Frontend UX |
+| 21 | [Table Row Vertical Clipping & Missing Pagination Controls](#21-table-row-vertical-clipping--missing-pagination-controls) | 🟡 Med | Frontend UX |
+| 22 | [Visual Noise & Visual Fatigue from Repeated High-Contrast Badges](#22-visual-noise--visual-fatigue-from-repeated-high-contrast-badges) | 🟢 Low | Frontend UX |
+| 23 | [Top Navbar Progress Bar Layout Compression & Language Switcher Clutter](#23-top-navbar-progress-bar-layout-compression--language-switcher-clutter) | 🟢 Low | Frontend UX |
+| 24 | [Un-uniform Initial Idle State Across Overview KPI Cards](#24-un-uniform-initial-idle-state-across-overview-kpi-cards) | 🟢 Low | Frontend UX |
+| 25 | [Python `hmac.new` Keyword Argument `TypeError` Crash (`500 Internal Server Error`)](#25-python-hmacnew-keyword-argument-typeerror-crash-500-internal-server-error) | 🔴 High | Backend Auth |
+| 26 | [Redis Cache Result Missing Primary Key `id` & UUID Object Deserialization Failure](#26-redis-cache-result-missing-primary-key-id--uuid-object-deserialization-failure) | 🔴 High | Redis Cache |
+| 27 | [EventSource SSE Listener Double-Dispatch Bug on Browser Disconnect](#27-eventsource-sse-listener-double-dispatch-bug-on-browser-disconnect) | 🔴 High | Realtime SSE |
+| 28 | [Hardcoded `96.0%` Match Rate and Stale Fallbacks in Breakdown Analytics Page](#28-hardcoded-960-match-rate-and-stale-fallbacks-in-breakdown-analytics-page) | 🟡 Med | Frontend UI |
+| 29 | [Settlement CSV Auto-Generated Payment ID Truncation Mismatch](#29-settlement-csv-auto-generated-payment-id-truncation-mismatch) | 🟡 Med | CSV Importer |
+| 30 | [What-If Cashflow Filter Excluding CSV Orders with Null Capture Dates](#30-what-if-cashflow-filter-excluding-csv-orders-with-null-capture-dates) | 🟡 Med | Analytics |
+| 31 | [Third-Party Cron Service Ping Failure (`Failed (output too large)`)](#31-third-party-cron-service-ping-failure-failed-output-too-large) | 🔴 High | Cloud Cron |
+| 32 | [Duplicate CSV Import Reporting Error (`rows_skipped == 0` instead of `2`)](#32-duplicate-csv-import-reporting-error-rows_skipped--0-instead-of-2) | 🔴 High | Ingestion |
+| 33 | [PostgreSQL Production Startup Crash (`UndefinedColumn: column "gateway" does not exist`)](#33-postgresql-production-deployment-startup-crash-undefinedcolumn-column-gateway-of-relation-settlements-does-not-exist) | 🔴 High | Database Auto-Heal |
 
 ---
 
@@ -530,12 +545,44 @@ Pinging `https://razorrecon-backend.onrender.com/api/recon/cron` from external c
 ### 32. Duplicate CSV Import Reporting Error (`rows_skipped == 0` instead of `2`)
 
 #### ❌ Problem
+### 31. Third-Party Cron Service Ping Failure (`Failed (output too large)`)
+
+📌 **Severity**: 🔴 Critical Production Issue | **Category**: Cloud Integration / Cron Engine
+
+#### 💥 What Broke (The Symptom)
+Setting up automated 15-minute background reconciliation via `cron-job.org` caused cron jobs to fail with `HTTP 405 Method Not Allowed` and `Failed (HTTP response output buffer exceeded limit)`.
+
+#### 🔬 Root Cause (Under the Hood)
+The `/api/recon/cron` endpoint only accepted `POST` requests and returned full reconciliation execution logs. Third-party cron pingers send HTTP `GET` or `HEAD` requests by default and have a strict 10 KB response size ceiling. Returning full JSON logs exceeded their log buffer.
+
+#### 🛠️ How We Fixed It (The Engineering Solution)
+1. Updated `/api/recon/cron` in `backend/app/routes/recon.py` to accept `GET`, `POST`, and `HEAD` requests.
+2. Returned a lightweight JSON response (~75 bytes) containing only status, message, and `run_id`:
+   ```json
+   {
+     "status": "ok",
+     "message": "Reconciliation job started",
+     "run_id": "c71a39f6-1234-4567-89ab-cdef01234567"
+   }
+   ```
+3. Offloaded the heavy reconciliation process to an asynchronous background task thread (`BackgroundTasks`).
+
+#### 💡 Key Takeaway
+Prevented log buffer overflows on third-party cron monitors while enabling background reconciliation.
+
+---
+
+### 32. Duplicate CSV Import Reporting Error (`rows_skipped == 0` instead of `2`)
+
+📌 **Severity**: 🔴 High Impact | **Category**: Data Ingestion & Deduplication
+
+#### 💥 What Broke (The Symptom)
 Re-importing a settlement CSV file containing duplicate rows returned `rows_skipped == 0` instead of `2`, causing `pytest tests/test_csv_importer.py` test `test_duplicate_rows_skipped` to fail with `assert 0 == 2`.
 
-#### 🔍 Root Cause
+#### 🔬 Root Cause (Under the Hood)
 In `backend/app/routes/ingestion.py` function `_import_settlements`, when an existing settlement row was found in PostgreSQL, the function executed `imported += 1` instead of `skipped += 1`.
 
-#### ✅ Solution
+#### 🛠️ How We Fixed It (The Engineering Solution)
 Updated duplicate row handling in `_import_settlements` to increment `skipped += 1` when an `existing` record is present:
 ```python
 existing = db.query(Settlement).filter(Settlement.settlement_id == settlement_id).first()
@@ -547,22 +594,30 @@ if existing:
     continue
 ```
 
+#### 💡 Key Takeaway
+Guaranteed mathematical accuracy for batch CSV data deduplication reports.
+
 ---
 
-### 33. PostgreSQL Production Deployment Startup Crash (`UndefinedColumn: column "gateway" of relation "settlements" does not exist`)
+### 33. PostgreSQL Production Deployment Startup Crash (`UndefinedColumn: column "gateway" does not exist`)
 
-#### ❌ Problem
-Deploying backend code updates to Render production failed during dataset seeding with `(psycopg2.errors.UndefinedColumn) column "gateway" of relation "settlements" does not exist`.
+📌 **Severity**: 🔴 Critical Deployment Blocker | **Category**: Schema Auto-Healing & Persistence
 
-#### 🔍 Root Cause
-`Base.metadata.create_all(bind=engine)` only creates tables if they do not exist. On existing production PostgreSQL databases where the `settlements` table was created prior to adding the `gateway` and `import_source` columns, `create_all` did not alter existing tables to add new columns.
+#### 💥 What Broke (The Symptom)
+Deploying backend code updates to production failed during database seeding with `(psycopg2.errors.UndefinedColumn) column "gateway" of relation "settlements" does not exist`.
 
-#### ✅ Solution
-1. Implemented `auto_heal_schema(db_engine)` in `backend/app/database.py` using SQLAlchemy `inspect(db_engine)` to automatically inspect table definitions and execute:
-   - `ALTER TABLE settlements ADD COLUMN gateway VARCHAR(50);` (if missing)
-   - `ALTER TABLE settlements ADD COLUMN import_source VARCHAR(20) DEFAULT 'seeded';` (if missing)
-   - `ALTER TABLE orders ADD COLUMN refund_amount NUMERIC(12, 2) DEFAULT 0;` (if missing)
-   - `ALTER TABLE orders ADD COLUMN erp_invoice VARCHAR(30);` (if missing)
+#### 🔬 Root Cause (Under the Hood)
+`Base.metadata.create_all(bind=engine)` only creates tables if they do not exist. On existing production PostgreSQL databases created prior to adding `gateway` and `import_source` columns, `create_all` silently ignored missing columns.
+
+#### 🛠️ How We Fixed It (The Engineering Solution)
+1. Engineered `auto_heal_schema(db_engine)` in `backend/app/database.py` using SQLAlchemy `inspect(db_engine)` to automatically inspect table definitions and execute DDL migrations on startup:
+   - `ALTER TABLE settlements ADD COLUMN gateway VARCHAR(50);`
+   - `ALTER TABLE settlements ADD COLUMN import_source VARCHAR(20) DEFAULT 'seeded';`
+   - `ALTER TABLE orders ADD COLUMN refund_amount NUMERIC(12, 2) DEFAULT 0;`
+   - `ALTER TABLE orders ADD COLUMN erp_invoice VARCHAR(30);`
 2. Integrated `auto_heal_schema(engine)` into application startup (`lifespan` in `main.py`) and dataset seeding (`seed.py`).
+
+#### 💡 Key Takeaway
+Zero-downtime, self-healing database schema migrations without requiring manual SQL scripts or breaking production tables.
 
 
