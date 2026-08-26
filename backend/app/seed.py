@@ -314,9 +314,12 @@ def seed(seed_val: Optional[int] = None):
 
 
 def write_csv_files(settlement_rows: list[dict], erp_rows: list[dict]):
-    """Write synchronized sample CSV files to project root."""
+    """Write synchronized sample CSV files to samples/ directory."""
+    import os
+    samples_dir = "../samples"
+    os.makedirs(samples_dir, exist_ok=True)
     try:
-        with open("../sample_razorpay_settlements.csv", "w", newline="", encoding="utf-8") as f:
+        with open(os.path.join(samples_dir, "sample_razorpay_settlements.csv"), "w", newline="", encoding="utf-8") as f:
             writer = csv.DictWriter(f, fieldnames=[
                 "Settlement ID", "Entity ID", "Type", "Amount", "Fee", "Tax",
                 "Credit", "Debit", "Settlement UTR", "Settled At", "Order ID", "Gateway"
@@ -324,7 +327,7 @@ def write_csv_files(settlement_rows: list[dict], erp_rows: list[dict]):
             writer.writeheader()
             writer.writerows(settlement_rows)
 
-        with open("../sample_erp_ledger.csv", "w", newline="", encoding="utf-8") as f:
+        with open(os.path.join(samples_dir, "sample_erp_ledger.csv"), "w", newline="", encoding="utf-8") as f:
             writer = csv.DictWriter(f, fieldnames=[
                 "Ledger ID", "Invoice ID", "Order ID", "Expected Amount",
                 "Recorded Amount", "Payment Method", "Entry Date", "Status", "Notes"
@@ -332,9 +335,10 @@ def write_csv_files(settlement_rows: list[dict], erp_rows: list[dict]):
             writer.writeheader()
             writer.writerows(erp_rows)
 
-        print("   [CSV] Generated sample_razorpay_settlements.csv & sample_erp_ledger.csv in project root.")
+        print("   [CSV] Generated sample_razorpay_settlements.csv & sample_erp_ledger.csv in samples/ directory.")
     except Exception as exc:
         print(f"   [WARN] Failed to write CSV files: {exc}")
+
 
 
 if __name__ == "__main__":
