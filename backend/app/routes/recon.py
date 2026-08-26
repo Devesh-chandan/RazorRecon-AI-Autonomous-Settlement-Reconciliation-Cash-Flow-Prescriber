@@ -5,7 +5,7 @@ import uuid
 import logging
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
+from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, Response
 from sse_starlette.sse import EventSourceResponse
 from sqlalchemy.orm import Session
 
@@ -126,28 +126,7 @@ async def get_results(run_id: str, db: Session = Depends(get_db)):
     if not results:
         raise HTTPException(status_code=404, detail=f"Run {run_id} not found or still running")
 
-    return [
-        ReconResultResponse(
-            id=r.id,
-            run_id=str(r.run_id),
-            order_id=r.order_id,
-            settlement_id=r.settlement_id,
-            ledger_id=r.ledger_id,
-            pass_number=r.pass_number,
-            status=r.status,
-            confidence=float(r.confidence) if r.confidence else None,
-            flags=r.flags or [],
-            delta=r.delta or {},
-            root_cause=r.root_cause,
-            explanation_en=r.explanation_en,
-            explanation_hi=r.explanation_hi,
-            suggested_action=r.suggested_action,
-            severity=r.severity,
-            created_at=r.created_at,
-        )
-        for r in results
-    ]
-
+    return [ReconResultResponse.model_validate(r) for r in results]
 
 
 @router.get("/stats/{run_id}", response_model=ReconStatsResponse)
@@ -157,12 +136,37 @@ async def get_stats(run_id: str, db: Session = Depends(get_db)):
     if not recon_run:
         raise HTTPException(status_code=404, detail=f"Run {run_id} not found")
 
-    return ReconStatsResponse(
-        run_id=str(recon_run.run_id),
-        total_records=recon_run.total_records or 0,
-        matched_count=recon_run.matched_count or 0,
-        break_count=recon_run.break_count or 0,
-        match_rate=float(recon_run.match_rate or 0),
-        net_payout=float(recon_run.net_payout or 0),
-        status=recon_run.status,
-    )
+    return ReconStatsResponse.model_validate(recon_run)
+
+
+@router.post("/cron", status_code=204, summary="Lightweight Cron Reconciliation Trigger")
+async def trigger_cron_recon(
+    background_tasks: BackgroundTasks,
+    scope: str = "all",
+    db: Session = Depends(get_db),
+):
+    """Cron-friendly reconciliation trigger returning HTTP 204 No Content.
+    
+    Prevents hosting platform HTTP response buffer overflow by returning an empty body while
+    executing reconciliation headlessly in the background.
+    """
+    run_id = str(uuid.uuid4())
+    recon_run = ReconRun(run_id=run_id, status="running")
+    db.add(recon_run)
+    db.commit()
+
+    from app.database import SessionLocal
+
+    async def _run():
+        bg_db = SessionLocal()
+        try:
+            await run_reconciliation(run_id, bg_db, scope=scope)
+        except Exception as e:
+            logger.error(f"Cron background recon failed: {e}", exc_info=True)
+        finally:
+            bg_db.close()
+
+    background_tasks.add_task(_run)
+    logger.info(f"Cron scheduled reconciliation run started: {run_id}")
+    return Response(status_code=204)
+

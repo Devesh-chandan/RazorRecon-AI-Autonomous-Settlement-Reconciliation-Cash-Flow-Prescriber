@@ -136,7 +136,7 @@ def analyze_breaks(breaks: list[dict]) -> list[dict]:
                 max_tokens=4000,
             )
 
-            raw = response.choices[0].message.content
+            raw = response.choices[0].message.content or "{}"
             parsed = json.loads(raw)
             results = parsed.get("results", [])
 
@@ -168,7 +168,7 @@ def analyze_breaks(breaks: list[dict]) -> list[dict]:
             return results
 
         except Exception as e:
-            logger.error(f"Groq API attempt {attempt + 1}/{retries} failed: {e}")
+            logger.warning("Groq API attempt %d/%d failed: %s", attempt + 1, retries, e)
             if attempt < retries - 1:
                 time.sleep(backoff * (2 ** attempt))
             else:

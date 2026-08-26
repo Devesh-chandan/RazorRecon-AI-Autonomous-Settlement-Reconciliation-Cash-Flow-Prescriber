@@ -18,12 +18,13 @@ from app.routes import recon, cashflow, audit, health
 from app.routes import auth as auth_routes
 from app.routes import ingestion
 
+settings = get_settings()
+
 logging.basicConfig(
-    level=logging.INFO,
+    level=getattr(logging, settings.LOG_LEVEL.upper(), logging.INFO),
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
 )
 logger = logging.getLogger(__name__)
-settings = get_settings()
 
 # ── Rate Limiter ───────────────────────────────────────────────────────────────
 # Key = client IP address. Limit configured via RATE_LIMIT_PER_MINUTE env var.

@@ -10,6 +10,9 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
+    # ── Logging ────────────────────────────────────────────────────────────
+    LOG_LEVEL: str = "INFO"
+
     # ── LLM ────────────────────────────────────────────────────────────────
     GROQ_API_KEY: str = ""
     GROQ_MODEL: str = "llama-3.3-70b-versatile"   # valid Groq model name (no prefix)
