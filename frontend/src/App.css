@@ -33,6 +33,59 @@
   overflow: hidden;
 }
 
+.rzp-content-body--fullview {
+  overflow-y: auto;
+}
+
+/* ── Global Progress Banner ────────────────────────────────── */
+.global-recon-banner {
+  background: #eff6ff;
+  border-bottom: 1px solid #bfdbfe;
+  padding: 6px 24px;
+  position: relative;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  animation: fadeIn 200ms ease;
+}
+
+.global-recon-banner-track {
+  height: 4px;
+  background: #dbeafe;
+  border-radius: 2px;
+  overflow: hidden;
+  width: 100%;
+}
+
+.global-recon-banner-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #2563eb, #0b72e7);
+  transition: width 300ms ease;
+  border-radius: 2px;
+}
+
+.global-recon-banner-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11px;
+}
+
+.banner-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 700;
+  color: #1d4ed8;
+}
+
+.banner-subtitle {
+  font-weight: 600;
+  color: #2563eb;
+  font-family: var(--font-mono, monospace);
+}
+
 /* ── Sidebar Resizer Drag Handle ───────────────────────────── */
 .sidebar-resizer {
   width: 6px;
@@ -78,8 +131,7 @@
   overflow: hidden;
 }
 
-.workbench-left,
-.workbench-right {
+.workbench-left {
   min-height: 0;
   height: 100%;
   overflow: hidden;
@@ -87,11 +139,19 @@
   flex-direction: column;
 }
 
-.workbench-left > *,
-.workbench-right > * {
+.workbench-left > * {
   flex: 1;
   min-height: 0;
   height: 100%;
+}
+
+.workbench-right {
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 /* ── Drag Splitter Handle ──────────────────────────────────── */
@@ -123,6 +183,41 @@
   background: #0b72e7;
   height: 60px;
   width: 5px;
+  box-shadow: 0 0 8px rgba(11, 114, 231, 0.5);
+}
+
+/* ── Zero-Extra-Space Vertical Resizer Adjustment Handle ─────── */
+.workbench-vertical-resizer {
+  height: 12px;
+  margin-top: -8px;
+  margin-bottom: -4px;
+  width: 100%;
+  cursor: row-resize;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+  z-index: 10;
+  background: transparent;
+  transition: background 150ms ease;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.workbench-vertical-resizer::after {
+  content: '';
+  width: 36px;
+  height: 4px;
+  background: #cbd5e1;
+  border-radius: 2px;
+  transition: all 150ms ease;
+}
+
+.workbench-vertical-resizer:hover::after,
+.workbench-vertical-resizer--dragging::after {
+  background: #0b72e7;
+  width: 60px;
+  height: 5px;
   box-shadow: 0 0 8px rgba(11, 114, 231, 0.5);
 }
 

@@ -1,23 +1,44 @@
 import { useState } from 'react';
 import {
-  Layers, TrendingUp, Bot, ClipboardList, Download, HelpCircle, ChevronLeft, ChevronRight, UploadCloud
+  Layers, TrendingUp, Bot, ClipboardList, Download, HelpCircle, ChevronLeft, ChevronRight, UploadCloud, Activity, PieChart
 } from 'lucide-react';
 import { useReconciliation } from '../context/ReconciliationContext';
 import { exportAuditLog } from '../api/client';
 import './Sidebar.css';
 
-export default function Sidebar({ onOpenAI, onOpenAudit, onOpenUpload, width = 220, isCollapsed = false, onToggleCollapse }) {
+export default function Sidebar({
+  onOpenAI,
+  onOpenAudit,
+  onOpenUpload,
+  activeView = 'workbench',
+  onSelectView,
+  width = 256,
+  isCollapsed = false,
+  onToggleCollapse
+}) {
   const { state } = useReconciliation();
-  const { runId, results, resolvedBreaks } = state;
+  const { runId, results, resolvedBreaks, status, progress } = state;
 
-  const [activeItem, setActiveItem] = useState('Settlements & Recon');
+  const isRunning = status === 'running';
+  const pct = progress.total_records
+    ? Math.round(((progress.total_matched || 0) / progress.total_records) * 100)
+    : 10;
+
+  const getProgressText = () => {
+    if (!progress.pass) return 'Initializing...';
+    return `Pass ${progress.pass}: ${progress.total_matched || 0}/${progress.total_records || 100} matched`;
+  };
 
   const pass4Breaks = results.filter(r => r.status === 'break');
   const unresolvedCount = Math.max(0, pass4Breaks.length - resolvedBreaks.size);
 
   const handleNavClick = (item) => {
-    setActiveItem(item.name);
-    if (item.action) item.action();
+    if (item.view && onSelectView) {
+      onSelectView(item.view);
+    }
+    if (item.action) {
+      item.action();
+    }
   };
 
   const handleExport = () => {
@@ -36,8 +57,9 @@ export default function Sidebar({ onOpenAI, onOpenAudit, onOpenUpload, width = 2
     {
       title: 'RECONCILIATION ENGINE',
       items: [
-        { name: 'Settlements & Recon', icon: Layers },
-        { name: 'Cash Flow Forecast', icon: TrendingUp },
+        { name: 'Settlements & Recon', icon: Layers, view: 'workbench' },
+        { name: 'Cash Flow Forecast', icon: TrendingUp, view: 'cashflow' },
+        { name: 'Reconciliation Breakdown', icon: PieChart, view: 'breakdown' },
         { name: 'Import CSV / Excel', icon: UploadCloud, action: onOpenUpload },
       ]
     },
@@ -105,7 +127,7 @@ export default function Sidebar({ onOpenAI, onOpenAudit, onOpenUpload, width = 2
             )}
             {group.items.map((item) => {
               const Icon = item.icon;
-              const isActive = activeItem === item.name;
+              const isActive = item.view ? activeView === item.view : false;
               return (
                 <button
                   key={item.name}
@@ -128,6 +150,38 @@ export default function Sidebar({ onOpenAI, onOpenAudit, onOpenUpload, width = 2
           </div>
         ))}
       </nav>
+
+      {/* Minimal Sidebar Live Engine Progress Card */}
+      {isRunning && (
+        isCollapsed ? (
+          <div
+            className="sidebar-collapsed-progress font-mono font-bold"
+            title={`Engine Running: ${pct}%`}
+            aria-label={`Engine Running: ${pct}%`}
+          >
+            {pct}%
+          </div>
+        ) : (
+          <div className="sidebar-recon-card" aria-live="polite">
+            <div className="sidebar-recon-header">
+              <div className="sidebar-recon-title-group">
+                <Activity size={12} className="animate-spin text-blue" />
+                <span className="sidebar-recon-title">Engine Running</span>
+              </div>
+              <span className="sidebar-recon-pct font-mono">{pct}%</span>
+            </div>
+            <div className="sidebar-recon-bar-wrap">
+              <div
+                className="sidebar-recon-bar-fill"
+                style={{ width: `${pct}%` }}
+              />
+            </div>
+            <div className="sidebar-recon-desc">
+              {getProgressText()}
+            </div>
+          </div>
+        )
+      )}
 
       {/* Help & API Documentation Button */}
       <div className="sidebar-footer">

@@ -37,20 +37,24 @@ function formatINR(value) {
 
 export default function KPIRow({ onOpenAI, onOpenAudit }) {
   const { state, refreshData } = useReconciliation();
-  const { stats, progress, status, results, resolvedBreaks } = state;
-
-  const totalRecords = stats.total_records || progress.total_records || 100;
-  const matchedCount = stats.matched_count || progress.total_matched || 0;
-  const breakCount = stats.break_count || 4;
-  const matchRate = stats.match_rate || 96.0;
-  const netPayout = stats.net_payout || 440000;
-
-  const animMatchRate = useCountUp(matchRate, 1200, 1);
-  const animPayout = useCountUp(netPayout, 1400, 0);
+  const { stats = {}, progress = {}, status, results = [], resolvedBreaks = new Set() } = state || {};
 
   const breaks = selectBreaks(results);
+  const matched = results.filter(r => r && r.status === 'matched');
+
+  const hasData = results.length > 0 || stats.total_records != null;
+
+  const totalRecords = stats.total_records ?? progress.total_records ?? (results.length > 0 ? results.length : 0);
+  const matchedCount = stats.matched_count ?? progress.total_matched ?? (results.length > 0 ? matched.length + resolvedBreaks.size : 0);
+  const breakCount = stats.break_count ?? (results.length > 0 ? Math.max(0, breaks.length - resolvedBreaks.size) : 0);
+  const rawMatchRate = totalRecords > 0 ? parseFloat(((matchedCount / totalRecords) * 100).toFixed(1)) : 0.0;
+  const matchRate = stats.match_rate ?? (results.length > 0 ? rawMatchRate : 0.0);
+  const netPayout = stats.net_payout ?? (results.length > 0 ? 440000 : 0);
+
+  const animMatchRate = useCountUp(hasData ? matchRate : 0, 1200, 1);
+  const animPayout = useCountUp(hasData ? netPayout : 0, 1400, 0);
+
   const unresolvedCount = Math.max(0, breaks.length - resolvedBreaks.size);
-  const isIdle = status === 'idle';
 
   return (
     <section className="rzp-overview-section" aria-label="Settlement Overview">
@@ -86,7 +90,7 @@ export default function KPIRow({ onOpenAI, onOpenAudit }) {
           </div>
         </div>
 
-        {/* 4 Metric Columns inside Same Card Div */}
+        {/* 4 Metric Card Containers */}
         <div className="overview-metrics-grid">
           {/* Metric Column 1: Current Balance */}
           <div className="overview-metric-col" id="kpi-current-balance">
@@ -94,10 +98,33 @@ export default function KPIRow({ onOpenAI, onOpenAudit }) {
               <span>Current balance</span>
               <Info size={12} className="info-icon" title="Net un-settled balance in account" />
             </div>
-            <div className="metric-value-row">
-              <span className="metric-currency">₹</span>
-              <span className="metric-amount">0.00</span>
-            </div>
+            {status === 'running' ? (
+              <div className="metric-value-row">
+                <div className="sk-box sk-w-20" style={{ height: '24px', margin: '4px 0' }} />
+              </div>
+            ) : !hasData ? (
+              <>
+                <div className="metric-value-row">
+                  <span className="metric-amount font-large" style={{ color: '#a0aec0' }}>—</span>
+                </div>
+                <div className="metric-caption">
+                  Awaiting Reconciliation
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="metric-value-row">
+                  <span className="metric-currency">₹</span>
+                  <span className="metric-amount">0.00</span>
+                  <span className="processed-pill-badge">
+                    <CheckCircle size={10} /> Available
+                  </span>
+                </div>
+                <div className="metric-caption">
+                  Escrow Account Balance
+                </div>
+              </>
+            )}
           </div>
 
           {/* Metric Column 2: Settlement Due Today */}
@@ -106,15 +133,36 @@ export default function KPIRow({ onOpenAI, onOpenAudit }) {
               <span>Settlement due today</span>
               <Info size={12} className="info-icon" title="Pending settlements requiring reconciliation" />
             </div>
-            <div className="metric-value-row">
-              <span className="metric-amount font-large">{formatINR(netPayout > 0 ? netPayout : 6616.76)}</span>
-              <span className="break-highlight-badge">
-                <AlertCircle size={10} /> {breakCount} Breaks
-              </span>
-            </div>
-            <div className="metric-caption">
-              {breakCount} exceptions to be reviewed
-            </div>
+            {status === 'running' ? (
+              <>
+                <div className="metric-value-row" style={{ gap: '8px', alignItems: 'center' }}>
+                  <div className="sk-box sk-w-32" style={{ height: '24px' }} />
+                  <div className="sk-pill sk-w-24" style={{ height: '18px' }} />
+                </div>
+                <div className="sk-box sk-w-24" style={{ height: '11px', marginTop: '6px' }} />
+              </>
+            ) : !hasData ? (
+              <>
+                <div className="metric-value-row">
+                  <span className="metric-amount font-large" style={{ color: '#a0aec0' }}>—</span>
+                </div>
+                <div className="metric-caption">
+                  Awaiting Reconciliation
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="metric-value-row">
+                  <span className="metric-amount font-large">{formatINR(netPayout)}</span>
+                  <span className="break-highlight-badge">
+                    <AlertCircle size={10} /> {breakCount} Breaks
+                  </span>
+                </div>
+                <div className="metric-caption">
+                  {breakCount} exceptions to be reviewed
+                </div>
+              </>
+            )}
           </div>
 
           {/* Metric Column 3: Reconciliation Rate */}
@@ -123,15 +171,36 @@ export default function KPIRow({ onOpenAI, onOpenAudit }) {
               <span>Reconciliation Rate</span>
               <Info size={12} className="info-icon" title="Automated match rate percentage" />
             </div>
-            <div className="metric-value-row">
-              <span className="metric-amount font-large">{isIdle ? '96.0%' : `${animMatchRate.toFixed(1)}%`}</span>
-              <span className="processed-pill-badge">
-                <CheckCircle size={10} /> &gt;90% Target
-              </span>
-            </div>
-            <div className="metric-caption">
-              {matchedCount || 96}/{totalRecords} Matched
-            </div>
+            {status === 'running' ? (
+              <>
+                <div className="metric-value-row" style={{ gap: '8px', alignItems: 'center' }}>
+                  <div className="sk-box sk-w-20" style={{ height: '24px' }} />
+                  <div className="sk-pill sk-w-24" style={{ height: '18px' }} />
+                </div>
+                <div className="sk-box sk-w-24" style={{ height: '11px', marginTop: '6px' }} />
+              </>
+            ) : !hasData ? (
+              <>
+                <div className="metric-value-row">
+                  <span className="metric-amount font-large" style={{ color: '#a0aec0' }}>—</span>
+                </div>
+                <div className="metric-caption">
+                  0/0 Matched
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="metric-value-row">
+                  <span className="metric-amount font-large">{`${animMatchRate.toFixed(1)}%`}</span>
+                  <span className="processed-pill-badge">
+                    <CheckCircle size={10} /> &gt;90% Target
+                  </span>
+                </div>
+                <div className="metric-caption">
+                  {matchedCount}/{totalRecords} Matched
+                </div>
+              </>
+            )}
           </div>
 
           {/* Metric Column 4: Net Confirmed Payout */}
@@ -140,15 +209,36 @@ export default function KPIRow({ onOpenAI, onOpenAudit }) {
               <span>Net Confirmed Payout</span>
               <Info size={12} className="info-icon" title="Total confirmed liquidity payout" />
             </div>
-            <div className="metric-value-row">
-              <span className="metric-amount font-large">{isIdle ? '₹ 4.4L' : formatINR(animPayout)}</span>
-              <span className="processed-pill-badge">
-                <CheckCircle size={10} /> Processed
-              </span>
-            </div>
-            <div className="metric-caption">
-              Confirmed 7-day inflow projection
-            </div>
+            {status === 'running' ? (
+              <>
+                <div className="metric-value-row" style={{ gap: '8px', alignItems: 'center' }}>
+                  <div className="sk-box sk-w-32" style={{ height: '24px' }} />
+                  <div className="sk-pill sk-w-24" style={{ height: '18px' }} />
+                </div>
+                <div className="sk-box sk-w-32" style={{ height: '11px', marginTop: '6px' }} />
+              </>
+            ) : !hasData ? (
+              <>
+                <div className="metric-value-row">
+                  <span className="metric-amount font-large" style={{ color: '#a0aec0' }}>—</span>
+                </div>
+                <div className="metric-caption">
+                  Awaiting Pipeline Run
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="metric-value-row">
+                  <span className="metric-amount font-large">{formatINR(animPayout)}</span>
+                  <span className="processed-pill-badge">
+                    <CheckCircle size={10} /> Processed
+                  </span>
+                </div>
+                <div className="metric-caption">
+                  Confirmed 7-day inflow projection
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>

@@ -1,10 +1,12 @@
-import { Play, RefreshCw, Activity, Search, User, ChevronDown, UploadCloud } from 'lucide-react';
+import { useState } from 'react';
+import { Play, RefreshCw, Activity, Search, User, ChevronDown, UploadCloud, Globe, Code } from 'lucide-react';
 import { useReconciliation } from '../context/ReconciliationContext';
 import './Header.css';
 
 export default function Header({ onOpenAudit, onOpenUpload }) {
   const { state, dispatch, startRecon } = useReconciliation();
-  const { status, progress, language, results } = state;
+  const { status, progress, language } = state;
+  const [profileOpen, setProfileOpen] = useState(false);
 
   const isRunning = status === 'running';
 
@@ -32,29 +34,11 @@ export default function Header({ onOpenAudit, onOpenUpload }) {
           <input
             id="global-search"
             className="global-search-input"
-            placeholder="Search order ID, settlement, flag..."
+            placeholder="Search order ID, settlement, amount, flag..."
+            value={state.searchQuery || ''}
+            onChange={e => dispatch({ type: 'SET_SEARCH_QUERY', query: e.target.value })}
           />
         </div>
-
-        {/* Live Progress Bar (During Run) */}
-        {isRunning && (
-          <div className="header-progress" aria-live="polite">
-            <div className="header-progress-bar">
-              <div
-                className="header-progress-fill"
-                style={{
-                  width: progress.total_records
-                    ? `${((progress.total_matched || 0) / progress.total_records) * 100}%`
-                    : '10%',
-                }}
-              />
-            </div>
-            <span className="header-progress-text">
-              <Activity size={12} className="animate-spin" />
-              {getProgressText()}
-            </span>
-          </div>
-        )}
 
         {/* Right Utility Controls */}
         <div className="header-utility-controls">
@@ -62,27 +46,6 @@ export default function Header({ onOpenAudit, onOpenUpload }) {
           <div className="system-status-badge" title="AI Recon Engine Operational Status">
             <span className={`system-status-dot ${isRunning ? 'system-status-dot--busy' : ''}`} />
             <span>{isRunning ? 'Engine Active' : 'System Ready'}</span>
-          </div>
-
-          {/* Test Mode Badge Toggle */}
-          <div className="test-mode-badge" title="AI Multi-Pass Engine Active in Test Mode">
-            <span className="test-mode-dot" />
-            <span>Test Mode</span>
-            <ChevronDown size={12} className="text-tertiary" />
-          </div>
-
-          {/* Language Segmented Pill Toggle */}
-          <div
-            id="language-toggle"
-            className="lang-toggle-pill"
-            onClick={toggleLanguage}
-            title={language === 'en' ? 'Switch to Hinglish (HI)' : 'Switch to English (EN)'}
-            role="button"
-            tabIndex={0}
-            aria-label="Toggle language"
-          >
-            <span className={`lang-segment ${language === 'en' ? 'lang-segment--active' : ''}`}>EN</span>
-            <span className={`lang-segment ${language === 'hi' ? 'lang-segment--active' : ''}`}>HI</span>
           </div>
 
           {/* Import CSV Secondary Button */}
@@ -117,16 +80,77 @@ export default function Header({ onOpenAudit, onOpenUpload }) {
             )}
           </button>
 
-          {/* Profile / Merchant Avatar Icon at VERY RIGHT END */}
-          <button
-            id="profile-avatar-btn"
-            className="profile-avatar-btn"
-            title="Merchant Profile & API Docs"
-            aria-label="Merchant Profile"
-            onClick={() => window.open('http://localhost:8000/docs', '_blank')}
-          >
-            <User size={15} />
-          </button>
+          {/* Profile Dropdown Container */}
+          <div className="profile-menu-container">
+            <button
+              id="profile-avatar-btn"
+              className="profile-avatar-btn"
+              title="Merchant Settings & Profile"
+              aria-label="Merchant Profile"
+              onClick={() => setProfileOpen(o => !o)}
+            >
+              <User size={15} />
+              <ChevronDown size={12} />
+            </button>
+
+            {profileOpen && (
+              <div className="profile-dropdown-menu">
+                {/* Merchant Info Header */}
+                <div className="profile-menu-header">
+                  <div className="merchant-avatar-circle">TC</div>
+                  <div className="merchant-info-text">
+                    <div className="merchant-name">Trendhive Commerce</div>
+                    <div className="merchant-mid font-mono">MID4823099</div>
+                  </div>
+                </div>
+
+                <div className="profile-menu-divider" />
+
+                {/* Language Toggle Row */}
+                <div className="profile-menu-row">
+                  <div className="profile-row-left">
+                    <Globe size={14} />
+                    <span>Language</span>
+                  </div>
+                  <div
+                    id="language-toggle"
+                    className="lang-toggle-pill-dropdown"
+                    onClick={toggleLanguage}
+                    title={language === 'en' ? 'Switch to Hinglish (HI)' : 'Switch to English (EN)'}
+                    role="button"
+                    tabIndex={0}
+                  >
+                    <span className={`lang-segment ${language === 'en' ? 'lang-segment--active' : ''}`}>EN</span>
+                    <span className={`lang-segment ${language === 'hi' ? 'lang-segment--active' : ''}`}>HI</span>
+                  </div>
+                </div>
+
+                <div className="profile-menu-divider" />
+
+                {/* Test Mode Row */}
+                <div className="profile-menu-row">
+                  <div className="profile-row-left">
+                    <span className="test-mode-dot" />
+                    <span>Test Mode</span>
+                  </div>
+                  <span className="status-pill-active">Active</span>
+                </div>
+
+                <div className="profile-menu-divider" />
+
+                {/* API Docs Button */}
+                <button
+                  className="profile-menu-row profile-menu-btn"
+                  onClick={() => { setProfileOpen(false); window.open('http://localhost:8000/docs', '_blank'); }}
+                >
+                  <div className="profile-row-left">
+                    <Code size={14} />
+                    <span>API Docs (Swagger)</span>
+                  </div>
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </header>
     </div>

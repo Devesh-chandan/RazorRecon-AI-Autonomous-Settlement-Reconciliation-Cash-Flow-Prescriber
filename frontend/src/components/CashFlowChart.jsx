@@ -3,7 +3,7 @@ import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, Legend, ReferenceLine,
 } from 'recharts';
-import { TrendingUp, AlertTriangle, DollarSign } from 'lucide-react';
+import { TrendingUp, AlertTriangle } from 'lucide-react';
 import { useReconciliation } from '../context/ReconciliationContext';
 import './CashFlowChart.css';
 
@@ -37,11 +37,22 @@ export default function CashFlowChart() {
   const chartData = useMemo(() => {
     if (!cashFlow?.length) return [];
 
+    // Find last index with non-zero activity
+    let lastActiveIdx = cashFlow.length - 1;
+    for (let i = cashFlow.length - 1; i >= 0; i--) {
+      if ((cashFlow[i]?.confirmed_inflow || 0) > 0 || (cashFlow[i]?.disputed_held || 0) > 0) {
+        lastActiveIdx = i;
+        break;
+      }
+    }
+
     return cashFlow.map((day, i) => {
+      const isFuture = i > lastActiveIdx && !whatIfScenario;
+
       const row = {
         date: day.day_label,
-        'Confirmed Inflow': day.confirmed_inflow,
-        'Disputed / Held': day.disputed_held,
+        'Confirmed Inflow': isFuture ? null : (day.confirmed_inflow ?? null),
+        'Disputed / Held': isFuture ? null : (day.disputed_held ?? null),
       };
 
       if (whatIfScenario?.whatif_projection) {
@@ -52,12 +63,13 @@ export default function CashFlowChart() {
     });
   }, [cashFlow, whatIfScenario]);
 
-  const totalConfirmed = cashFlow.reduce((s, d) => s + d.confirmed_inflow, 0);
-  const totalDisputed = cashFlow.reduce((s, d) => s + d.disputed_held, 0);
+  const totalConfirmed = (cashFlow || []).reduce((s, d) => s + (d?.confirmed_inflow || 0), 0);
+  const totalDisputed = (cashFlow || []).reduce((s, d) => s + (d?.disputed_held || 0), 0);
   const whatIfGain = whatIfScenario
-    ? whatIfScenario.deltas?.reduce((s, d) => s + d.delta, 0) ?? 0
+    ? (whatIfScenario.deltas || []).reduce((s, d) => s + (d?.delta || 0), 0)
     : 0;
 
+  const isLoading = status === 'running';
   const isEmpty = !cashFlow?.length;
 
   return (
@@ -69,10 +81,14 @@ export default function CashFlowChart() {
             7-Day Cash Flow
           </h2>
         </div>
-        {!isEmpty && (
+        {isLoading ? (
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <div className="sk-pill sk-w-24" style={{ height: '22px' }} />
+            <div className="sk-pill sk-w-24" style={{ height: '22px' }} />
+          </div>
+        ) : !isEmpty ? (
           <div className="cashflow-totals">
             <div className="cashflow-total cashflow-total--confirmed">
-              <DollarSign size={12} />
               <span>{formatINR(totalConfirmed)}</span>
               <span className="cashflow-total-label">confirmed</span>
             </div>
@@ -84,7 +100,7 @@ export default function CashFlowChart() {
               </div>
             )}
           </div>
-        )}
+        ) : null}
       </div>
 
       {/* What-If Banner */}
@@ -95,9 +111,20 @@ export default function CashFlowChart() {
         </div>
       )}
 
-      {/* Chart */}
+      {/* Chart Area */}
       <div className="cashflow-chart-area">
-        {isEmpty ? (
+        {isLoading ? (
+          <div className="cashflow-skeleton-container" style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '12px 16px', gap: '12px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', height: '145px', gap: '14px' }}>
+              {[60, 85, 45, 95, 70, 80, 65].map((h, i) => (
+                <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', height: '100%', justifyContent: 'flex-end' }}>
+                  <div className="sk-box" style={{ width: '100%', height: `${h}%`, borderRadius: '4px 4px 0 0' }} />
+                  <div className="sk-box" style={{ width: '30px', height: '10px' }} />
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : isEmpty ? (
           <div className="cashflow-empty">
             <TrendingUp size={40} className="empty-icon" />
             <p>Run reconciliation to see the 7-day projection</p>
@@ -149,6 +176,7 @@ export default function CashFlowChart() {
                 animationDuration={1500}
                 dot={false}
                 activeDot={{ r: 4, strokeWidth: 0 }}
+                connectNulls={false}
               />
               <Area
                 type="monotone"
@@ -159,6 +187,7 @@ export default function CashFlowChart() {
                 animationDuration={1500}
                 dot={false}
                 activeDot={{ r: 4, strokeWidth: 0 }}
+                connectNulls={false}
               />
               {whatIfScenario && (
                 <Area
@@ -171,6 +200,7 @@ export default function CashFlowChart() {
                   animationDuration={800}
                   dot={false}
                   activeDot={{ r: 4, strokeWidth: 0 }}
+                  connectNulls={false}
                 />
               )}
             </AreaChart>
