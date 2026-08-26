@@ -69,6 +69,20 @@ async def run_reconciliation(run_id: str, db: Session, scope: str = "all") -> No
     def elapsed() -> int:
         return int(datetime.now(timezone.utc).timestamp() * 1000) - start_ms
 
+    def parse_run_uuid(rid: str) -> uuid.UUID:
+        try:
+            return uuid.UUID(str(rid))
+        except ValueError:
+            return uuid.uuid5(uuid.NAMESPACE_DNS, str(rid))
+
+    run_uuid = parse_run_uuid(run_id)
+
+    # Ensure ReconRun entry exists for foreign key constraints
+    existing_run = db.query(ReconRun).filter(ReconRun.run_id == run_uuid).first()
+    if not existing_run:
+        db.add(ReconRun(run_id=run_uuid, status="running"))
+        db.commit()
+
     async def emit(event_type: str, data: dict):
         await queue.put({"event": event_type, "data": data})
 
@@ -78,17 +92,13 @@ async def run_reconciliation(run_id: str, db: Session, scope: str = "all") -> No
         erp_raw = db.query(ErpLedger).all()
 
         if scope == "imported":
-            from sqlalchemy import or_
+            # Filter by import_source tag — CSV/webhook imports are tagged 'csv_import'
             settlements_raw = db.query(Settlement).filter(
-                or_(
-                    Settlement.settlement_id.ilike("%csv%"),
-                    Settlement.settlement_id.ilike("%bulk%"),
-                    Settlement.order_id.ilike("%csv%"),
-                    Settlement.order_id.ilike("%bulk%"),
-                )
+                Settlement.import_source == "csv_import"
             ).all()
             if not settlements_raw:
-                # Fallback to all if no specific csv/bulk prefix found
+                # Fallback: if no tagged imports found, audit all records
+                logger.warning("No csv_import-tagged settlements found — falling back to full audit")
                 settlements_raw = db.query(Settlement).all()
         else:
             settlements_raw = db.query(Settlement).all()
@@ -184,21 +194,29 @@ async def run_reconciliation(run_id: str, db: Session, scope: str = "all") -> No
             *[{**m, "status": "matched"} for m in p3["matched"]],
         ]
 
+        def parse_run_uuid(rid: str) -> uuid.UUID:
+            try:
+                return uuid.UUID(str(rid))
+            except ValueError:
+                return uuid.uuid5(uuid.NAMESPACE_DNS, str(rid))
+
+        run_uuid = parse_run_uuid(run_id)
         recon_results_to_insert = []
 
         for match in all_matched:
-            settlement = match.get("settlement") or {}
-            erp = match.get("erp") or {}
+            m_dict: dict = match if isinstance(match, dict) else {}
+            settlement: dict = m_dict.get("settlement") if isinstance(m_dict.get("settlement"), dict) else {}
+            erp: dict = m_dict.get("erp") if isinstance(m_dict.get("erp"), dict) else {}
             recon_results_to_insert.append(ReconResult(
-                run_id=uuid.UUID(run_id),
-                order_id=match["order_id"],
+                run_id=run_uuid,
+                order_id=str(m_dict.get("order_id", "")),
                 settlement_id=settlement.get("settlement_id"),
                 ledger_id=erp.get("ledger_id"),
-                pass_number=match["pass_number"],
+                pass_number=int(m_dict.get("pass_number", 1)),
                 status="matched",
-                confidence=match.get("confidence", 1.0),
-                flags=match.get("flags", []),
-                delta=match.get("delta", {}),
+                confidence=m_dict.get("confidence", 1.0),
+                flags=m_dict.get("flags", []),
+                delta=m_dict.get("delta", {}),
                 root_cause=None,
                 explanation_en=None,
                 explanation_hi=None,
@@ -210,7 +228,7 @@ async def run_reconciliation(run_id: str, db: Session, scope: str = "all") -> No
             settlement = brk.get("settlement") or {}
             erp = brk.get("erp") or {}
             recon_results_to_insert.append(ReconResult(
-                run_id=uuid.UUID(run_id),
+                run_id=run_uuid,
                 order_id=brk["order_id"],
                 settlement_id=settlement.get("settlement_id"),
                 ledger_id=erp.get("ledger_id") if erp else None,
@@ -227,17 +245,21 @@ async def run_reconciliation(run_id: str, db: Session, scope: str = "all") -> No
             ))
 
         db.add_all(recon_results_to_insert)
+        db.flush()   # populate PKs without a full commit, so r.id is readable below
 
         # Compute stats
-        net_payout = sum(
-            float(s.get("credit", 0))
-            for m in all_matched
-            if (s := m.get("settlement") or {}) and float(s.get("credit", 0)) > 0
-        )
+        net_payout = 0.0
+        for m in all_matched:
+            if isinstance(m, dict):
+                s_obj = m.get("settlement")
+                if isinstance(s_obj, dict):
+                    credit_val = float(s_obj.get("credit", 0) or 0)
+                    if credit_val > 0:
+                        net_payout += credit_val
         match_rate = round((matched_count / total) * 100, 2) if total > 0 else 0.0
 
         # Update ReconRun record
-        recon_run = db.query(ReconRun).filter(ReconRun.run_id == run_id).first()
+        recon_run = db.query(ReconRun).filter(ReconRun.run_id == run_uuid).first()
         if recon_run:
             recon_run.status = "complete"
             recon_run.total_records = total
@@ -251,14 +273,32 @@ async def run_reconciliation(run_id: str, db: Session, scope: str = "all") -> No
 
         # Cache results in Redis
         all_results_for_cache = []
+
+        # Build a quick lookup: order_id → settlement dict (for amount lookup)
+        settlement_by_order_id: dict[str, dict] = {}
+        for m in all_matched:
+            s_dict: dict = m.get("settlement") if isinstance(m, dict) and isinstance(m.get("settlement"), dict) else {}
+            oid = str(s_dict.get("order_id", ""))
+            if oid:
+                settlement_by_order_id[oid] = s_dict
+        for brk in p4_results:
+            b_dict: dict = brk if isinstance(brk, dict) else {}
+            s_dict2: dict = b_dict.get("settlement") if isinstance(b_dict.get("settlement"), dict) else {}
+            oid2 = str(s_dict2.get("order_id", ""))
+            if oid2:
+                settlement_by_order_id[oid2] = s_dict2
+
         for r in recon_results_to_insert:
+            s: dict = settlement_by_order_id.get(str(r.order_id)) or {}
             all_results_for_cache.append({
+                "id": r.id,                         # available after flush()
+                "run_id": str(r.run_id),            # always str, never UUID object
                 "order_id": r.order_id,
                 "settlement_id": r.settlement_id,
                 "ledger_id": r.ledger_id,
                 "pass_number": r.pass_number,
                 "status": r.status,
-                "confidence": float(r.confidence) if r.confidence else None,
+                "confidence": float(r.confidence) if r.confidence is not None else None,
                 "flags": r.flags or [],
                 "delta": r.delta or {},
                 "root_cause": r.root_cause,
@@ -266,9 +306,16 @@ async def run_reconciliation(run_id: str, db: Session, scope: str = "all") -> No
                 "explanation_hi": r.explanation_hi,
                 "suggested_action": r.suggested_action,
                 "severity": r.severity,
+                # Always include the actual transaction amount for display
+                "amount": float(s.get("amount", 0)) if s.get("amount") is not None else None,
+                "settlement_credit": float(s.get("credit", 0)) if s.get("credit") is not None else None,
+                # Gateway & payment method for Gateway Performance Matrix chart
+                "gateway": s.get("gateway") or None,
+                "payment_method": s.get("method") or None,
             })
 
-        await loop.run_in_executor(None, cache_results, run_id, all_results_for_cache)
+        import functools
+        await loop.run_in_executor(None, functools.partial(cache_results, run_id, all_results_for_cache))
 
         await emit("complete", {
             "run_id": run_id,
@@ -284,7 +331,7 @@ async def run_reconciliation(run_id: str, db: Session, scope: str = "all") -> No
         logger.error(f"[{run_id}] Reconciliation failed: {e}", exc_info=True)
         # Update run status to error
         try:
-            recon_run = db.query(ReconRun).filter(ReconRun.run_id == run_id).first()
+            recon_run = db.query(ReconRun).filter(ReconRun.run_id == run_uuid).first()
             if recon_run:
                 recon_run.status = "error"
                 db.commit()

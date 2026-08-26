@@ -17,8 +17,9 @@ const formatINR = (val) => {
 
 export default function ReconBreakdownFullView() {
   const { state } = useReconciliation();
-  const { results, resolvedBreaks } = state;
+  const { results, resolvedBreaks, stats, status } = state;
 
+  const isLoading = status === 'running';
   const [activeTab, setActiveTab] = useState('gateways'); // 'gateways' | 'exceptions'
 
   // Gateway Volume Distribution from shared selector
@@ -74,7 +75,11 @@ export default function ReconBreakdownFullView() {
               <CheckCircle2 size={15} />
             </div>
           </div>
-          <div className="rb-kpi-value font-mono">{formatINR(totalVolume)}</div>
+          {isLoading ? (
+            <div className="sk-box" style={{ height: 28, width: 110, margin: '6px 0' }} />
+          ) : (
+            <div className="rb-kpi-value font-mono">{formatINR(totalVolume)}</div>
+          )}
           <div className="rb-kpi-sub text-emerald">
             <ArrowUpRight size={13} /> Across {gatewayData.length} Payment Gateways
           </div>
@@ -87,7 +92,11 @@ export default function ReconBreakdownFullView() {
               <AlertTriangle size={15} />
             </div>
           </div>
-          <div className="rb-kpi-value font-mono text-red">{totalBreaks}</div>
+          {isLoading ? (
+            <div className="sk-box" style={{ height: 28, width: 60, margin: '6px 0' }} />
+          ) : (
+            <div className="rb-kpi-value font-mono text-red">{totalBreaks}</div>
+          )}
           <div className="rb-kpi-sub text-red">
             Action required in Pass 4 AI Diagnostics
           </div>
@@ -100,7 +109,11 @@ export default function ReconBreakdownFullView() {
               <IndianRupee size={15} />
             </div>
           </div>
-          <div className="rb-kpi-value font-mono text-amber">{formatINR(totalImpact)}</div>
+          {isLoading ? (
+            <div className="sk-box" style={{ height: 28, width: 110, margin: '6px 0' }} />
+          ) : (
+            <div className="rb-kpi-value font-mono text-amber">{formatINR(totalImpact)}</div>
+          )}
           <div className="rb-kpi-sub text-slate-500">
             Unreconciled delta between Gateway &amp; ERP
           </div>
@@ -113,9 +126,15 @@ export default function ReconBreakdownFullView() {
               <ShieldCheck size={15} />
             </div>
           </div>
-          <div className="rb-kpi-value font-mono text-emerald">96.0%</div>
+          {isLoading ? (
+            <div className="sk-box" style={{ height: 28, width: 80, margin: '6px 0' }} />
+          ) : (
+            <div className="rb-kpi-value font-mono text-emerald">
+              {stats?.match_rate != null ? `${Number(stats.match_rate).toFixed(1)}%` : '—'}
+            </div>
+          )}
           <div className="rb-kpi-sub text-emerald">
-            Verified by 4-Pass Engine
+            {stats?.match_rate != null ? 'From live recon run' : 'Run reconciliation first'}
           </div>
         </div>
       </div>
@@ -134,7 +153,16 @@ export default function ReconBreakdownFullView() {
           </div>
 
           <div className="rb-chart-wrapper">
-            {activeTab === 'gateways' ? (
+            {isLoading ? (
+              <div className="flex items-center justify-center h-[260px]">
+                <div className="sk-box" style={{ width: '100%', height: '240px', borderRadius: '8px' }} />
+              </div>
+            ) : (activeTab === 'gateways' ? gatewayData : exceptionData).length === 0 ? (
+              <div className="rb-empty-chart">
+                <CheckCircle2 size={32} className="rb-empty-icon" />
+                <p>{activeTab === 'gateways' ? 'Run reconciliation to view gateway volume allocation' : 'Zero active breaks detected!'}</p>
+              </div>
+            ) : activeTab === 'gateways' ? (
               <ResponsiveContainer width="100%" height={260}>
                 <PieChart>
                   <Pie
@@ -169,7 +197,14 @@ export default function ReconBreakdownFullView() {
 
           {/* Chart Legend */}
           <div className="rb-legend-grid">
-            {activeTab === 'gateways' ? (
+            {isLoading ? (
+              [...Array(4)].map((_, i) => (
+                <div key={i} className="rb-legend-item">
+                  <div className="sk-box" style={{ width: 8, height: 8, borderRadius: '50%' }} />
+                  <div className="sk-box" style={{ width: 90, height: 12 }} />
+                </div>
+              ))
+            ) : activeTab === 'gateways' ? (
               gatewayData.map(gw => (
                 <div key={gw.name} className="rb-legend-item">
                   <span className="rb-legend-dot" style={{ background: gw.color }} />
@@ -201,7 +236,36 @@ export default function ReconBreakdownFullView() {
           </div>
 
           <div className="rb-matrix-wrapper">
-            {activeTab === 'gateways' ? (
+            {isLoading ? (
+              <div className="rb-gw-list">
+                {[...Array(5)].map((_, i) => (
+                  <div key={i} className="rb-gw-row">
+                    <div className="rb-gw-header">
+                      <div className="rb-gw-left">
+                        <div className="sk-box" style={{ width: 8, height: 8, borderRadius: '50%' }} />
+                        <div className="sk-box" style={{ width: 120, height: 14 }} />
+                      </div>
+                      <div className="rb-gw-right">
+                        <div className="sk-box" style={{ width: 40, height: 14 }} />
+                        <div className="sk-box" style={{ width: 60, height: 14 }} />
+                      </div>
+                    </div>
+                    <div className="rb-gw-track">
+                      <div className="sk-box" style={{ width: '100%', height: '100%' }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (activeTab === 'gateways' ? gatewayData : exceptionData).length === 0 ? (
+              <div className="rb-empty-matrix">
+                <p className="rb-empty-title">
+                  {activeTab === 'gateways' ? 'No Gateway Data Available' : 'No Active Exception Root Causes'}
+                </p>
+                <p className="rb-empty-sub">
+                  {activeTab === 'gateways' ? 'Execute a reconciliation run to generate gateway performance analytics.' : 'All settlement records matched cleanly or resolved.'}
+                </p>
+              </div>
+            ) : activeTab === 'gateways' ? (
               <div className="rb-gw-list">
                 {gatewayData.map(gw => (
                   <div key={gw.name} className="rb-gw-row">

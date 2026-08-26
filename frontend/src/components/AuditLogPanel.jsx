@@ -45,7 +45,9 @@ export default function AuditLogPanel({ isOpen, onClose }) {
             <ClipboardList size={18} className="text-blue" />
             <div>
               <h3>Audit Trail &amp; Execution Log</h3>
-              <span className="audit-count">{results.length} total entries</span>
+              <span className="audit-count">
+                {auditLog ? auditLog.total_entries : results.length} total entries
+              </span>
             </div>
           </div>
           <div className="audit-panel-actions">

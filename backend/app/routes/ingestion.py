@@ -84,9 +84,9 @@ async def razorpay_webhook(
     # ── Signature verification (constant-time compare) ────────────────────────
     if settings.RAZORPAY_WEBHOOK_SECRET:
         expected = hmac.new(
-            key=settings.RAZORPAY_WEBHOOK_SECRET.encode("utf-8"),
-            msg=raw_body,
-            digestmod=hashlib.sha256,
+            settings.RAZORPAY_WEBHOOK_SECRET.encode("utf-8"),
+            raw_body,
+            hashlib.sha256,
         ).hexdigest()
         if not hmac.compare_digest(expected, x_razorpay_signature):
             logger.warning("Razorpay webhook: invalid signature — request rejected")
@@ -234,6 +234,9 @@ _RAZORPAY_SETTLEMENT_COLUMNS: dict[str, str] = {
     "settled at": "settled_at",
     "order id": "order_id",
     "payment id": "entity_id",
+    "gateway": "gateway",
+    "bank": "gateway",
+    "gateway name": "gateway",
 }
 
 # Tally / Zoho Books ERP ledger column mappings
@@ -353,15 +356,19 @@ def _import_settlements(df: pd.DataFrame, db: Session):
                 errors.append(f"Row {idx}: missing settlement_id — skipped")
                 continue
 
-            # Dedup check
-            if db.query(Settlement).filter(Settlement.settlement_id == settlement_id).first():
-                skipped += 1
+            # Check if settlement already exists — update import_source so 'Audit Imported Data Only' scope includes it
+            existing = db.query(Settlement).filter(Settlement.settlement_id == settlement_id).first()
+            if existing:
+                existing.import_source = "csv_import"
+                if data.get("gateway"):
+                    existing.gateway = str(data.get("gateway", "") or "Razorpay Stack")
+                imported += 1
                 continue
 
             # Parse settled_at
             settled_at_raw = data.get("settled_at")
             try:
-                settled_at = pd.to_datetime(settled_at_raw, utc=True).to_pydatetime()
+                settled_at = pd.to_datetime(str(settled_at_raw or ""), utc=True).to_pydatetime()
             except Exception:
                 settled_at = datetime.now(timezone.utc)
 
@@ -377,12 +384,15 @@ def _import_settlements(df: pd.DataFrame, db: Session):
                 settlement_utr=str(data.get("settlement_utr", "") or ""),
                 settled_at=settled_at,
                 order_id=str(data.get("order_id", "") or ""),
+                gateway=str(data.get("gateway", "") or "Razorpay Stack") or "Razorpay Stack",
+                import_source="csv_import",
             )
             db.add(record)
 
             # Auto-create Order record if missing so Pass 1 & 2 match it immediately
             order_id = str(data.get("order_id", "") or "").strip()[:20]
-            payment_id = str(data.get("entity_id", "") or f"pay_{order_id}")[:20]
+            entity_id_raw = str(data.get("entity_id", "") or "").strip()
+            payment_id = (entity_id_raw if entity_id_raw else f"pay_{order_id}")[:20]
             if order_id and not db.query(Order).filter(Order.order_id == order_id).first():
                 db.add(Order(
                     order_id=order_id,
@@ -433,7 +443,7 @@ def _import_erp_ledger(df: pd.DataFrame, db: Session):
 
             entry_date_raw = data.get("entry_date")
             try:
-                entry_date = pd.to_datetime(entry_date_raw).date()
+                entry_date = pd.to_datetime(str(entry_date_raw or "")).date()
             except Exception:
                 entry_date = datetime.now(timezone.utc).date()
 

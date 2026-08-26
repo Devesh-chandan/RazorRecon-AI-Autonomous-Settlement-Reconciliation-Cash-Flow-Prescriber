@@ -16,7 +16,7 @@ export default function GatewayBreakdownWidget() {
   const [activeTab, setActiveTab] = useState('gateways'); // 'gateways' | 'exceptions'
 
   const isLoading = status === 'running';
-  const isEmpty = status === 'idle' && (!results || results.length === 0);
+  const isEmpty = (status === 'idle' || status === 'complete') && (!results || results.length === 0);
 
   const gatewayData = useMemo(() => {
     return selectGatewayBreakdown(results);
@@ -30,10 +30,10 @@ export default function GatewayBreakdownWidget() {
     <div className="gateway-widget-card card">
       {/* Widget Header */}
       <div className="gateway-widget-header">
-        <div className="gateway-header-left">
-          <Layers size={15} className="text-blue" />
-          <h3 className="gateway-widget-title">Reconciliation Breakdown</h3>
-        </div>
+        <h2 className="gateway-widget-title">
+          <Layers size={16} />
+          <span>Reconciliation Breakdown</span>
+        </h2>
         <div className="gateway-tab-toggle">
           <button
             className={`gateway-tab-btn ${activeTab === 'gateways' ? 'active' : ''}`}
@@ -54,13 +54,21 @@ export default function GatewayBreakdownWidget() {
       <div className="gateway-widget-body">
         {isLoading ? (
           <div className="gateway-skeleton-list">
-            {[...Array(3)].map((_, i) => (
+            {[...Array(5)].map((_, i) => (
               <div key={i} className="gateway-skeleton-item-stacked">
-                <div className="skeleton-row-top">
-                  <div className="sk-box sk-w-32" />
-                  <div className="sk-box sk-w-24" />
+                <div className="gateway-top-row" style={{ marginBottom: '6px' }}>
+                  <div className="gateway-info-left" style={{ gap: '6px' }}>
+                    <div className="sk-box" style={{ width: 8, height: 8, borderRadius: '50%' }} />
+                    <div className="sk-box" style={{ width: 90, height: 14 }} />
+                  </div>
+                  <div className="gateway-stats-right" style={{ gap: '8px' }}>
+                    <div className="sk-box" style={{ width: 35, height: 14 }} />
+                    <div className="sk-box" style={{ width: 55, height: 14 }} />
+                  </div>
                 </div>
-                <div className="sk-box" style={{ width: '100%', height: '6px', borderRadius: '3px' }} />
+                <div className="gateway-bar-track">
+                  <div className="sk-box" style={{ width: '100%', height: '100%' }} />
+                </div>
               </div>
             ))}
           </div>

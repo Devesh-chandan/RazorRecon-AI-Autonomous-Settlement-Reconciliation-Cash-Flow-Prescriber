@@ -140,7 +140,6 @@ def what_if_resolve(db: Session, run_id: str, break_order_id: str) -> dict[str, 
     # Recompute with resolution — same date anchor as get_7day_projection
     all_orders = db.query(Order).filter(
         Order.status.in_(["captured", "partial_refund"]),
-        Order.captured_at.isnot(None),
     ).all()
 
     if all_orders:

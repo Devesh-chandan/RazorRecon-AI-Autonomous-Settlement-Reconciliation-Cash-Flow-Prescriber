@@ -3,7 +3,9 @@ import asyncio
 import json
 import uuid
 import logging
+from decimal import Decimal
 from datetime import datetime, timezone
+from typing import cast, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, Response
 from sse_starlette.sse import EventSourceResponse
@@ -42,6 +44,9 @@ async def trigger_recon(
     async def _run():
         bg_db = SessionLocal()
         try:
+            if scope == "all":
+                from app.seed import seed
+                seed(seed_val=None)  # Generate fresh bounded random dataset
             await run_reconciliation(run_id, bg_db, scope=scope)
         except Exception as e:
             logger.error(f"Background recon failed: {e}", exc_info=True)
@@ -119,14 +124,62 @@ async def get_results(run_id: str, db: Session = Depends(get_db)):
                 suggested_action=item.get("suggested_action"),
                 severity=item.get("severity"),
                 created_at=item.get("created_at"),
+                amount=item.get("amount"),
+                settlement_credit=item.get("settlement_credit"),
+                # Gateway Performance Matrix fields
+                gateway=item.get("gateway"),
+                payment_method=item.get("payment_method"),
             ))
         return enriched
 
-    results = db.query(ReconResult).filter(ReconResult.run_id == run_id).all()
+    # DB fallback — join Settlement & Order to get actual amounts and gateway metadata
+    from app.models import Settlement, Order
+    def parse_run_uuid(rid: str) -> uuid.UUID:
+        try:
+            return uuid.UUID(str(rid))
+        except ValueError:
+            return uuid.uuid5(uuid.NAMESPACE_DNS, str(rid))
+
+    run_uuid = parse_run_uuid(run_id)
+    results = db.query(ReconResult).filter(ReconResult.run_id == run_uuid).all()
     if not results:
         raise HTTPException(status_code=404, detail=f"Run {run_id} not found or still running")
 
-    return [ReconResultResponse.model_validate(r) for r in results]
+    # Build settlement and order lookups keyed by order_id
+    order_ids = [r.order_id for r in results]
+    settlements = db.query(Settlement).filter(Settlement.order_id.in_(order_ids)).all()
+    orders = db.query(Order).filter(Order.order_id.in_(order_ids)).all()
+    settlement_by_order: dict[str, Settlement] = {s.order_id: s for s in settlements}
+    order_by_id: dict[str, Order] = {o.order_id: o for o in orders}
+
+    enriched_db = []
+    for r in results:
+        s = settlement_by_order.get(r.order_id)
+        o = order_by_id.get(r.order_id)
+        enriched_db.append(ReconResultResponse(
+            id=r.id,
+            run_id=str(r.run_id),
+            order_id=r.order_id,
+            settlement_id=r.settlement_id,
+            ledger_id=r.ledger_id,
+            pass_number=r.pass_number,
+            status=r.status,
+            confidence=float(r.confidence) if r.confidence is not None else None,
+            flags=r.flags or [],
+            delta=r.delta or {},
+            root_cause=r.root_cause,
+            explanation_en=r.explanation_en,
+            explanation_hi=r.explanation_hi,
+            suggested_action=r.suggested_action,
+            severity=r.severity,
+            created_at=r.created_at,
+            amount=float(s.amount) if s and s.amount is not None else None,
+            settlement_credit=float(s.credit) if s and s.credit is not None else None,
+            # Gateway Performance Matrix fields
+            gateway=str(s.gateway) if s and s.gateway else None,
+            payment_method=str(o.method) if o and o.method else None,
+        ))
+    return enriched_db
 
 
 @router.get("/stats/{run_id}", response_model=ReconStatsResponse)
@@ -136,7 +189,22 @@ async def get_stats(run_id: str, db: Session = Depends(get_db)):
     if not recon_run:
         raise HTTPException(status_code=404, detail=f"Run {run_id} not found")
 
-    return ReconStatsResponse.model_validate(recon_run)
+    _total: int = cast(int, recon_run.total_records) if recon_run.total_records is not None else 0
+    _matched: int = cast(int, recon_run.matched_count) if recon_run.matched_count is not None else 0
+    _breaks: int = cast(int, recon_run.break_count) if recon_run.break_count is not None else 0
+    _rate: float = float(cast(Decimal, recon_run.match_rate)) if recon_run.match_rate is not None else 0.0
+    _payout: float = float(cast(Decimal, recon_run.net_payout)) if recon_run.net_payout is not None else 0.0
+    _status: str = cast(str, recon_run.status)
+
+    return ReconStatsResponse(
+        run_id=str(recon_run.run_id),
+        total_records=_total,
+        matched_count=_matched,
+        break_count=_breaks,
+        match_rate=_rate,
+        net_payout=_payout,
+        status=_status,
+    )
 
 
 @router.post("/cron", status_code=204, summary="Lightweight Cron Reconciliation Trigger")

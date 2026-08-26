@@ -92,12 +92,15 @@ function reducer(state, action) {
       const newResolved = new Set(state.resolvedBreaks);
       newResolved.add(action.orderId);
 
-      // Keep results intact so resolved breaks stay visible in the UI
-      const totalRecords = state.stats.total_records || state.results.length || 100;
-      const initialMatched = state.results.filter(r => r.status === 'matched').length || 96;
-      const newMatchedCount = Math.min(totalRecords, initialMatched + newResolved.size);
-      const newBreakCount = Math.max(0, (state.results.filter(r => r.status === 'break').length || 4) - newResolved.size);
-      const newMatchRate = parseFloat(((newMatchedCount / totalRecords) * 100).toFixed(1));
+      // Derive counts purely from real results — no hardcoded fallbacks
+      const totalRecords = state.stats.total_records ?? state.results.length ?? 0;
+      const realMatched  = state.results.filter(r => r.status === 'matched').length;
+      const realBreaks   = state.results.filter(r => r.status === 'break').length;
+      const newMatchedCount = Math.min(totalRecords, realMatched + newResolved.size);
+      const newBreakCount   = Math.max(0, realBreaks - newResolved.size);
+      const newMatchRate    = totalRecords > 0
+        ? parseFloat(((newMatchedCount / totalRecords) * 100).toFixed(1))
+        : 0;
 
       const updatedStats = {
         ...state.stats,
@@ -195,7 +198,7 @@ export function ReconciliationProvider({ children }) {
   // ── Refresh Active Data ────────────────────────────────────────────────────
   const refreshData = useCallback(async () => {
     if (!state.runId) {
-      return startRecon();
+      return;
     }
     try {
       const [results, stats, cashFlowData] = await Promise.all([
@@ -264,6 +267,23 @@ const GATEWAY_COLORS = {
   'Other / Direct': '#64748b',
 };
 
+// Map raw payment_method values → display gateway name (fallback for older records without gateway field)
+const METHOD_TO_GATEWAY = {
+  upi: 'Razorpay Stack',
+  card: 'HDFC Bank (PG)',
+  netbanking: 'ICICI Direct',
+  emi: 'HDFC Bank (PG)',
+  wallet: 'PhonePe Gateway',
+};
+
+function resolveGateway(r) {
+  // Prefer explicit gateway name from new seeded/imported data
+  if (r.gateway && r.gateway.trim()) return r.gateway.trim();
+  // Fall back to payment_method → gateway display name mapping
+  if (r.payment_method) return METHOD_TO_GATEWAY[r.payment_method] || 'Razorpay Stack';
+  return 'Razorpay Stack';
+}
+
 function getRecordAmount(r) {
   if (r.settlement_credit !== undefined && r.settlement_credit !== null) return r.settlement_credit;
   if (r.amount !== undefined && r.amount !== null) return r.amount;
@@ -274,13 +294,7 @@ function getRecordAmount(r) {
 
 export function selectGatewayBreakdown(results) {
   if (!results || results.length === 0) {
-    return [
-      { name: 'HDFC Bank (PG)', count: 35, amount: 420000, percentage: 38.2, color: GATEWAY_COLORS['HDFC Bank (PG)'] },
-      { name: 'ICICI Direct', count: 28, amount: 310000, percentage: 28.2, color: GATEWAY_COLORS['ICICI Direct'] },
-      { name: 'Razorpay Stack', count: 22, amount: 210000, percentage: 19.1, color: GATEWAY_COLORS['Razorpay Stack'] },
-      { name: 'Axis UPI Express', count: 10, amount: 110000, percentage: 10.0, color: GATEWAY_COLORS['Axis UPI Express'] },
-      { name: 'PhonePe Gateway', count: 5, amount: 50000, percentage: 4.5, color: GATEWAY_COLORS['PhonePe Gateway'] },
-    ];
+    return [];
   }
 
   const counts = {};
@@ -288,7 +302,7 @@ export function selectGatewayBreakdown(results) {
   let totalAmt = 0;
 
   results.forEach(r => {
-    const gw = r.gateway || r.payment_method || 'Razorpay Stack';
+    const gw = resolveGateway(r);
     const amt = getRecordAmount(r);
     counts[gw] = (counts[gw] || 0) + 1;
     amounts[gw] = (amounts[gw] || 0) + amt;
@@ -319,12 +333,7 @@ export function selectExceptionBreakdown(results, resolvedBreaks = new Set()) {
   const breaks = (results || []).filter(r => r && r.status === 'break' && !resolvedBreaks.has(r.order_id));
 
   if (!breaks.length) {
-    return [
-      { title: 'MDR Fee Discrepancy (18% GST Lag)', count: 8, impact: 4200, color: '#e53e3e', pass: 'Pass 2', severity: 'High' },
-      { title: 'Cross-Midnight Timing Lag (T+1 Cutoff)', count: 5, impact: 15400, color: '#dd6b20', pass: 'Pass 3', severity: 'Medium' },
-      { title: 'Duplicate ERP Entry (Batch Replay)', count: 3, impact: 8900, color: '#d69e2e', pass: 'Pass 3', severity: 'Medium' },
-      { title: 'Disputed Holdback (Unverified Chargeback)', count: 2, impact: 23000, color: '#805ad5', pass: 'Pass 4', severity: 'High' },
-    ];
+    return [];
   }
 
   const causes = {};

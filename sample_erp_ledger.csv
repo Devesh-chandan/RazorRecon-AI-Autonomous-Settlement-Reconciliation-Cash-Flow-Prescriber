@@ -1,21 +1,45 @@
 Ledger ID,Invoice ID,Order ID,Expected Amount,Recorded Amount,Payment Method,Entry Date,Status,Notes
-LED-CSV-001,INV-CSV-001,order_csv_001,5000.00,5000.00,card,2026-08-23,received,Exact match test
-LED-CSV-002,INV-CSV-002,order_csv_002,12000.00,12000.00,card,2026-08-23,received,Exact match test
-LED-CSV-003,INV-CSV-003,order_csv_003,2500.00,2500.00,netbanking,2026-08-23,received,Netbanking test
-LED-CSV-004,INV-CSV-004,order_csv_004,1500.00,-1500.00,upi,2026-08-23,received,Refund record test
-LED-CSV-005,INV-CSV-005,order_csv_005,8500.00,8500.00,card,2026-08-23,received,Exact match test
-LED-CSV-006,INV-CSV-006,order_csv_006,3499.00,3499.00,upi,2026-08-22,received,UPI exact match
-LED-CSV-007,INV-CSV-007,order_csv_007,14999.00,14999.00,card,2026-08-22,received,Card exact match
-LED-CSV-008,INV-CSV-008,order_csv_008,750.00,750.00,netbanking,2026-08-22,received,Netbanking exact match
-LED-CSV-009,INV-CSV-009,order_csv_009,6200.00,6200.00,card,2026-08-22,received,Card exact match
-LED-CSV-010,INV-CSV-010,order_csv_010,999.00,999.00,upi,2026-08-22,received,UPI exact match
-LED-CSV-011,INV-CSV-011,order_csv_011,18500.00,18500.00,card,2026-08-21,received,Card exact match
-LED-CSV-012,INV-CSV-012,order_csv_012,4200.00,4200.00,netbanking,2026-08-21,received,Netbanking test
-LED-CSV-013,INV-CSV-013,order_csv_013,2150.00,2150.00,card,2026-08-21,received,Card exact match
-LED-CSV-014,INV-CSV-014,order_csv_014,9500.00,9500.00,card,2026-08-21,received,Card exact match
-LED-CSV-015,INV-CSV-015,order_csv_015,1250.00,1250.00,upi,2026-08-21,received,UPI exact match
-LED-CSV-016,INV-CSV-016,order_csv_016,28900.00,28900.00,card,2026-08-20,received,High value card match
-LED-CSV-017,INV-CSV-017,order_csv_017,3100.00,3100.00,netbanking,2026-08-20,received,Netbanking test
-LED-CSV-018,INV-CSV-018,order_csv_018,7800.00,7800.00,card,2026-08-20,received,Card exact match
-LED-CSV-019,INV-CSV-019,order_csv_019,2000.00,-2000.00,upi,2026-08-20,received,Refund record test
-LED-CSV-020,INV-CSV-020,order_csv_020,11200.00,11200.00,card,2026-08-20,received,Card exact match
+LED-TH-2608-0001,INV/2026-27/TH/00001,order_TH26080001,793.00,793.00,card,2026-08-01,received,Fashion - Men Clothing | Peter England formal shirt
+LED-TH-2608-0002,INV/2026-27/TH/00002,order_TH26080002,5398.00,5398.00,netbanking,2026-08-01,received,Fashion - Women Clothing | Libas ethnic kurta palazzo
+LED-TH-2608-0003,INV/2026-27/TH/00003,order_TH26080003,410.00,410.00,netbanking,2026-08-01,received,Beauty & Personal Care | Forest Essentials wash
+LED-TH-2608-0004,INV/2026-27/TH/00004,order_TH26080004,3132.00,3132.00,card,2026-08-01,received,Home & Kitchen | Prestige induction cooktop | Tier MDR fee variance
+LED-TH-2608-0006,INV/2026-27/TH/00006,order_TH26080006,19831.00,19831.00,netbanking,2026-08-01,received,Sports & Fitness | Yonex badminton racket
+LED-TH-2608-0007,INV/2026-27/TH/00007,order_TH26080007,1035.00,1035.00,card,2026-08-01,received,Fashion - Men Clothing | Peter England formal shirt
+LED-TH-2608-0008,INV/2026-27/TH/00008,order_TH26080008,25233.00,25233.00,card,2026-08-01,received,Jewellery | Malabar diamond pendant
+LED-TH-2608-0009,INV/2026-27/TH/00009,order_TH26080009,595.00,595.00,card,2026-08-01,received,Books & Stationery | Ikigai paperback
+LED-TH-2608-0010,INV/2026-27/TH/00010,order_TH26080010,1114.67,1114.67,upi,2026-08-01,received,Books & Stationery | UPSC Exam set 2026 | Amount mismatch — ERP invoice typo
+LED-TH-2608-0011,INV/2026-27/TH/00011,order_TH26080011,10877.00,10877.00,card,2026-08-01,received,Electronics - Smartphone | Samsung Galaxy A54 5G
+LED-TH-2608-0012,INV/2026-27/TH/00012,order_TH26080012,263.00,263.00,upi,2026-08-01,received,Books & Stationery | Ikigai paperback
+LED-TH-2608-0013,INV/2026-27/TH/00013,order_TH26080013,3074.00,3074.00,emi,2026-08-01,received,Fashion - Men Clothing | Peter England formal shirt
+LED-TH-2608-0014,INV/2026-27/TH/00014,order_TH26080014,107535.00,107535.00,emi,2026-08-01,received,Electronics - Laptop | ASUS VivoBook 15
+LED-TH-2608-0015,INV/2026-27/TH/00015,order_TH26080015,14567.11,14567.11,emi,2026-08-01,received,Home & Kitchen | Dyson V8 vacuum | Amount mismatch — ERP invoice typo
+LED-TH-2608-0016,INV/2026-27/TH/00016,order_TH26080016,1292.00,1292.00,upi,2026-08-01,received,Fashion - Men Clothing | Peter England formal shirt
+LED-TH-2608-0017,INV/2026-27/TH/00017,order_TH26080017,30684.00,30684.00,emi,2026-08-01,received,Electronics - Smartphone | Samsung Galaxy A54 5G | Tier MDR fee variance
+LED-TH-2608-0018,INV/2026-27/TH/00018,order_TH26080018,5575.00,5575.00,emi,2026-08-01,received,Sports & Fitness | Yonex badminton racket
+LED-TH-2608-0019,INV/2026-27/TH/00019,order_TH26080019,141724.00,141724.00,upi,2026-08-01,received,"Electronics - Laptop | Lenovo IdeaPad 3 15"""
+LED-TH-2608-0021,INV/2026-27/TH/00021,order_TH26080021,85075.00,85075.00,upi,2026-08-01,received,Electronics - Laptop | HP Pavilion x360
+LED-TH-2608-0022,INV/2026-27/TH/00022,order_TH26080022,28683.00,28683.00,wallet,2026-08-01,received,Jewellery | Tanishq 22K gold mangalsutra
+LED-TH-2608-0023,INV/2026-27/TH/00023,order_TH26080023,737.00,737.00,emi,2026-08-02,received,Books & Stationery | Atomic Habits paperback
+LED-TH-2608-0024,INV/2026-27/TH/00024,order_TH26080024,51713.00,51713.00,card,2026-08-02,received,Electronics - Smartphone | OnePlus Nord CE3
+LED-TH-2608-0026,INV/2026-27/TH/00026,order_TH26080026,24872.00,24872.00,netbanking,2026-08-02,received,Electronics - Smartphone | Samsung Galaxy A54 5G
+LED-TH-2608-0027,INV/2026-27/TH/00027,order_TH26080027,337.00,337.00,upi,2026-08-02,received,Beauty & Personal Care | Forest Essentials wash
+LED-TH-2608-0028,INV/2026-27/TH/00028,order_TH26080028,80813.00,80813.00,card,2026-08-02,received,Electronics - Smartphone | Redmi Note 13 Pro
+LED-TH-2608-0029,INV/2026-27/TH/00029,order_TH26080029,2738.00,2738.00,netbanking,2026-08-02,received,Fashion - Men Clothing | Jockey innerwear combo | Cross-midnight batch order
+LED-TH-2608-0031,INV/2026-27/TH/00031,order_TH26080031,4648.00,4648.00,emi,2026-08-02,received,Fashion - Men Clothing | Peter England formal shirt
+LED-TH-2608-0032,INV/2026-27/TH/00032,order_TH26080032,5691.00,5691.00,emi,2026-08-02,received,Fashion - Women Clothing | Libas ethnic kurta palazzo
+LED-TH-2608-0033,INV/2026-27/TH/00033,order_TH26080033,20420.00,20420.00,card,2026-08-02,received,Sports & Fitness | Yonex badminton racket
+LED-TH-2608-0034,INV/2026-27/TH/00034,order_TH26080034,1133.00,1133.00,netbanking,2026-08-02,received,Beauty & Personal Care | Lakme 9to5 lipstick set
+LED-TH-2608-0035,INV/2026-27/TH/00035,order_TH26080035,5193.97,5193.97,netbanking,2026-08-02,received,Fashion - Women Clothing | Libas ethnic kurta palazzo | Amount mismatch — ERP invoice typo
+LED-TH-2608-0036,INV/2026-27/TH/00036,order_TH26080036,230.00,230.00,upi,2026-08-02,received,Books & Stationery | Ikigai paperback
+LED-TH-2608-0037,INV/2026-27/TH/00037,order_TH26080037,20521.00,20521.00,card,2026-08-02,received,Electronics - Smartphone | Redmi Note 13 Pro
+LED-TH-2608-0038,INV/2026-27/TH/00038,order_TH26080038,5344.00,5344.00,card,2026-08-02,received,Home & Kitchen | Philips air fryer 4L | Tier MDR fee variance
+LED-TH-2608-0039,INV/2026-27/TH/00039,order_TH26080039,1688.00,1688.00,upi,2026-08-02,received,Home & Kitchen | Dyson V8 vacuum
+LED-TH-2608-0040,INV/2026-27/TH/00040,order_TH26080040,3301.63,3301.63,wallet,2026-08-02,received,Home & Kitchen | Prestige induction cooktop | Amount mismatch — ERP invoice typo
+LED-TH-2608-0041,INV/2026-27/TH/00041,order_TH26080041,137852.00,137852.00,upi,2026-08-02,received,Electronics - Laptop | ASUS VivoBook 15
+LED-TH-2608-0042,INV/2026-27/TH/00042,order_TH26080042,22801.00,22801.00,netbanking,2026-08-02,received,Electronics - Smartphone | OnePlus Nord CE3
+LED-TH-2608-0043,INV/2026-27/TH/00043,order_TH26080043,3939.00,3939.00,upi,2026-08-02,received,Beauty & Personal Care | Lakme 9to5 lipstick set
+LED-TH-2608-0044,INV/2026-27/TH/00044,order_TH26080044,80779.00,80779.00,emi,2026-08-02,received,Electronics - Laptop | ASUS VivoBook 15
+LED-TH-2608-0046,INV/2026-27/TH/00046,order_TH26080046,890.00,890.00,emi,2026-08-03,received,Books & Stationery | UPSC Exam set 2026 | Tier MDR fee variance
+LED-TH-2608-0047,INV/2026-27/TH/00047,order_TH26080047,1030.00,1030.00,netbanking,2026-08-03,received,Fashion - Footwear | Puma Softride Pro
+LED-TH-2608-0048,INV/2026-27/TH/00048,order_TH26080048,1050.00,1050.00,emi,2026-08-03,received,Beauty & Personal Care | Forest Essentials wash
+LED-TH-2608-0049,INV/2026-27/TH/00049,order_TH26080049,68354.00,68354.00,netbanking,2026-08-03,received,"Electronics - Laptop | Lenovo IdeaPad 3 15"""

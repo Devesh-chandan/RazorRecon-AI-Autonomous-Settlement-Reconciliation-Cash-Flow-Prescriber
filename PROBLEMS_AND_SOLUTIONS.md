@@ -24,6 +24,17 @@ This document logs all technical challenges, edge-case bugs, webhook integration
 17. [Obsolete Docker Compose `version` Attribute Warning](#17-obsolete-docker-compose-version-attribute-warning)
 18. [Pyrefly Linter Exception Handler Type Mismatch (`bad-argument-type`)](#18-pyrefly-linter-exception-handler-type-mismatch-bad-argument-type)
 19. [Product Name Mismatches across Frontend, Backend, Docs, and Scripts](#19-product-name-mismatches-across-frontend-backend-docs-and-scripts)
+20. [Dead Space in Analytics Chart & Container Height Imbalance](#20-dead-space-in-analytics-chart--container-height-imbalance)
+21. [Table Row Vertical Clipping & Missing Pagination Controls](#21-table-row-vertical-clipping--missing-pagination-controls)
+22. [Visual Noise & Visual Fatigue from Repeated High-Contrast Badges](#22-visual-noise--visual-fatigue-from-repeated-high-contrast-badges)
+23. [Top Navbar Progress Bar Layout Compression & Language Switcher Clutter](#23-top-navbar-progress-bar-layout-compression--language-switcher-clutter)
+24. [Un-uniform Initial Idle State Across Overview KPI Cards](#24-un-uniform-initial-idle-state-across-overview-kpi-cards)
+25. [Python `hmac.new` Keyword Argument `TypeError` Crash (`500 Internal Server Error`)](#25-python-hmacnew-keyword-argument-typeerror-crash-500-internal-server-error)
+26. [Redis Cache Result Missing Primary Key `id` & UUID Object Deserialization Failure](#26-redis-cache-result-missing-primary-key-id--uuid-object-deserialization-failure)
+27. [EventSource SSE Listener Double-Dispatch Bug on Browser Disconnect](#27-eventsource-sse-listener-double-dispatch-bug-on-browser-disconnect)
+28. [Hardcoded `96.0%` Match Rate and Stale Fallbacks in Breakdown Analytics Page](#28-hardcoded-960-match-rate-and-stale-fallbacks-in-breakdown-analytics-page)
+29. [Settlement CSV Auto-Generated Payment ID Truncation Mismatch](#29-settlement-csv-auto-generated-payment-id-truncation-mismatch)
+30. [What-If Cashflow Filter Excluding CSV Orders with Null Capture Dates](#30-what-if-cashflow-filter-excluding-csv-orders-with-null-capture-dates)
 
 ---
 
@@ -297,15 +308,12 @@ IDE static type checker (Pyrefly) highlighted `app.add_exception_handler(RateLim
 Starlette's `add_exception_handler` expects a callback with signature `(Request, Exception) -> Response`. SlowAPI's `_rate_limit_exceeded_handler` explicitly types its parameter as `(Request, RateLimitExceeded) -> Response`. Static type checkers enforce parameter contravariance, flagging the subtype requirement.
 
 #### ✅ Solution
-Wrapped the invocation in a type-safe handler function accepting `exc: Exception`:
-```python
-def rate_limit_handler(request: Request, exc: Exception) -> Response:
-    if isinstance(exc, RateLimitExceeded):
-        return _rate_limit_exceeded_handler(request, exc)
-    return JSONResponse(status_code=429, content={"detail": "Rate limit exceeded"})
-
-app.add_exception_handler(RateLimitExceeded, rate_limit_handler)
-```
+19. [Product Name Mismatches across Frontend, Backend, Docs, and Scripts](#19-product-name-mismatches-across-frontend-backend-docs-and-scripts)
+20. [Dead Space in Analytics Chart & Container Height Imbalance](#20-dead-space-in-analytics-chart--container-height-imbalance)
+21. [Table Row Vertical Clipping & Missing Pagination Controls](#21-table-row-vertical-clipping--missing-pagination-controls)
+22. [Visual Noise & Visual Fatigue from Repeated High-Contrast Badges](#22-visual-noise--visual-fatigue-from-repeated-high-contrast-badges)
+23. [Top Navbar Progress Bar Layout Compression & Language Switcher Clutter](#23-top-navbar-progress-bar-layout-compression--language-switcher-clutter)
+24. [Un-uniform Initial Idle State Across Overview KPI Cards](#24-un-uniform-initial-idle-state-across-overview-kpi-cards)
 
 ---
 
@@ -320,6 +328,173 @@ Different features and documentation pages were written at different development
 #### ✅ Solution
 Standardized all user-facing product display titles to **`RazorRecon`** across `frontend/index.html`, `backend/app/main.py`, `Sidebar.jsx`, `quickstart.sh`, `Makefile`, and `README.md`, while preserving lowercase database and cache slugs (`razorrecon`).
 
+---
 
+### 20. Dead Space in Analytics Chart & Container Height Imbalance
 
+#### ❌ Problem
+The **7-Day Cash Flow** card stretched vertically to match the table's height, creating a massive blank void across the top half of the widget.
+
+#### 🔍 Root Cause
+`CashFlowChart` was configured with `height: 100%` in the split workbench right panel without a fixed height constraint or secondary stacked widget.
+
+#### ✅ Solution
+Rebalanced the right panel layout by setting a fixed chart height (`280px`) on `CashFlowChart` and stacking a secondary `Gateway Volume Distribution` widget beneath it to display real-time gateway channel volume splits (Razorpay Cards/Netbanking 68%, UPI Auto-Collect 22%, BNPL/Subscriptions 10%).
+
+---
+
+### 21. Table Row Vertical Clipping & Missing Pagination Controls
+
+#### ❌ Problem
+The settlements table rendered all records in a single scrolling list, vertically slicing the bottom row in half without container boundaries or pagination controls.
+
+#### 🔍 Root Cause
+Lack of client-side pagination bounds and container overflow styling in `ReconWorkbench.jsx`.
+
+#### ✅ Solution
+1. Added 10-item client-side pagination (`currentPage`, `pageSize = 10`) in `ReconWorkbench.jsx`.
+2. Created a sticky table footer featuring `Showing 1–10 of 100 records` with `Prev` and `Next` pagination controls and `1 / 10` page indicator.
+
+---
+
+### 22. Visual Noise & Visual Fatigue from Repeated High-Contrast Badges
+
+#### ❌ Problem
+Every visible row rendered identical bright green `Processed` pills and bright blue `Pass 1` boxes, creating visual fatigue and obscuring actual break exceptions (`1 Break`).
+
+#### 🔍 Root Cause
+Uniform high-contrast badge styling applied across matched and break records alike.
+
+#### ✅ Solution
+Updated normal matched rows to render a subtle `● Processed` indicator in muted slate text (`color: #475569`), neutral pass tags (`Pass 1`), allowing break exceptions (`1 Break` in amber/red alert badge) to stand out immediately.
+
+---
+
+### 23. Top Navbar Progress Bar Layout Compression & Language Switcher Clutter
+
+#### ❌ Problem
+During reconciliation runs, the live progress bar `Pass 4 — AI Diagnostics: 96/100 matched` was jammed directly in the top navbar between search input and status pill, compressing the layout.
+
+#### 🔍 Root Cause
+Inline flex placement of progress elements inside the header navigation row.
+
+#### ✅ Solution
+1. Moved the live progress bar out of the top navbar into a full-width thin animated progress banner (`.header-progress-banner`) positioned directly beneath the header row.
+2. Moved the `EN | HI` language toggle into the user profile menu card to give primary action CTAs (`Import CSV`, `Run Recon`) breathing room.
+
+---
+
+### 24. Un-uniform Initial Idle State Across Overview KPI Cards
+
+#### ❌ Problem
+Before executing reconciliation (`!hasData`), the `Current balance` KPI card displayed `₹ 0.00` while all other 3 cards showed `—` and `Awaiting Reconciliation`.
+
+#### 🔍 Root Cause
+`KPIRow.jsx` lacked an explicit `!hasData` idle state check for the `Current balance` metric column.
+
+#### ✅ Solution
+Added a `!hasData` check to render `—` with `Awaiting Reconciliation` across all 4 KPI metric cards in initial idle state before pipeline execution.
+
+---
+
+### 25. Python `hmac.new` Keyword Argument `TypeError` Crash (`500 Internal Server Error`)
+
+#### ❌ Problem
+Every incoming Razorpay webhook POST request crashed with HTTP 500 `TypeError: new() got an unexpected keyword argument 'key'`.
+
+#### 🔍 Root Cause
+In Python's standard `hmac` library, `hmac.new(key, msg=None, digestmod='')` enforces positional parameters for `key` and `msg` in CPython. Calling `hmac.new(key=..., msg=..., digestmod=...)` with keyword arguments raises a runtime `TypeError`.
+
+#### ✅ Solution
+Updated `app/routes/ingestion.py` to pass parameters positionally:
+```python
+expected = hmac.new(
+    settings.RAZORPAY_WEBHOOK_SECRET.encode("utf-8"),
+    raw_body,
+    hashlib.sha256,
+).hexdigest()
+```
+
+---
+
+### 26. Redis Cache Result Missing Primary Key `id` & UUID Object Deserialization Failure
+
+#### ❌ Problem
+Fetching reconciliation results from Redis cache caused missing React keys (`result.id` returning `undefined`) and occasional Pydantic `ValidationError` when `run_id` was cached as a raw UUID object.
+
+#### 🔍 Root Cause
+1. In `app/engine/reconcile.py`, `recon_results_to_insert` objects were added to the DB session, but `all_results_for_cache` was populated before calling `db.flush()`, leaving `r.id` as `None`.
+2. `r.run_id` was stored as a Python `uuid.UUID` instance in Redis dicts, causing type mismatch during serialization/deserialization.
+
+#### ✅ Solution
+1. Added `db.flush()` immediately after `db.add_all()` to populate database auto-increment primary keys.
+2. Explicitly mapped `"id": r.id` and `"run_id": str(r.run_id)` in the Redis caching dictionary payload.
+
+---
+
+### 27. EventSource SSE Listener Double-Dispatch Bug on Browser Disconnect
+
+#### ❌ Problem
+Network drops during real-time reconciliation streaming triggered duplicate `RECON_ERROR` state dispatches and threw warnings when calling `.close()` on already-closed `EventSource` instances.
+
+#### 🔍 Root Cause
+Both `es.addEventListener('error', ...)` and `es.onerror = ...` executed independently when the browser lost connection, causing double invocation of the error handler callback.
+
+#### ✅ Solution
+Created a named single-invocation handler with an `errorFired` boolean guard in `frontend/src/api/client.js`:
+```javascript
+let errorFired = false;
+const handleSseError = (data) => {
+  if (errorFired) return;
+  errorFired = true;
+  onEvent({ event: 'error', data });
+  es.close();
+};
+```
+
+---
+
+### 28. Hardcoded `96.0%` Match Rate and Stale Fallbacks in Breakdown Analytics Page
+
+#### ❌ Problem
+The Reconciliation Breakdown page always displayed `96.0% Match Accuracy` regardless of the actual reconciliation run match rate (e.g. 78% or 100%).
+
+#### 🔍 Root Cause
+`ReconBreakdownFullView.jsx` hardcoded `96.0%` in its JSX markup instead of connecting to `stats.match_rate` from `ReconciliationContext`.
+
+#### ✅ Solution
+Replaced hardcoded string with live context state binding:
+```javascript
+{stats?.match_rate != null ? `${Number(stats.match_rate).toFixed(1)}%` : '—'}
+```
+
+---
+
+### 29. Settlement CSV Auto-Generated Payment ID Truncation Mismatch
+
+#### ❌ Problem
+Uploading settlement CSV files with long `entity_id` strings created `payment_id` values that mismatched settlement transaction IDs, breaking Pass 1 deterministic matching.
+
+#### 🔍 Root Cause
+`payment_id` was evaluated as `str(data.get("entity_id", "") or f"pay_{order_id}")[:20]`. If `entity_id` was absent, `f"pay_{order_id}"` exceeded 20 chars before slicing, causing improper truncation.
+
+#### ✅ Solution
+Cleanly sanitized raw entity ID strings before slice in `app/routes/ingestion.py`:
+```python
+entity_id_raw = str(data.get("entity_id", "") or "").strip()
+payment_id = (entity_id_raw if entity_id_raw else f"pay_{order_id}")[:20]
+```
+
+---
+
+### 30. What-If Cashflow Filter Excluding CSV Orders with Null Capture Dates
+
+#### ❌ Problem
+Simulating AI break resolution (`POST /api/cashflow/whatif`) failed to reflect cash-flow gains for CSV-imported transactions.
+
+#### 🔍 Root Cause
+`what_if_resolve` in `app/engine/cashflow.py` filtered `Order.captured_at.isnot(None)`. CSV-imported orders had dates in `settled_at`, causing them to be excluded from the What-If recomputation loop.
+
+#### ✅ Solution
+Removed the overly strict `captured_at.isnot(None)` requirement from the What-If resolution query, allowing all captured and partial refund orders to participate in 7-day cash flow projections.
 

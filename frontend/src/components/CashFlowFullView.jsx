@@ -91,7 +91,11 @@ export default function CashFlowFullView() {
             <span className="cf-kpi-label">7-Day Confirmed Inflow</span>
             <CheckCircle2 size={16} className="cf-icon-emerald" />
           </div>
-          <div className="cf-kpi-value font-mono">{formatINR(totalConfirmed)}</div>
+          {isLoading ? (
+            <div className="sk-box" style={{ height: 28, width: 110, margin: '6px 0' }} />
+          ) : (
+            <div className="cf-kpi-value font-mono">{formatINR(totalConfirmed)}</div>
+          )}
           <div className="cf-kpi-sub text-emerald">
             <ArrowUpRight size={13} /> Verified by Pass 1 &amp; Pass 2
           </div>
@@ -102,7 +106,11 @@ export default function CashFlowFullView() {
             <span className="cf-kpi-label">Disputed / Held in Exceptions</span>
             <AlertCircle size={16} className="cf-icon-amber" />
           </div>
-          <div className="cf-kpi-value font-mono text-amber">{formatINR(totalDisputed)}</div>
+          {isLoading ? (
+            <div className="sk-box" style={{ height: 28, width: 110, margin: '6px 0' }} />
+          ) : (
+            <div className="cf-kpi-value font-mono text-amber">{formatINR(totalDisputed)}</div>
+          )}
           <div className="cf-kpi-sub text-slate-500">
             Holdbacks due to fee discrepancies &amp; timing lags
           </div>
@@ -113,7 +121,11 @@ export default function CashFlowFullView() {
             <span className="cf-kpi-label">Projected AI Recovery Gain</span>
             <TrendingUp size={16} className="cf-icon-blue" />
           </div>
-          <div className="cf-kpi-value font-mono text-blue">{formatINR(projectedRecovery)}</div>
+          {isLoading ? (
+            <div className="sk-box" style={{ height: 28, width: 110, margin: '6px 0' }} />
+          ) : (
+            <div className="cf-kpi-value font-mono text-blue">{formatINR(projectedRecovery)}</div>
+          )}
           <div className="cf-kpi-sub text-blue font-semibold">
             +85% potential liquidity unlock upon AI resolution
           </div>
@@ -222,7 +234,18 @@ export default function CashFlowFullView() {
               </tr>
             </thead>
             <tbody>
-              {(cashFlow || []).map((day, idx) => {
+              {isLoading ? (
+                [...Array(5)].map((_, i) => (
+                  <tr key={`sk-${i}`}>
+                    <td><div className="sk-box" style={{ height: 16, width: 80 }} /></td>
+                    <td className="text-right"><div className="sk-box" style={{ height: 16, width: 70, marginLeft: 'auto' }} /></td>
+                    <td className="text-right"><div className="sk-box" style={{ height: 16, width: 70, marginLeft: 'auto' }} /></td>
+                    <td className="text-right"><div className="sk-box" style={{ height: 16, width: 70, marginLeft: 'auto' }} /></td>
+                    <td className="text-right"><div className="sk-box" style={{ height: 16, width: 80, marginLeft: 'auto' }} /></td>
+                    <td><div className="sk-pill" style={{ height: 20, width: 90 }} /></td>
+                  </tr>
+                ))
+              ) : (cashFlow || []).map((day, idx) => {
                 const confirmed = day.confirmed_inflow || 0;
                 const disputed = day.disputed_held || 0;
                 const simGain = simulatedResolution ? Math.round(disputed * 0.85) : 0;

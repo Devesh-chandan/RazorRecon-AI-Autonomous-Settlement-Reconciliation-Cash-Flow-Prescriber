@@ -44,18 +44,27 @@ export function subscribeToRecon(runId, onEvent) {
       es.close();
     } catch { /* ignore */ }
   });
+  // Named error handler — fires at most once per EventSource lifetime.
+  // Both the server-sent 'error' event and the browser-level onerror can fire;
+  // the guard prevents a double RECON_ERROR dispatch and a second es.close() call.
+  let errorFired = false;
+  const handleSseError = (data) => {
+    if (errorFired) return;
+    errorFired = true;
+    onEvent({ event: 'error', data });
+    es.close();
+  };
+
   es.addEventListener('error', (e) => {
     try {
       const data = e.data ? JSON.parse(e.data) : { message: 'SSE error' };
-      onEvent({ event: 'error', data });
-    } catch { /* ignore */ }
+      handleSseError(data);
+    } catch { handleSseError({ message: 'SSE error' }); }
   });
   es.addEventListener('keepalive', () => { /* noop */ });
 
   es.onerror = () => {
-    // Browser-level error (e.g., connection refused)
-    onEvent({ event: 'error', data: { message: 'Connection to backend lost' } });
-    es.close();
+    handleSseError({ message: 'Connection to backend lost' });
   };
 
   return es;

@@ -1,11 +1,18 @@
 """
-Synthetic data seeder — generates 100 records with all 10 edge case types.
-Run: python -m app.seed
+Synthetic data seeder — 100 records mirroring real Indian e-commerce
+payment gateway settlement patterns (Razorpay-style).
+
+Generates bounded random data for each run:
+- Deterministic order/payment/settlement IDs
+- Amounts bounded per category (₹199 .. ₹1,49,999)
+- Gateway weights bounded (HDFC, ICICI, Razorpay, Axis, PhonePe)
+- Interleaved breaks across a 5-day window so 7-day cashflow ALWAYS includes non-zero disputed holdbacks.
 """
 import random
-import string
-from datetime import datetime, timedelta, date, timezone
+import csv
+from datetime import datetime, timedelta, timezone
 from decimal import Decimal
+from typing import Optional
 
 import numpy as np
 from sqlalchemy.orm import Session
@@ -13,189 +20,208 @@ from sqlalchemy.orm import Session
 from app.database import SessionLocal, engine
 from app.models import Base, Order, Settlement, ErpLedger
 
-# ── Deterministic seed for reproducibility ────────────────────────────────────
-SEED = 42
-rng = np.random.default_rng(SEED)
-random.seed(SEED)
+# ── Merchant profile ─────────────────────────────────────────────────────────
+MERCHANT = "Trendhive Commerce Pvt Ltd"
+MERCHANT_MID = "MID4823099"
 
-# ── Constants ─────────────────────────────────────────────────────────────────
-METHODS = ["upi", "card", "netbanking", "wallet"]
-METHOD_WEIGHTS = [0.45, 0.30, 0.15, 0.10]
+GATEWAYS = [
+    ("HDFC Bank (PG)",     "HDFC",  35),
+    ("ICICI Direct",       "ICIC",  28),
+    ("Razorpay Stack",     "RATN",  22),
+    ("Axis UPI Express",   "AXIS",  10),
+    ("PhonePe Gateway",    "PYTM",   5),
+]
 
-MDR_RATES = {"upi": 0.0, "card": 0.02, "netbanking": 0.0175, "wallet": 0.025}
+GATEWAY_METHOD_WEIGHTS = {
+    "HDFC Bank (PG)":    {"card": 0.40, "emi": 0.25, "netbanking": 0.20, "upi": 0.10, "wallet": 0.05},
+    "ICICI Direct":      {"card": 0.35, "netbanking": 0.25, "emi": 0.25, "upi": 0.10, "wallet": 0.05},
+    "Razorpay Stack":    {"upi": 0.45, "card": 0.25, "wallet": 0.15, "netbanking": 0.10, "emi": 0.05},
+    "Axis UPI Express":  {"upi": 0.60, "card": 0.30, "netbanking": 0.05, "wallet": 0.05, "emi": 0.00},
+    "PhonePe Gateway":   {"upi": 0.75, "wallet": 0.20, "card": 0.05, "netbanking": 0.00, "emi": 0.00},
+}
+METHODS = ["upi", "card", "netbanking", "wallet", "emi"]
+
+MDR_RATES = {
+    "upi": 0.0,
+    "card": 0.020,
+    "netbanking": 0.0175,
+    "wallet": 0.025,
+    "emi": 0.015,
+}
 GST_RATE = 0.18
+
+CATEGORIES = [
+    ("Electronics - Smartphone",    8999,  89999),
+    ("Electronics - Laptop",        34999, 149999),
+    ("Electronics - Earbuds/TWS",   999,   8999),
+    ("Fashion - Men Clothing",      499,   4999),
+    ("Fashion - Women Clothing",    799,   7999),
+    ("Fashion - Footwear",          999,   5999),
+    ("Home & Kitchen",              299,   15999),
+    ("Beauty & Personal Care",      199,   3999),
+    ("Books & Stationery",          99,    999),
+    ("Sports & Fitness",            499,   24999),
+    ("Grocery & Essentials",        199,   2999),
+    ("Jewellery",                   999,   49999),
+]
+
+FIRST_NAMES = [
+    "aarav", "vivaan", "aditya", "vihaan", "arjun", "sai", "reyansh", "ayaan",
+    "atharv", "dhruv", "ananya", "diya", "saanvi", "riya", "aadhya", "kavya",
+    "ishaan", "pranav", "rohit", "priya", "neha", "sneha", "pooja", "akash",
+    "rahul", "sunita", "amit", "meera", "harsh", "divya",
+]
+DOMAINS = ["gmail.com", "yahoo.com", "hotmail.com", "outlook.com", "rediffmail.com"]
 
 BASE_DATE = datetime(2026, 8, 1, tzinfo=timezone.utc)
 
 
-def rand_id(prefix: str, length: int = 12) -> str:
-    chars = string.ascii_letters + string.digits
-    suffix = "".join(random.choices(chars, k=length))
-    return f"{prefix}{suffix}"
-
-
 def compute_fee_tax(amount: float, method: str):
-    fee = round(amount * MDR_RATES[method], 2)
+    rate = MDR_RATES.get(method, 0.0)
+    fee = round(amount * rate, 2)
     tax = round(fee * GST_RATE, 2)
     return fee, tax
 
 
-def make_order_id(i: int):
-    return f"order_Rzp{i:04d}abcd"
+def seed(seed_val: Optional[int] = None):
+    """Generate bounded random dataset of 100 e-commerce settlement transactions."""
+    if seed_val is None:
+        seed_val = random.randint(1000, 999999)
+    
+    print(f"[SEED] Initializing dataset with bounded random seed: {seed_val}")
+    rng = np.random.default_rng(seed_val)
+    random.seed(seed_val)
 
+    # Build gateway map
+    gateway_assignments = []
+    for gw_name, utr_pfx, count in GATEWAYS:
+        gateway_assignments.extend([(gw_name, utr_pfx)] * count)
+    shuffle_idx = rng.permutation(100).tolist()
+    gateway_map = [gateway_assignments[shuffle_idx[i]] for i in range(100)]
 
-def make_payment_id(i: int):
-    return f"pay_Rzp{i:04d}efgh"
-
-
-def make_settlement_id(i: int):
-    return f"setl_Rzp{i:04d}ijkl"
-
-
-def make_ledger_id(i: int):
-    return f"LED-2026-{i:04d}"
-
-
-def make_invoice_id(i: int):
-    return f"INV-2026-{i:04d}"
-
-
-def utc_dt(base: datetime, offset_hours: float = 0) -> datetime:
-    return base + timedelta(hours=offset_hours)
-
-
-# ── Edge case plan ─────────────────────────────────────────────────────────────
-# Indices 0-49:  Clean matches
-# Indices 50-57: MDR Variance (8)
-# Indices 58-67: T+2 Timing Lag (10)
-# Indices 68-72: Cross-Midnight (5)
-# Indices 73-78: Full Refunds (6)
-# Indices 79-82: Partial Refunds (4)
-# Indices 83-85: Chargeback Holdbacks (3)
-# Indices 86-89: Missing ERP Entry (4)
-# Indices 90-91: Duplicate ERP Entry (2)
-# Indices 92-96: Amount Mismatch (5)
-# Indices 97-99: GST Rounding (3)
-
-def seed():
-    print("🌱 Creating tables...")
     Base.metadata.create_all(bind=engine)
-
     db: Session = SessionLocal()
+
     try:
-        # Clear existing data
         db.query(ErpLedger).delete()
         db.query(Settlement).delete()
         db.query(Order).delete()
         db.commit()
-        print("🗑️  Cleared existing data.")
 
-        orders = []
-        settlements = []
-        erp_entries = []
+        orders, settlements, erp_entries = [], [], []
+        csv_settlements_data, csv_erp_data = [], []
 
-        amounts = [float(round(rng.uniform(199, 9999), 2)) for _ in range(100)]
-        methods = rng.choice(METHODS, size=100, p=METHOD_WEIGHTS).tolist()
+        PRODUCT_SAMPLES = {
+            "Electronics - Smartphone": ["Redmi Note 13 Pro", "Samsung Galaxy A54 5G", "OnePlus Nord CE3"],
+            "Electronics - Laptop": ["Lenovo IdeaPad 3 15\"", "ASUS VivoBook 15", "HP Pavilion x360"],
+            "Electronics - Earbuds/TWS": ["Sony WH-1000XM5", "boAt Airdopes 141", "JBL Tune 230NC TWS"],
+            "Fashion - Men Clothing": ["Peter England formal shirt", "Jockey innerwear combo", "Levi's 511 jeans"],
+            "Fashion - Women Clothing": ["Floral kurti set", "Libas ethnic kurta palazzo", "BIBA printed kurta"],
+            "Fashion - Footwear": ["Nike Revolution 6 shoes", "Puma Softride Pro", "Skechers Go Walk 5"],
+            "Home & Kitchen": ["Prestige induction cooktop", "Philips air fryer 4L", "Dyson V8 vacuum"],
+            "Beauty & Personal Care": ["Lakme 9to5 lipstick set", "Mamaearth vitamin C serum", "Forest Essentials wash"],
+            "Books & Stationery": ["UPSC Exam set 2026", "Atomic Habits paperback", "Ikigai paperback"],
+            "Sports & Fitness": ["Bowflex adjustable dumbbell", "Boldfit resistance bands", "Yonex badminton racket"],
+            "Grocery & Essentials": ["Tata Tea Gold 1kg", "Aashirvaad atta 10kg", "Maggi noodles 12-pack"],
+            "Jewellery": ["Tanishq 22K gold mangalsutra", "Malabar diamond pendant", "CaratLane silver anklet"],
+        }
+
+        # Interleave 20 break records evenly across indices (every 5th record: 4, 9, 14, 19...)
+        # This guarantees break transactions occur across all days in the 7-day projection window!
+        break_indices = set(range(4, 100, 5))
+        break_list = list(break_indices)
+        random.shuffle(break_list)
+
+        # Assign specific break types to the 20 break indices
+        missing_erp_set = set(break_list[:10])        # 10 Missing ERP
+        amount_mismatch_set = set(break_list[10:18])  # 8 Amount Mismatches
+        disputed_chargeback_set = set(break_list[18:])# 2 Chargebacks
+
+        # Assign Pass 2 & Pass 3 matched edge cases to non-break indices
+        non_break_list = [i for i in range(100) if i not in break_indices]
+        random.shuffle(non_break_list)
+        pass2_rules_set = set(non_break_list[:10])
+        pass3_fuzzy_set = set(non_break_list[10:15])
 
         for i in range(100):
-            amt = amounts[i]
-            method = methods[i]
+            cat_idx = int(rng.integers(0, len(CATEGORIES)))
+            category_name, lo_price, hi_price = CATEGORIES[cat_idx]
+
+            # Bounded price pick with realistic price points
+            base_price = float(rng.integers(lo_price, hi_price))
+            amt = round(base_price, 2)
+
+            gateway_name, utr_prefix = gateway_map[i]
+            
+            # Pick payment method according to gateway distribution
+            method_weights = GATEWAY_METHOD_WEIGHTS.get(gateway_name, {m: 0.2 for m in METHODS})
+            method = random.choices(list(method_weights.keys()), weights=list(method_weights.values()), k=1)[0]
+
             fee, tax = compute_fee_tax(amt, method)
             credit = round(amt - fee - tax, 2)
 
-            order_id = make_order_id(i)
-            pay_id = make_payment_id(i)
-            setl_id = make_settlement_id(i)
-            led_id = make_ledger_id(i)
-            inv_id = make_invoice_id(i)
+            order_id = f"order_TH2608{i+1:04d}"
+            pay_id = f"pay_TH2608{i+1:04d}"
+            setl_id = f"setl_TH2608{i+1:04d}"
+            led_id = f"LED-TH-2608-{i+1:04d}"
+            inv_id = f"INV/2026-27/TH/{i+1:05d}"
 
-            created = utc_dt(BASE_DATE, offset_hours=float(rng.integers(0, 240)))
-            captured = created + timedelta(minutes=float(rng.integers(1, 30)))
-            settled = captured + timedelta(days=1)  # default T+1
+            cust_name = random.choice(FIRST_NAMES)
+            cust_num = rng.integers(10, 9999)
+            customer_email = f"{cust_name}{cust_num}@{random.choice(DOMAINS)}"
+            utr = f"{utr_prefix}260826{i+1:06d}00"
+
+            products = PRODUCT_SAMPLES.get(category_name, [category_name])
+            product_name = products[i % len(products)]
+            erp_product_note = f"{category_name} | {product_name}"
+
+            # Compress order created timestamps to fit inside 4.5 days (1.1 hours per record)
+            created = BASE_DATE + timedelta(hours=float(i * 1.1))
+            captured = created + timedelta(minutes=float(rng.integers(1, 15)))
+            settled = captured + timedelta(days=1)
 
             order_status = "captured"
             refund_amt = 0.0
             setl_type = "payment"
             setl_debit = 0.0
             erp_status = "received"
+            erp_expected = amt
             erp_recorded = amt
-            erp_notes = ""
+            erp_notes = erp_product_note
             skip_erp = False
-            add_duplicate_erp = False
             setl_credit = credit
             setl_fee = fee
             setl_tax = tax
             setl_amt = amt
 
-            # ── Edge cases ────────────────────────────────────────────────────
-
-            # 50-57: MDR Variance — fee is ±₹0.50–₹5.00 off
-            if 50 <= i <= 57:
-                variance = round(float(rng.uniform(0.5, 5.0)), 2)
-                setl_fee = round(fee + (variance if rng.random() > 0.5 else -variance), 2)
+            # Apply specific edge-case break & match logic
+            if i in pass2_rules_set:
+                setl_fee = round(fee + float(rng.uniform(2.50, 12.00)), 2)
                 setl_credit = round(amt - setl_fee - tax, 2)
-                erp_notes = "MDR fee discrepancy flagged"
+                erp_notes = f"{erp_product_note} | Tier MDR fee variance"
 
-            # 58-67: T+2 Timing Lag
-            elif 58 <= i <= 67:
-                settled = captured + timedelta(days=2)
-
-            # 68-72: Cross-Midnight — created near midnight
-            elif 68 <= i <= 72:
-                created = BASE_DATE.replace(hour=23, minute=45) + timedelta(
-                    days=int(rng.integers(0, 30))
-                )
-                captured = created + timedelta(minutes=17)  # crosses midnight
+            elif i in pass3_fuzzy_set:
+                created = created.replace(hour=23, minute=50)
+                captured = created + timedelta(minutes=15)
                 settled = captured + timedelta(days=1)
+                erp_notes = f"{erp_product_note} | Cross-midnight batch order"
 
-            # 73-78: Full Refunds
-            elif 73 <= i <= 78:
-                order_status = "refunded"
-                refund_amt = amt
-                setl_type = "refund"
-                setl_debit = amt
-                setl_credit = 0.0
-                setl_fee = 0.0
-                setl_tax = 0.0
-                erp_status = "received"
-                erp_recorded = -amt
+            elif i in missing_erp_set:
+                skip_erp = True
 
-            # 79-82: Partial Refunds
-            elif 79 <= i <= 82:
-                order_status = "partial_refund"
-                refund_amt = round(amt * float(rng.uniform(0.2, 0.6)), 2)
-                net = round(amt - refund_amt, 2)
-                net_fee, net_tax = compute_fee_tax(net, method)
-                setl_credit = round(net - net_fee - net_tax, 2)
-                erp_recorded = net
+            elif i in amount_mismatch_set:
+                erp_expected = round(amt + float(rng.uniform(150, 850)), 2)
+                erp_recorded = erp_expected
+                erp_notes = f"{erp_product_note} | Amount mismatch — ERP invoice typo"
 
-            # 83-85: Chargeback Holdbacks
-            elif 83 <= i <= 85:
+            elif i in disputed_chargeback_set:
                 setl_type = "adjustment"
                 setl_debit = amt
                 setl_credit = -amt
                 erp_status = "disputed"
-                skip_erp = True  # no ERP entry expected
-
-            # 86-89: Missing ERP Entry — no erp row
-            elif 86 <= i <= 89:
                 skip_erp = True
+                erp_notes = f"{erp_product_note} | Chargeback holdback dispute"
 
-            # 90-91: Duplicate ERP Entry — will add second ERP row
-            elif 90 <= i <= 91:
-                add_duplicate_erp = True
-
-            # 92-96: Amount Mismatch — data entry typo in ERP
-            elif 92 <= i <= 96:
-                typo_delta = round(float(rng.uniform(50, 300)), 2)
-                erp_recorded = round(amt + typo_delta, 2)
-
-            # 97-99: GST Rounding ₹0.01 discrepancy
-            elif 97 <= i <= 99:
-                setl_tax = round(tax + 0.01, 2)
-                setl_credit = round(amt - setl_fee - setl_tax, 2)
-
-            # ── Build objects ─────────────────────────────────────────────────
             orders.append(Order(
                 order_id=order_id,
                 payment_id=pay_id,
@@ -205,8 +231,8 @@ def seed():
                 method=method,
                 created_at=created,
                 captured_at=captured,
-                customer_email=f"user{i}@example.com",
-                description=f"Order #{i+1}",
+                customer_email=customer_email,
+                description=erp_product_note,
                 refund_amount=Decimal(str(refund_amt)),
                 erp_invoice=inv_id,
             ))
@@ -220,9 +246,11 @@ def seed():
                 credit=Decimal(str(setl_credit)),
                 debit=Decimal(str(setl_debit)),
                 settlement_id=setl_id,
-                settlement_utr=rand_id("UTR", 16),
+                settlement_utr=utr,
                 settled_at=settled,
                 order_id=order_id,
+                gateway=gateway_name,
+                import_source="seeded",
             ))
 
             if not skip_erp:
@@ -230,51 +258,80 @@ def seed():
                     ledger_id=led_id,
                     invoice_id=inv_id,
                     order_id=order_id,
-                    expected_amount=Decimal(str(amt)),
+                    expected_amount=Decimal(str(erp_expected)),
                     recorded_amount=Decimal(str(erp_recorded)),
                     payment_method=method,
                     entry_date=created.date(),
                     status=erp_status,
                     notes=erp_notes,
                 ))
-                if add_duplicate_erp:
-                    erp_entries.append(ErpLedger(
-                        ledger_id=f"{led_id}-DUP",
-                        invoice_id=inv_id,
-                        order_id=order_id,
-                        expected_amount=Decimal(str(amt)),
-                        recorded_amount=Decimal(str(round(float(rng.uniform(amt * 0.8, amt * 1.2)), 2))),
-                        payment_method=method,
-                        entry_date=created.date(),
-                        status="received",
-                        notes="Duplicate entry - suspected data entry error",
-                    ))
+
+            if i < 50:
+                csv_settlements_data.append({
+                    "Settlement ID": setl_id,
+                    "Entity ID": pay_id,
+                    "Type": setl_type,
+                    "Amount": f"{setl_amt:.2f}",
+                    "Fee": f"{setl_fee:.2f}",
+                    "Tax": f"{setl_tax:.2f}",
+                    "Credit": f"{setl_credit:.2f}",
+                    "Debit": f"{setl_debit:.2f}",
+                    "Settlement UTR": utr,
+                    "Settled At": settled.strftime("%Y-%m-%d %H:%M:%S"),
+                    "Order ID": order_id,
+                    "Gateway": gateway_name,
+                })
+                if not skip_erp:
+                    csv_erp_data.append({
+                        "Ledger ID": led_id,
+                        "Invoice ID": inv_id,
+                        "Order ID": order_id,
+                        "Expected Amount": f"{erp_expected:.2f}",
+                        "Recorded Amount": f"{erp_recorded:.2f}",
+                        "Payment Method": method,
+                        "Entry Date": created.date().strftime("%Y-%m-%d"),
+                        "Status": erp_status,
+                        "Notes": erp_notes,
+                    })
 
         db.add_all(orders)
         db.add_all(settlements)
         db.add_all(erp_entries)
         db.commit()
 
-        print(f"✅ Seeded {len(orders)} orders, {len(settlements)} settlements, {len(erp_entries)} ERP entries.")
-        print("   Edge case breakdown:")
-        print("   • Clean matches:        50")
-        print("   • MDR Variance:          8")
-        print("   • T+2 Timing Lag:       10")
-        print("   • Cross-Midnight:        5")
-        print("   • Full Refunds:          6")
-        print("   • Partial Refunds:       4")
-        print("   • Chargeback Holdbacks:  3")
-        print("   • Missing ERP Entry:     4")
-        print("   • Duplicate ERP Entry:   2")
-        print("   • Amount Mismatch:       5")
-        print("   • GST Rounding:          3")
+        write_csv_files(csv_settlements_data, csv_erp_data)
+        print(f"[OK] Seeded {len(orders)} orders, {len(settlements)} settlements, {len(erp_entries)} ERP entries (seed={seed_val}).")
 
     except Exception as e:
         db.rollback()
-        print(f"❌ Seed failed: {e}")
+        print(f"[ERROR] Seed failed: {e}")
         raise
     finally:
         db.close()
+
+
+def write_csv_files(settlement_rows: list[dict], erp_rows: list[dict]):
+    """Write synchronized sample CSV files to project root."""
+    try:
+        with open("../sample_razorpay_settlements.csv", "w", newline="", encoding="utf-8") as f:
+            writer = csv.DictWriter(f, fieldnames=[
+                "Settlement ID", "Entity ID", "Type", "Amount", "Fee", "Tax",
+                "Credit", "Debit", "Settlement UTR", "Settled At", "Order ID", "Gateway"
+            ])
+            writer.writeheader()
+            writer.writerows(settlement_rows)
+
+        with open("../sample_erp_ledger.csv", "w", newline="", encoding="utf-8") as f:
+            writer = csv.DictWriter(f, fieldnames=[
+                "Ledger ID", "Invoice ID", "Order ID", "Expected Amount",
+                "Recorded Amount", "Payment Method", "Entry Date", "Status", "Notes"
+            ])
+            writer.writeheader()
+            writer.writerows(erp_rows)
+
+        print("   [CSV] Generated sample_razorpay_settlements.csv & sample_erp_ledger.csv in project root.")
+    except Exception as exc:
+        print(f"   [WARN] Failed to write CSV files: {exc}")
 
 
 if __name__ == "__main__":

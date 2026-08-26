@@ -31,6 +31,9 @@ class ReconStatsResponse(BaseModel):
     net_payout: float
     status: str
 
+    class Config:
+        from_attributes = True
+
 
 # ── Recon Results ──────────────────────────────────────────────────────────────
 
@@ -51,6 +54,12 @@ class ReconResultResponse(BaseModel):
     suggested_action: Optional[str] = None
     severity: Optional[str] = None
     created_at: Optional[datetime] = None
+    # Actual transaction amounts — always populated from settlement record
+    amount: Optional[float] = None            # gross order amount
+    settlement_credit: Optional[float] = None  # net credit after MDR + GST
+    # Gateway Performance Matrix fields
+    gateway: Optional[str] = None             # HDFC Bank (PG) | ICICI Direct | etc.
+    payment_method: Optional[str] = None      # upi | card | netbanking | wallet | emi
 
     class Config:
         from_attributes = True

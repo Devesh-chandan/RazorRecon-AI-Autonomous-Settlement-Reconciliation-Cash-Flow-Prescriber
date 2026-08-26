@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { ChevronRight, ChevronDown, Search, Bot, CheckCircle2, AlertCircle, Clock, ArrowRight, X, Play, MoreHorizontal } from 'lucide-react';
+import { ChevronRight, ChevronDown, Search, Bot, CheckCircle2, AlertCircle, Clock, ArrowRight, X, Play, MoreHorizontal, Layers } from 'lucide-react';
 import { useReconciliation, selectBreaks, selectMatched } from '../context/ReconciliationContext';
 import './ReconWorkbench.css';
 
@@ -85,6 +85,30 @@ function ExpandedDropdownCard({ result, language, onViewAI, isResolved }) {
     ? (result.explanation_hi || result.explanation_en)
     : result.explanation_en;
 
+  const SEVERITY_CONFIG = {
+    critical: { label: 'Critical', className: 'severity-critical' },
+    high: { label: 'High', className: 'severity-high' },
+    medium: { label: 'Medium', className: 'severity-medium' },
+    low: { label: 'Low', className: 'severity-low' },
+  };
+
+  const ROOT_CAUSE_LABELS = {
+    mdr_variance: 'MDR Variance',
+    timing_lag: 'Timing Lag',
+    missing_erp_entry: 'Missing ERP Entry',
+    data_entry_error: 'Data Entry Error',
+    chargeback: 'Chargeback',
+    partial_refund: 'Partial Refund',
+    gst_rounding: 'GST Rounding',
+    duplicate_entry: 'Duplicate Entry',
+    unknown: 'Unknown',
+  };
+
+  const sev = SEVERITY_CONFIG[result.severity] || SEVERITY_CONFIG.medium;
+  const rootCauseText = result.root_cause
+    ? (ROOT_CAUSE_LABELS[result.root_cause] || result.root_cause.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()))
+    : null;
+
   return (
     <tr className="rzp-expanded-tr">
       <td colSpan={7}>
@@ -117,31 +141,58 @@ function ExpandedDropdownCard({ result, language, onViewAI, isResolved }) {
               </div>
             </div>
 
-            {/* AI Diagnosis Col */}
+            {/* AI Diagnosis Col — Matched to BreakCard UI (Image 3) */}
             {result.status === 'break' && (
-              <div className="dropdown-card-col col-ai">
-                <div className="col-title">AI Exception Diagnosis &amp; Fix</div>
-                {result.root_cause && (
-                  <span className="root-cause-tag">{result.root_cause.replace(/_/g, ' ')}</span>
-                )}
-                {explanation && <p className="ai-explanation-text">{explanation}</p>}
-                {result.suggested_action && (
-                  <div className="ai-action-box">
-                    <strong>Recommended Action:</strong> {result.suggested_action}
+              <div className={`break-card ${isResolved ? 'break-card--resolved' : ''}`} style={{ flex: 2, gridColumn: 'span 2' }}>
+                <div className="break-card-header">
+                  <div className="break-card-left">
+                    <span className={`severity-badge ${sev.className}`}>
+                      <span className="severity-dot" />
+                      {sev.label}
+                    </span>
+                    <span className="mono break-order-id">{result.order_id}</span>
                   </div>
-                )}
-                <button
-                  className="btn btn-primary btn-sm rzp-ai-btn"
-                  onClick={() => onViewAI(result)}
-                  id={`view-ai-${result.order_id}`}
-                >
-                  <Bot size={13} /> {isResolved ? 'View Resolution Analysis' : 'View AI Analysis'} <ArrowRight size={12} />
-                </button>
+                  {rootCauseText && (
+                    <span className="root-cause-chip">
+                      {rootCauseText}
+                    </span>
+                  )}
+                </div>
+
+                <div className="break-card-body">
+                  {explanation ? (
+                    <p className="break-explanation">{explanation}</p>
+                  ) : (
+                    <p className="break-explanation break-explanation--empty">Analysis pending...</p>
+                  )}
+
+                  {result.suggested_action && (
+                    <div className="break-action">
+                      <AlertCircle size={13} style={{ flexShrink: 0, marginTop: '2px', color: '#b45309' }} />
+                      <span>{result.suggested_action}</span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="break-card-footer">
+                  <button
+                    className="btn btn-primary btn-sm rzp-ai-btn"
+                    onClick={() => onViewAI(result)}
+                    id={`view-ai-${result.order_id}`}
+                  >
+                    <Bot size={13} /> {isResolved ? 'View Resolution Analysis' : 'View AI Analysis'} <ArrowRight size={12} />
+                  </button>
+                  {result.confidence != null && (
+                    <span className="confidence-badge">
+                      {(result.confidence * 100).toFixed(0)}% confident
+                    </span>
+                  )}
+                </div>
               </div>
             )}
 
             {/* Delta Discrepancy Col */}
-            {Object.keys(result.delta || {}).length > 0 && (
+            {result.status !== 'break' && Object.keys(result.delta || {}).length > 0 && (
               <div className="dropdown-card-col">
                 <div className="col-title">Variance Breakdown</div>
                 {Object.entries(result.delta).map(([k, v]) => (
@@ -196,7 +247,8 @@ function ResultRow({ result, language, onViewAI, isResolved }) {
             title={expanded ? "Hide details" : "View match details"}
             aria-label="View match details"
           >
-            {expanded ? <ChevronDown size={14} /> : <MoreHorizontal size={14} />}
+            <span>Details</span>
+            {expanded ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
           </button>
         </td>
       </tr>
@@ -305,7 +357,7 @@ export default function ReconWorkbench({ onOpenAI }) {
               className={`rzp-tab ${activeTab === tab.key ? 'rzp-tab--active' : ''}`}
               onClick={() => dispatch({ type: 'SET_TAB', tab: tab.key })}
             >
-              <span>{tab.label}</span>
+              <span>{tab.label}</span>{' '}
               {isLoading ? (
                 <span className="sk-pill-sm" style={{ width: '28px', height: '16px', display: 'inline-block', marginLeft: '6px', verticalAlign: 'middle' }} />
               ) : (
@@ -317,41 +369,43 @@ export default function ReconWorkbench({ onOpenAI }) {
           ))}
         </div>
 
-        {/* Compact Filters Right */}
-        <div className="rzp-toolbar-filters">
-          <div className="search-input-box">
-            <Search size={12} className="search-box-icon" />
-            <input
-              id="toolbar-search-input"
-              className="toolbar-input"
-              placeholder="Search Order / Settlement ID..."
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-            />
-            {searchQuery && (
-              <button className="clear-search-btn" onClick={() => setSearchQuery('')}>
-                <X size={12} />
+        {/* Compact Filters Right - Only show when data exists or loading */}
+        {(!isEmpty || isLoading) && (
+          <div className="rzp-toolbar-filters">
+            <div className="search-input-box">
+              <Search size={12} className="search-box-icon" />
+              <input
+                id="toolbar-search-input"
+                className="toolbar-input"
+                placeholder="Search Order / Settlement ID..."
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+              />
+              {searchQuery && (
+                <button className="clear-search-btn" onClick={() => setSearchQuery('')}>
+                  <X size={12} />
+                </button>
+              )}
+            </div>
+
+            <select
+              id="toolbar-status-filter"
+              className="toolbar-select"
+              value={statusFilter}
+              onChange={e => setStatusFilter(e.target.value)}
+            >
+              <option value="all">Status: All</option>
+              <option value="matched">Matched</option>
+              <option value="break">Breaks</option>
+            </select>
+
+            {(searchQuery || statusFilter !== 'all') && (
+              <button className="rzp-clear-link" onClick={clearFilters} title="Clear filters">
+                Clear
               </button>
             )}
           </div>
-
-          <select
-            id="toolbar-status-filter"
-            className="toolbar-select"
-            value={statusFilter}
-            onChange={e => setStatusFilter(e.target.value)}
-          >
-            <option value="all">Status: All</option>
-            <option value="matched">Matched</option>
-            <option value="break">Breaks</option>
-          </select>
-
-          {(searchQuery || statusFilter !== 'all') && (
-            <button className="rzp-clear-link" onClick={clearFilters} title="Clear filters">
-              Clear
-            </button>
-          )}
-        </div>
+        )}
       </div>
 
       {/* Table Area */}
@@ -366,82 +420,70 @@ export default function ReconWorkbench({ onOpenAI }) {
             </button>
           </div>
         ) : isEmpty ? (
-          <div className="rzp-hero-welcome">
-            {/* Section Header */}
-            <div className="hero-header-wrap">
-              <h3 className="hero-title">
-                Autonomous 4-Pass Reconciliation Engine
-              </h3>
-              <p className="hero-description">
-                Audit payment gateway settlements against ERP ledgers using multi-pass deterministic rules, fuzzy heuristics, and LLM exception diagnostics.
+          <div className="workbench-empty-hero">
+            <div className="hero-header-text">
+              <h3 className="workbench-empty-title">Ready for Settlement Reconciliation</h3>
+              <p className="workbench-empty-sub">
+                Run the automated 4-Pass Engine to match payment gateway settlements against ERP ledgers and isolate exception breaks.
               </p>
             </div>
 
-            {/* Grid: 4 Equal-Height Cards */}
-            <div className="hero-pipeline-grid">
-              {/* Pass 1 Card */}
-              <div className="pipeline-pass-card pass-card-1">
-                <div>
-                  <span className="pass-pill-badge badge-blue">Pass 1</span>
-                  <div className="pass-card-title-group">
-                    <h4 className="pass-card-main-title">Deterministic</h4>
-                    <p className="pass-card-subtitle">Exact Match</p>
-                  </div>
+            {/* 4 Pass Block Cards Grid */}
+            <div className="engine-vertical-grid">
+              {/* Card 1 */}
+              <div className="vertical-pass-card">
+                <div className="v-card-top">
+                  <span className="v-card-num font-mono">01</span>
+                  <span className="v-card-pass-tag">Pass 1</span>
                 </div>
-                <p className="pass-card-desc">Matches Order ID &amp; net settlement amount with 100% precision.</p>
+                <div className="v-card-body">
+                  <h4 className="v-card-title">Deterministic</h4>
+                  <span className="v-card-subtitle">Exact Match</span>
+                  <p className="v-card-desc">Matches Order ID &amp; net settlement with 100% precision.</p>
+                </div>
               </div>
 
-              {/* Pass 2 Card */}
-              <div className="pipeline-pass-card pass-card-2">
-                <div>
-                  <span className="pass-pill-badge badge-emerald">Pass 2</span>
-                  <div className="pass-card-title-group">
-                    <h4 className="pass-card-main-title">Contextual</h4>
-                    <p className="pass-card-subtitle">Rule-Based Audit</p>
-                  </div>
+              {/* Card 2 */}
+              <div className="vertical-pass-card">
+                <div className="v-card-top">
+                  <span className="v-card-num font-mono">02</span>
+                  <span className="v-card-pass-tag">Pass 2</span>
                 </div>
-                <p className="pass-card-desc">Audits MDR fee rates, 18% GST, and T+1/T+2 settlement timing lags.</p>
+                <div className="v-card-body">
+                  <h4 className="v-card-title">Contextual</h4>
+                  <span className="v-card-subtitle">Rule-Based Audit</span>
+                  <p className="v-card-desc">Audits MDR fee rates, 18% GST, and timing lags.</p>
+                </div>
               </div>
 
-              {/* Pass 3 Card */}
-              <div className="pipeline-pass-card pass-card-3">
-                <div>
-                  <span className="pass-pill-badge badge-amber">Pass 3</span>
-                  <div className="pass-card-title-group">
-                    <h4 className="pass-card-main-title">Heuristic</h4>
-                    <p className="pass-card-subtitle">Fuzzy Engine</p>
-                  </div>
+              {/* Card 3 */}
+              <div className="vertical-pass-card">
+                <div className="v-card-top">
+                  <span className="v-card-num font-mono">03</span>
+                  <span className="v-card-pass-tag">Pass 3</span>
                 </div>
-                <p className="pass-card-desc">Reconciles cross-midnight batches, duplicate ERPs &amp; partial returns.</p>
+                <div className="v-card-body">
+                  <h4 className="v-card-title">Heuristic</h4>
+                  <span className="v-card-subtitle">Fuzzy Engine</span>
+                  <p className="v-card-desc">Reconciles cross-midnight batches &amp; duplicate ERPs.</p>
+                </div>
               </div>
 
-              {/* Pass 4 Card */}
-              <div className="pipeline-pass-card pass-card-4">
-                <div>
-                  <span className="pass-pill-badge badge-purple">Pass 4</span>
-                  <div className="pass-card-title-group">
-                    <h4 className="pass-card-main-title">Llama 3.3 70B</h4>
-                    <p className="pass-card-subtitle">AI Prescriber</p>
-                  </div>
+              {/* Card 4 */}
+              <div className="vertical-pass-card">
+                <div className="v-card-top">
+                  <span className="v-card-num font-mono">04</span>
+                  <span className="v-card-pass-tag">Pass 4</span>
                 </div>
-                <p className="pass-card-desc">Diagnoses root causes and prescribes resolution steps for breaks.</p>
+                <div className="v-card-body">
+                  <h4 className="v-card-title">AI Diagnosed</h4>
+                  <span className="v-card-subtitle">LLM Prescriber</span>
+                  <p className="v-card-desc">Diagnoses root causes and prescribes resolution steps.</p>
+                </div>
               </div>
-            </div>
-
-            {/* Action Button */}
-            <div className="hero-cta-wrap">
-              <button
-                className="btn btn-primary hero-run-btn"
-                onClick={() => startRecon()}
-                disabled={isLoading}
-                id="btn-run-recon-hero"
-              >
-                <Play size={15} fill="currentColor" />
-                <span>Execute 4-Pass Reconciliation</span>
-              </button>
             </div>
           </div>
-        ) : isLoading && results.length === 0 ? (
+        ) : isLoading ? (
           <table className="rzp-table rzp-table--skeleton" aria-label="Loading Settlement Records">
             <thead>
               <tr>
@@ -455,7 +497,7 @@ export default function ReconWorkbench({ onOpenAI }) {
               </tr>
             </thead>
             <tbody>
-              {[...Array(10)].map((_, i) => (
+              {[...Array(20)].map((_, i) => (
                 <tr key={i} className="rzp-skeleton-row">
                   <td><div className="sk-box sk-w-20" /></td>
                   <td><div className="sk-box sk-w-32 mono" /></td>

@@ -16,13 +16,13 @@ export default function Sidebar({
   isCollapsed = false,
   onToggleCollapse
 }) {
-  const { state } = useReconciliation();
+  const { state, dispatch } = useReconciliation();
   const { runId, results, resolvedBreaks, status, progress } = state;
 
   const isRunning = status === 'running';
   const pct = progress.total_records
     ? Math.round(((progress.total_matched || 0) / progress.total_records) * 100)
-    : 10;
+    : 0;
 
   const getProgressText = () => {
     if (!progress.pass) return 'Initializing...';
@@ -35,6 +35,9 @@ export default function Sidebar({
   const handleNavClick = (item) => {
     if (item.view && onSelectView) {
       onSelectView(item.view);
+      if (item.view !== 'workbench') {
+        dispatch({ type: 'SET_SEARCH_QUERY', query: '' });
+      }
     }
     if (item.action) {
       item.action();
@@ -60,7 +63,6 @@ export default function Sidebar({
         { name: 'Settlements & Recon', icon: Layers, view: 'workbench' },
         { name: 'Cash Flow Forecast', icon: TrendingUp, view: 'cashflow' },
         { name: 'Reconciliation Breakdown', icon: PieChart, view: 'breakdown' },
-        { name: 'Import CSV / Excel', icon: UploadCloud, action: onOpenUpload },
       ]
     },
     {

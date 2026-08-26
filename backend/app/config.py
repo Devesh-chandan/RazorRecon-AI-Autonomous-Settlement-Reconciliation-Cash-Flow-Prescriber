@@ -61,6 +61,7 @@ class Settings(BaseSettings):
         "http://127.0.0.1:5173",
         "http://127.0.0.1:3000",
         "https://localhost",           # production Nginx
+        "https://razor-recon-ai-autonomous-settlemen.vercel.app",
     ]
 
 
