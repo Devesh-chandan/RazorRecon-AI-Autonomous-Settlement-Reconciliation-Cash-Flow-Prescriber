@@ -1,7 +1,7 @@
 <!-- PROJECT LOGO -->
 <div align="center">
   <a href="https://github.com/Devesh-chandan/RazorRecon-AI-Autonomous-Settlement-Reconciliation-Cash-Flow-Prescriber">
-    <img src="docs/images/04-recon-results-cashflow.png" alt="RazorRecon — Dashboard showing reconciliation results, 7-day cash flow chart, and settlement workbench">
+    <img src="docs/images/03-dashboard-overview-results.png" alt="RazorRecon — Dashboard showing reconciliation results, 7-day cash flow chart, and settlement workbench">
   </a>
 
   <h1 align="center">RazorRecon ⚡</h1>
@@ -56,88 +56,126 @@ Razorpay merchants receive daily **net settlements** that lump captured orders, 
 | **⚠️ Error-Prone** | Human error leads to unrecorded breaks, missed tax deductions, and duplicate ledger entries |
 | **🌫️ Cash Opaque** | Unresolved breaks obscure usable operating capital and forward liquidity |
 
-**RazorRecon & Flow** is an autonomous AI financial controller that solves this end-to-end — from raw webhook events and CSV uploads through 4-pass reconciliation to AI-powered diagnostics and 7-day forward cash flow projection.
+**RazorRecon** is an autonomous AI financial controller that solves this end-to-end — from raw webhook events and CSV uploads through 4-pass reconciliation to AI-powered diagnostics and 7-day forward cash flow projection.
 
 ---
 
 ## ✨ See RazorRecon in action
 
-### Dashboard & KPI Overview
-The main dashboard shows real-time settlement KPIs — total settlement value, reconciliation rate, net confirmed payout — and provides one-click access to the 4-pass reconciliation engine.
+### 1. Dashboard Initial Idle State
+The main workbench initializes in a clean state with metric place-holders and 4-pass pipeline cards ready for execution.
 
 <p align="center">
-  <img src="docs/images/01-dashboard-overview.png" alt="RazorRecon dashboard showing settlement KPIs, reconciliation rate of 96%, and the reconciliation engine ready state">
+  <img src="docs/images/01-dashboard-idle.png" alt="RazorRecon dashboard initial idle state showing 4-pass pipeline architecture cards">
 </p>
 
-### CSV & Excel Batch Import
-Drag-and-drop modal for importing official Razorpay Settlement Reports or Tally/Zoho Books ERP ledgers. Supports `.csv` and `.xlsx` with auto-header mapping and deduplication.
+### 2. Real-Time 4-Pass Engine Execution
+Triggering reconciliation initiates real-time SSE streaming. Progress bars and skeleton loaders reflect live status pass by pass.
 
 <p align="center">
-  <img src="docs/images/02-csv-import-modal.png" alt="Import batch data modal with Razorpay Settlement Report and ERP Sales Ledger options, drag and drop file upload area">
+  <img src="docs/images/02-engine-running-skeleton.png" alt="4-Pass reconciliation engine active streaming state with live skeleton loaders">
 </p>
 
-### 4-Pass Reconciliation Engine Running
-Real-time SSE streaming shows the engine progressing through all 4 passes with a live progress bar and match counter in the header.
+### 3. Reconciliation Overview & Results Workbench
+Completed audit displays key financial metrics: 7-Day Confirmed Inflow (₹11.44L), Disputed Exceptions (₹83.89K), 83.0% Recon Rate, and Projected AI Recovery Gain (₹71.30K).
 
 <p align="center">
-  <img src="docs/images/03-engine-running.png" alt="Reconciliation engine actively running Pass 4 AI Diagnostics, showing 116/122 matched with skeleton loading rows">
+  <img src="docs/images/03-dashboard-overview-results.png" alt="RazorRecon complete dashboard showing overview KPIs, 7-day cash flow chart, settlement workbench table, and gateway distribution">
 </p>
 
-### Reconciliation Results with 7-Day Cash Flow
-After reconciliation completes, the settlement workbench shows all 122 records with match status, pass number, and actions. The 7-day cash flow chart displays confirmed inflow vs disputed/held amounts.
+### 4. Merchant Profile & Language Settings Menu
+Integrated user menu displaying active Merchant ID (`MID4823099`), language switcher (`EN` / `HI`), Test Mode indicator, and direct API documentation link.
 
 <p align="center">
-  <img src="docs/images/04-recon-results-cashflow.png" alt="Settlement workbench with 122 settlements, 116 matched, 6 breaks, and 7-day cash flow chart showing confirmed vs disputed inflow curves">
+  <img src="docs/images/04-user-profile-menu.png" alt="Top navigation user profile menu dropdown with Merchant profile and Hinglish language toggle">
 </p>
 
-### Detailed Match Audit — Exact Match (Pass 1)
-Expanding any matched row reveals the full reconciliation audit: which pass matched it, confidence score, settlement ID, and ERP ledger reference.
+### 5. CSV & Excel Batch Data Import Modal
+Drag-and-drop ingestion interface supporting official Razorpay Settlement Reports and Tally/Zoho Books ERP sales ledgers (`.csv` and `.xlsx` files up to 50 MB).
 
 <p align="center">
-  <img src="docs/images/05-match-details-expanded.png" alt="Expanded detail row showing Pass 1 Exact Match with 100% confidence, settlement ID, and ERP Ledger ID">
+  <img src="docs/images/05-csv-import-modal.png" alt="Import Batch Data modal with data source type radio buttons and drag-and-drop upload zone">
 </p>
 
-### AI Exception Diagnosis — Break Detection (Pass 4)
-Unmatched records show AI-powered root cause analysis with actionable fix recommendations. Each break includes severity, exception type, and a recommended action.
+### 6. CSV Batch Import Completion Summary
+Post-import summary showing rows read, records imported vs duplicate rows skipped, with instant "Audit All DB Records" or "Audit Imported Data Only" action triggers.
 
 <p align="center">
-  <img src="docs/images/06-break-ai-diagnosis.png" alt="Break detail showing Pass 4 AI Diagnosed with 96% confidence, missing ERP entry diagnosis, and recommended action to create an ERP invoice entry">
+  <img src="docs/images/06-csv-import-success.png" alt="Import Completed Successfully modal showing 50 rows read, 0 imported, 50 skipped duplicates summary">
 </p>
 
-### AI Exception Analysis Drawer (English)
-The side drawer lists all unresolved exceptions with one-click Resolve and Escalate actions. AI explains each break in plain English with confidence scores.
+### 7. 7-Day Cash Flow Projection & Recovery Analysis Page
+Dedicated liquidity forecast page projecting 7-day cash inflow trends, gateway holdback risks, and daily liquidity breakdown tables.
 
 <p align="center">
-  <img src="docs/images/07-ai-exception-drawer.png" alt="AI Exception Analysis drawer showing 6 unresolved exceptions with Resolve, Escalate buttons and 95-96% confidence scores">
+  <img src="docs/images/07-cashflow-forecast-page.png" alt="7-Day Cash Flow Projection & Recovery Analysis view with trend chart and daily liquidity table">
 </p>
 
-### Audit Trail & Execution Log
-Complete audit trail of all 122 entries with pass-level filtering and status filtering. Every match is logged with its confidence score and match type.
+### 8. Interactive Cash Flow Chart Tooltip Detail
+Hovering over forecast date nodes displays exact confirmed inflow vs disputed exception holdbacks.
 
 <p align="center">
-  <img src="docs/images/08-audit-trail-log.png" alt="Audit Trail drawer showing 122 total entries, filterable by pass and status, each entry showing matched status and 100% confidence">
+  <img src="docs/images/08-cashflow-chart-tooltip.png" alt="Interactive chart tooltip showing Aug 05 confirmed inflow ₹3.5L vs disputed ₹11.8k">
 </p>
 
-### What-If Simulation — Break Resolution
-Resolving a break instantly updates the cash flow chart with a new "What-If" curve showing the recovered capital. The break status changes to "Resolved" and the reconciliation rate climbs.
+### 9. Reconciliation Breakdown — Gateway Performance Matrix
+Volume allocation breakdown across payment gateways (HDFC Bank PG 43.8%, Razorpay Stack 23.1%, ICICI Direct 20.3%, Axis UPI Express 11.2%, PhonePe 1.5%).
 
 <p align="center">
-  <img src="docs/images/10-whatif-break-resolved.png" alt="What-If simulation showing resolved break with 95.9% reconciliation rate, Resolved via What-If Engine badge, and updated cash flow chart with What-If projection line">
+  <img src="docs/images/09-recon-breakdown-gateways.png" alt="Reconciliation Breakdown Analysis page showing Gateway Volume Allocation donut chart and performance matrix">
 </p>
 
-### 100% Reconciliation — All Breaks Resolved
-After resolving all breaks, the dashboard shows 100% reconciliation rate with 122/122 matched. The cash flow chart displays confirmed inflow, disputed/held, and What-If projections together.
+### 10. Reconciliation Breakdown — Exception Root Cause Actions
+Breakdown tab isolating exception root causes with financial impact deltas, priority badges, and actionable next steps.
 
 <p align="center">
-  <img src="docs/images/11-all-breaks-resolved.png" alt="Dashboard showing 100% reconciliation rate, 122/122 matched, all breaks resolved, and cash flow chart with confirmed, disputed, and What-If curves with tooltip showing Aug 04 breakdown">
+  <img src="docs/images/10-recon-breakdown-exceptions.png" alt="Exception Root Cause Actions breakdown showing Unknown and Missing ERP Entry severity cards">
 </p>
 
-### Bilingual AI Diagnostics — Hinglish Mode
-Toggle between English and Hinglish for AI exception analysis. Hinglish mode explains breaks in natural mixed Hindi-English (e.g., *"Card payment ₹1,779.46 settle ho gayi hai fee aur tax ke saath, lekin ERP mein koi entry nahi hai..."*).
+### 11. AI Exception Analysis & Diagnostics Drawer (English Mode)
+Side drawer detailing all unresolved exceptions with LLM confidence scores, root cause explanations, and one-click `Resolve` / `Escalate` actions.
 
 <p align="center">
-  <img src="docs/images/12-hinglish-mode.png" alt="Hinglish mode showing AI diagnosis in natural Hindi-English with Resolved via What-If Engine badge and View Resolution Analysis button">
+  <img src="docs/images/11-ai-exception-drawer-en.png" alt="AI Exception Analysis & Diagnostics drawer listing unresolved exception breaks in English">
 </p>
+
+### 12. Resolved Exception State via What-If Simulation Engine
+Resolving a break updates exception status to `Resolved (What-If Applied)` with a green confirmation badge.
+
+<p align="center">
+  <img src="docs/images/12-ai-exception-drawer-resolved.png" alt="AI Exception drawer showing resolved exception item with green confirmation badge">
+</p>
+
+### 13. Audit Trail & Execution Log
+Comprehensive log of all audit records filterable by Recon Pass (Pass 1–4) and Status (`matched` / `break`) with JSON export capability.
+
+<p align="center">
+  <img src="docs/images/13-audit-trail-drawer.png" alt="Audit Trail & Execution Log drawer displaying 101 total entries with pass badges and confidence scores">
+</p>
+
+### 14. Detailed Match Audit — Pass 1 Exact Deterministic Match
+Expanding a matched row reveals execution context: Recon Pass 1, Deterministic Hash strategy, and matching Order & Settlement IDs.
+
+<p align="center">
+  <img src="docs/images/14-matched-row-expanded.png" alt="Expanded workbench row showing Pass 1 Exact Match execution details">
+</p>
+
+### 15. What-If Scenario Simulation Curve
+Simulating AI exception recovery overlays a blue dashed "What-If" curve on the cash flow chart showing liquidity recovery potential (+₹3.2K).
+
+<p align="center">
+  <img src="docs/images/15-whatif-scenario-curve.png" alt="Dashboard showing What-If blue simulation curve overlay on 7-Day Cash Flow chart">
+</p>
+
+### 16. AI Exception Audit Detail — Pass 4 AI Diagnosed Break
+Expanding a break exception displays LLM diagnosis execution context, confidence rating, root cause alert, and "View AI Analysis →" CTA.
+
+<p align="center">
+  <img src="docs/images/16-break-row-expanded.png" alt="Expanded row displaying Pass 4 AI Diagnosed break with root cause alert card">
+</p>
+
+### 17. Bilingual AI Diagnostics — Hinglish vs English Comparison
+Toggle language mode to view AI diagnostics in natural Hinglish (*"Order order_TH26080055 ka break automatically classify nahi ho saka. Manual review zarori hai."*) or English.
 
 <details>
 <summary><strong>🔍 Hinglish vs English — AI Diagnosis Detail Comparison</strong></summary>
@@ -145,7 +183,7 @@ Toggle between English and Hinglish for AI exception analysis. Hinglish mode exp
 
 | English Mode | Hinglish Mode |
 |---|---|
-| <img src="docs/images/14-hinglish-ai-detail-en.png" alt="English AI diagnosis detail" width="400"> | <img src="docs/images/15-hinglish-ai-detail-hi.png" alt="Hinglish AI diagnosis detail" width="400"> |
+| <img src="docs/images/18-english-ai-detail-en.png" alt="English AI diagnosis detail" width="400"> | <img src="docs/images/17-hinglish-ai-detail-hi.png" alt="Hinglish AI diagnosis detail" width="400"> |
 
 </details>
 
@@ -193,6 +231,8 @@ Toggle between English and Hinglish for AI exception analysis. Hinglish mode exp
 | Capability | What it covers |
 |---|---|
 | **Ingest production data** | Live Razorpay Webhooks (`payment.captured`, `settlement.processed`, `refund.processed`) with HMAC-SHA256 signature verification, and batch CSV/Excel drag-and-drop importer for Razorpay Settlement Reports & Tally/Zoho Books ledgers |
+| **Scheduled Cron Trigger** | Production `/api/recon/cron` endpoint supporting both `GET` and `POST` methods, returning a lightweight JSON payload (~75 bytes) to prevent hosting platform log buffer overflows while running background reconciliation |
+| **Schema Auto-Healing** | Built-in database schema inspector (`auto_heal_schema`) auto-migrates missing ORM table columns (`gateway`, `import_source`, `refund_amount`) on app startup without data loss |
 | **4-Pass reconciliation** | Pass 1: Exact deterministic HashMap match. Pass 2: Rule-based T+1/T+2 date windows, MDR fee tolerance ±₹5, UTC/IST shifts, GST rounding. Pass 3: Fuzzy heuristics for partial refunds, 2% variance typos, duplicate ERP entries. Pass 4: LLM deep root-cause analysis |
 | **AI diagnostics** | Bilingual English + Hinglish exception explanations with confidence scores, severity levels, recommended actions, and one-click Resolve/Escalate |
 | **Cash flow projection** | 7-day forward liquidity based on pending captured orders with payment method MDR rates (UPI 0%, Card 2%, NetBanking 1.75%, Wallet 2.5%) |
@@ -200,6 +240,7 @@ Toggle between English and Hinglish for AI exception analysis. Hinglish mode exp
 | **Real-time streaming** | Server-Sent Events (SSE) update the frontend pass-by-pass with animated progress counters |
 | **Enterprise auth** | OAuth2/JWT, role-based access control, endpoint rate limiting |
 | **Audit & export** | Complete audit trail per reconciliation run, JSON export, per-entry drill-down |
+
 
 ---
 
@@ -367,7 +408,25 @@ Ingests official Razorpay Settlement Reports (`.csv`, `.xlsx`) or ERP ledgers. A
 }
 ```
 
-Sample test datasets included: [`sample_razorpay_settlements.csv`](sample_razorpay_settlements.csv) and [`sample_erp_ledger.csv`](sample_erp_ledger.csv).
+Sample test datasets & JSON audit logs included in the production [`samples/`](samples/) directory:
+- [`samples/sample_razorpay_settlements.csv`](samples/sample_razorpay_settlements.csv) — Sample Razorpay Settlement report
+- [`samples/sample_erp_ledger.csv`](samples/sample_erp_ledger.csv) — Sample ERP Sales Ledger file
+- [`samples/sample_audit_log_export.json`](samples/sample_audit_log_export.json) — Sample JSON audit log export
+
+
+### 3. Production Cron Reconciliation Trigger (`GET` / `POST /api/recon/cron`)
+
+Designed for cloud cron job providers (e.g. `cron-job.org`, Render Cron, GitHub Actions, AWS EventBridge). Accepts both `GET` and `POST` methods and returns a lightweight HTTP 200 JSON status response (~75 bytes) to prevent response buffer overflows while executing reconciliation asynchronously in the background:
+
+```json
+{
+  "status": "ok",
+  "message": "Reconciliation job started",
+  "run_id": "c71a39f6-1234-4567-89ab-cdef01234567"
+}
+```
+
+Included runner script: [`scripts/cron_recon.sh`](scripts/cron_recon.sh).
 
 ---
 
@@ -389,6 +448,7 @@ Interactive Swagger documentation is available at **`http://localhost:8000/docs`
 |---|---|---|
 | `POST` | `/api/webhooks/razorpay` | Live Webhook Listener — HMAC-SHA256 signature verification |
 | `POST` | `/api/recon/upload` | Batch Importer — `.csv` / `.xlsx` ingestion |
+| `GET` / `POST` | `/api/recon/cron` | Lightweight Cron Trigger — HTTP 200 response (~75 bytes) |
 | `POST` | `/api/auth/register` | Register new merchant user |
 | `POST` | `/api/auth/token` | OAuth2 password login, returns JWT |
 | `GET` | `/api/auth/me` | Current authenticated user profile |
@@ -401,6 +461,7 @@ Interactive Swagger documentation is available at **`http://localhost:8000/docs`
 | `GET` | `/api/audit/{run_id}` | Complete audit log for a specific run |
 | `GET` | `/api/audit/{run_id}/export` | Download full audit log as JSON |
 | `GET` | `/api/health` | Health check — DB, Redis, and Groq API status |
+
 
 ---
 
@@ -506,14 +567,14 @@ RazorRecon-AI/
 │       └── ci.yml            # GitHub Actions automated test & build pipeline
 ├── backend/
 │   ├── alembic/              # Database migration scripts
-│   │   └── versions/         # Migration revisions (0001_initial, 0002_add_merchants)
+│   │   └── versions/         # Migration revisions (0001_initial, 0002_add_merchants, 0003_add_gateway_fields)
 │   ├── app/
 │   │   ├── auth/             # JWT auth, bcrypt password hashing, RBAC dependencies
 │   │   ├── engine/           # 4-Pass Reconciliation Core (pass1-4, cashflow, reconcile)
 │   │   ├── llm/              # Groq client & diagnostic prompts
 │   │   ├── routes/           # FastAPI routers (recon, cashflow, audit, auth, ingestion, health)
 │   │   ├── config.py         # Settings & environment variables
-│   │   ├── database.py       # SQLAlchemy database session manager
+│   │   ├── database.py       # SQLAlchemy database session manager & auto_heal_schema inspector
 │   │   ├── models.py         # DB ORM Schema definitions
 │   │   ├── schemas.py        # Pydantic request/response schemas
 │   │   ├── cache.py          # Redis caching implementation
@@ -528,8 +589,15 @@ RazorRecon-AI/
 │   │   ├── App.jsx
 │   │   └── index.css         # Razorpay Design System tokens & styles
 │   └── package.json
+├── samples/                  # Production sample datasets & JSON audit log exports
+│   ├── sample_razorpay_settlements.csv
+│   ├── sample_erp_ledger.csv
+│   └── sample_audit_log_export.json
+├── scripts/
+│   └── cron_recon.sh         # Production cron job trigger shell script
 ├── tests/                    # Pytest & Locust test suite
 │   ├── conftest.py           # Path resolver for IDEs & test runners
+│   ├── test_cron_logging.py  # Unit tests for cron endpoint & logging configuration
 │   ├── test_pass1_exact.py   # Unit tests for Pass 1 Exact Match logic
 │   ├── test_reconcile.py     # Unit tests for Pass 2-3 & multi-pass engine pipeline
 │   ├── test_webhook.py       # Unit tests for HMAC-SHA256 webhook verification
@@ -543,8 +611,6 @@ RazorRecon-AI/
 ├── Makefile                  # Developer & judge command shortcuts (make dev, make test)
 ├── quickstart.sh             # 1-click automated setup script for judges
 ├── LICENSE                   # MIT License
-├── sample_razorpay_settlements.csv  # Sample Razorpay Settlement report for batch testing
-├── sample_erp_ledger.csv     # Sample ERP Sales Ledger file for batch testing
 ├── PROBLEMS_AND_SOLUTIONS.md # Complete problem, root-cause & solution log
 ├── pytest.ini
 ├── .env.example
