@@ -362,8 +362,9 @@ def _import_settlements(df: pd.DataFrame, db: Session):
                 existing.import_source = "csv_import"
                 if data.get("gateway"):
                     existing.gateway = str(data.get("gateway", "") or "Razorpay Stack")
-                imported += 1
+                skipped += 1
                 continue
+
 
             # Parse settled_at
             settled_at_raw = data.get("settled_at")

@@ -207,16 +207,17 @@ async def get_stats(run_id: str, db: Session = Depends(get_db)):
     )
 
 
-@router.post("/cron", status_code=204, summary="Lightweight Cron Reconciliation Trigger")
+@router.api_route("/cron", methods=["GET", "POST", "HEAD"], summary="Lightweight Cron Reconciliation Trigger")
 async def trigger_cron_recon(
     background_tasks: BackgroundTasks,
     scope: str = "all",
     db: Session = Depends(get_db),
 ):
-    """Cron-friendly reconciliation trigger returning HTTP 204 No Content.
+    """Cron-friendly reconciliation trigger returning lightweight HTTP 200 JSON (~75 bytes).
     
-    Prevents hosting platform HTTP response buffer overflow by returning an empty body while
-    executing reconciliation headlessly in the background.
+    Prevents hosting platform (e.g., cron-job.org, Render) HTTP response buffer overflow by
+    returning a minimal JSON response while executing reconciliation asynchronously in the background.
+    Supports both GET and POST HTTP methods used by various cron providers.
     """
     run_id = str(uuid.uuid4())
     recon_run = ReconRun(run_id=run_id, status="running")
@@ -236,5 +237,6 @@ async def trigger_cron_recon(
 
     background_tasks.add_task(_run)
     logger.info(f"Cron scheduled reconciliation run started: {run_id}")
-    return Response(status_code=204)
+    return {"status": "ok", "message": "Reconciliation job started", "run_id": run_id}
+
 

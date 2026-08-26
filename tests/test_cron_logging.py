@@ -7,11 +7,17 @@ from app.config import get_settings
 client = TestClient(app)
 
 
-def test_cron_endpoint_returns_204():
-    """POST /api/recon/cron must return HTTP 204 No Content with empty body."""
-    response = client.post("/api/recon/cron")
-    assert response.status_code == 204
-    assert response.content == b""
+def test_cron_endpoint_returns_lightweight_json():
+    """GET and POST /api/recon/cron must return HTTP 200 with lightweight JSON payload (~75 bytes)."""
+    response_post = client.post("/api/recon/cron")
+    assert response_post.status_code == 200
+    assert response_post.json()["status"] == "ok"
+    assert "run_id" in response_post.json()
+
+    response_get = client.get("/api/recon/cron")
+    assert response_get.status_code == 200
+    assert response_get.json()["status"] == "ok"
+    assert "run_id" in response_get.json()
 
 
 def test_log_level_configuration():
