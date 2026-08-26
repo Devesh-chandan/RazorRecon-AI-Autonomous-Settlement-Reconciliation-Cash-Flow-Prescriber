@@ -35,6 +35,9 @@ This document logs all technical challenges, edge-case bugs, webhook integration
 28. [Hardcoded `96.0%` Match Rate and Stale Fallbacks in Breakdown Analytics Page](#28-hardcoded-960-match-rate-and-stale-fallbacks-in-breakdown-analytics-page)
 29. [Settlement CSV Auto-Generated Payment ID Truncation Mismatch](#29-settlement-csv-auto-generated-payment-id-truncation-mismatch)
 30. [What-If Cashflow Filter Excluding CSV Orders with Null Capture Dates](#30-what-if-cashflow-filter-excluding-csv-orders-with-null-capture-dates)
+31. [Third-Party Cron Service Ping Failure (`Failed (output too large)`)](#31-third-party-cron-service-ping-failure-failed-output-too-large)
+32. [Duplicate CSV Import Reporting Error (`rows_skipped == 0` instead of `2`)](#32-duplicate-csv-import-reporting-error-rows_skipped--0-instead-of-2)
+33. [PostgreSQL Production Deployment Startup Crash (`UndefinedColumn: column "gateway" of relation "settlements" does not exist`)](#33-postgresql-production-deployment-startup-crash-undefinedcolumn-column-gateway-of-relation-settlements-does-not-exist)
 
 ---
 
@@ -497,4 +500,69 @@ Simulating AI break resolution (`POST /api/cashflow/whatif`) failed to reflect c
 
 #### ✅ Solution
 Removed the overly strict `captured_at.isnot(None)` requirement from the What-If resolution query, allowing all captured and partial refund orders to participate in 7-day cash flow projections.
+
+---
+
+### 31. Third-Party Cron Service Ping Failure (`Failed (output too large)`)
+
+#### ❌ Problem
+Pinging `https://razorrecon-backend.onrender.com/api/recon/cron` from external cron job triggers (such as `cron-job.org`) failed with:
+`Status: Failed (output too large) — The response was larger than the allowed limit and was aborted. Make the endpoint return less data.`
+
+#### 🔍 Root Cause
+1. **HTTP Method Mismatch**: External cron triggers default to HTTP `GET` requests. The endpoint was registered exclusively as `@router.post("/cron")`.
+2. **HTML Error Response Overflow**: Calling `GET /api/recon/cron` returned `HTTP 405 Method Not Allowed` with a Render/FastAPI HTML trace page (>10 KB with styles), exceeding cron-job.org's strict 10 KB log limit.
+
+#### ✅ Solution
+1. Updated `/api/recon/cron` in `backend/app/routes/recon.py` using `@router.api_route("/cron", methods=["GET", "POST", "HEAD"])` to accept `GET`, `POST`, and `HEAD` methods.
+2. Returned a lightweight JSON response (~75 bytes) with `HTTP 200 OK`:
+   ```json
+   {
+     "status": "ok",
+     "message": "Reconciliation job started",
+     "run_id": "c71a39f6-1234-4567-89ab-cdef01234567"
+   }
+   ```
+3. Updated unit tests in `tests/test_cron_logging.py` to verify both `GET` and `POST` triggers.
+
+---
+
+### 32. Duplicate CSV Import Reporting Error (`rows_skipped == 0` instead of `2`)
+
+#### ❌ Problem
+Re-importing a settlement CSV file containing duplicate rows returned `rows_skipped == 0` instead of `2`, causing `pytest tests/test_csv_importer.py` test `test_duplicate_rows_skipped` to fail with `assert 0 == 2`.
+
+#### 🔍 Root Cause
+In `backend/app/routes/ingestion.py` function `_import_settlements`, when an existing settlement row was found in PostgreSQL, the function executed `imported += 1` instead of `skipped += 1`.
+
+#### ✅ Solution
+Updated duplicate row handling in `_import_settlements` to increment `skipped += 1` when an `existing` record is present:
+```python
+existing = db.query(Settlement).filter(Settlement.settlement_id == settlement_id).first()
+if existing:
+    existing.import_source = "csv_import"
+    if data.get("gateway"):
+        existing.gateway = str(data.get("gateway", "") or "Razorpay Stack")
+    skipped += 1
+    continue
+```
+
+---
+
+### 33. PostgreSQL Production Deployment Startup Crash (`UndefinedColumn: column "gateway" of relation "settlements" does not exist`)
+
+#### ❌ Problem
+Deploying backend code updates to Render production failed during dataset seeding with `(psycopg2.errors.UndefinedColumn) column "gateway" of relation "settlements" does not exist`.
+
+#### 🔍 Root Cause
+`Base.metadata.create_all(bind=engine)` only creates tables if they do not exist. On existing production PostgreSQL databases where the `settlements` table was created prior to adding the `gateway` and `import_source` columns, `create_all` did not alter existing tables to add new columns.
+
+#### ✅ Solution
+1. Implemented `auto_heal_schema(db_engine)` in `backend/app/database.py` using SQLAlchemy `inspect(db_engine)` to automatically inspect table definitions and execute:
+   - `ALTER TABLE settlements ADD COLUMN gateway VARCHAR(50);` (if missing)
+   - `ALTER TABLE settlements ADD COLUMN import_source VARCHAR(20) DEFAULT 'seeded';` (if missing)
+   - `ALTER TABLE orders ADD COLUMN refund_amount NUMERIC(12, 2) DEFAULT 0;` (if missing)
+   - `ALTER TABLE orders ADD COLUMN erp_invoice VARCHAR(30);` (if missing)
+2. Integrated `auto_heal_schema(engine)` into application startup (`lifespan` in `main.py`) and dataset seeding (`seed.py`).
+
 
