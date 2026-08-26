@@ -1,11 +1,11 @@
 <!-- PROJECT LOGO -->
 <div align="center">
-  <a href="https://github.com/Devesh-chandan/RazorRecon-AI-Autonomous-Settlement-Reconciliation-Cash-Flow-Prescriber">
-    <img src="docs/images/razorrecon-banner.png" alt="RazorRecon — LLM-Powered Autonomous Settlement Reconciliation & Cash-Flow Prescriber Banner">
+  <a href="https://razor-recon-ai-autonomous-settlemen.vercel.app/" target="_blank">
+    <img src="docs/images/razorrecon-hero-banner.png" alt="RazorRecon — LLM-Powered Autonomous Settlement Reconciliation & Cash-Flow Prescriber Banner">
   </a>
   <br />
   <br />
-  <a href="https://github.com/Devesh-chandan/RazorRecon-AI-Autonomous-Settlement-Reconciliation-Cash-Flow-Prescriber">
+  <a href="https://razor-recon-ai-autonomous-settlemen.vercel.app/" target="_blank">
     <img src="docs/images/app-logo.svg" alt="RazorRecon Logo" width="64" height="64" />
   </a>
 
@@ -21,7 +21,7 @@
     <br />
     <a href="https://razor-recon-ai-autonomous-settlemen.vercel.app/" target="_blank"><strong>🌐 Live Demo</strong></a>
     ·
-    <a href="#-product-tour"><strong>See it in action</strong></a>
+    <a href="#-interactive-platform-demonstration"><strong>See it in action</strong></a>
     ·
     <a href="#-quickstart"><strong>Get started</strong></a>
     ·
@@ -34,14 +34,14 @@
 <p align="center">
   <a href="https://razor-recon-ai-autonomous-settlemen.vercel.app/" target="_blank"><img src="https://img.shields.io/badge/Live_Demo-Vercel-000000?style=flat-square&logo=vercel&logoColor=white" alt="Live Demo on Vercel"></a>
   <a href="https://github.com/Devesh-chandan/RazorRecon-AI-Autonomous-Settlement-Reconciliation-Cash-Flow-Prescriber"><img src="https://img.shields.io/badge/Hackathon-Razorpay_Buildathon_2026-0C2340?style=flat-square&logo=razorpay&logoColor=white" alt="Razorpay Buildathon 2026"></a>
-  <a href="https://github.com/Devesh-chandan/RazorRecon-AI-Autonomous-Settlement-Reconciliation-Cash-Flow-Prescriber"><img src="https://img.shields.io/badge/Track-04_AI_Finance_Controller-F05032?style=flat-square" alt="Track 04"></a>
-  <a href="https://github.com/Devesh-chandan/RazorRecon-AI-Autonomous-Settlement-Reconciliation-Cash-Flow-Prescriber/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/Devesh-chandan/RazorRecon-AI-Autonomous-Settlement-Reconciliation-Cash-Flow-Prescriber/ci.yml?branch=main&style=flat-square&label=CI_Status&logo=githubactions&logoColor=white" alt="CI Status"></a>
+  <a href="https://github.com/Devesh-chandan/RazorRecon-AI-Autonomous-Settlement-Reconciliation-Cash-Flow-Prescriber"><img src="https://img.shields.io/badge/Track-04_AI_Finance_Controller-F05032?style=flat-square&logo=cpu&logoColor=white" alt="Track 04"></a>
+  <a href="https://github.com/Devesh-chandan/RazorRecon-AI-Autonomous-Settlement-Reconciliation-Cash-Flow-Prescriber/actions"><img src="https://img.shields.io/badge/CI_Status-Passing-2EA44F?style=flat-square&logo=githubactions&logoColor=white" alt="CI Status"></a>
   <a href="https://github.com/Devesh-chandan/RazorRecon-AI-Autonomous-Settlement-Reconciliation-Cash-Flow-Prescriber/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-MIT-2EA44F?style=flat-square&logo=opensourceinitiative&logoColor=white" alt="MIT License"></a>
 </p>
 
 <p align="center">
   <img src="https://img.shields.io/badge/LLM-Llama_3.3_70B-0467DF?style=flat-square&logo=meta&logoColor=white" alt="Llama 3.3 70B">
-  <img src="https://img.shields.io/badge/Inference-Groq_Cloud-F05032?style=flat-square&logo=speedtest&logoColor=white" alt="Groq Cloud">
+  <img src="https://img.shields.io/badge/Inference-Groq_Cloud-F05032?style=flat-square&logo=cloud&logoColor=white" alt="Groq Cloud">
   <img src="https://img.shields.io/badge/Python-3.12-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python 3.12">
   <img src="https://img.shields.io/badge/FastAPI-0.115-009688?style=flat-square&logo=fastapi&logoColor=white" alt="FastAPI">
   <img src="https://img.shields.io/badge/React-19-20232A?style=flat-square&logo=react&logoColor=61DAFB" alt="React 19">
@@ -54,6 +54,10 @@
 ---
 
 ## 📊 Quantified Impact — How RazorRecon Solves the Problem
+
+<p align="center">
+  <img src="docs/images/quantified-impact-matrix.png" alt="RazorRecon Quantified Impact — How RazorRecon Solves the Problem">
+</p>
 
 These are structural, architecture-level metrics — how the engine is built to perform — not
 numbers pulled from any one demo run. Actual results scale with your own transaction volume.
@@ -74,18 +78,17 @@ numbers pulled from any one demo run. Actual results scale with your own transac
 ## 📍 Table of Contents
 
 <details open>
-<summary><strong>Click to expand / collapse navigation menu</strong></summary>
+<summary><strong>Navigation Menu</strong></summary>
 <br />
 
-| Overview & Architecture | Developer & Ingestion Setup | Operations, Deployment & License |
-|---|---|---|
-| 💡 [What is RazorRecon?](#-what-is-razorrecon) | 🚀 [Quickstart Guide](#-quickstart) | 📖 [API Reference](#-api-reference) |
-| 📊 [Quantified Impact](#-quantified-impact--how-razorrecon-solves-the-problem) | 🔌 [Ports & Services](#-ports--services) | 🗄️ [Database & Cache Inspection](#-database--cache-inspection) |
-| 🎯 [Is RazorRecon a Fit?](#-is-razorrecon-a-fit) | 📥 [Data Ingestion Pipelines](#-data-ingestion-pipelines) | 🐳 [Production Deployment](#-production-deployment) |
-| 🎬 [Product Tour](#-product-tour) | 🔐 [Authentication](#-authentication) | 🧪 [Testing & Quality Assurance](#-testing--quality-assurance) |
-| 🏗️ [Architecture](#️-architecture) | | 📁 [Repository Structure](#-repository-structure) |
-| 🛠️ [Technology Stack](#️-technology-stack) | | 🔧 [Troubleshooting](#-troubleshooting) |
-| 📋 [Platform Capabilities](#-platform-capabilities) | | 🏆 [Project Info & License](#-project-info--license) |
+| 🏛️ Overview & Product | ⚡ Engine & Setup | 🛡️ Operations & Docs |
+| :--- | :--- | :--- |
+| 💡 **[What is RazorRecon?](#-what-is-razorrecon)** | 📋 **[Platform Capabilities](#-platform-capabilities)** | 🗄️ **[Database & Cache Inspection](#-database--cache-inspection)** |
+| 📊 **[Quantified Impact](#-quantified-impact--how-razorrecon-solves-the-problem)** | 🚀 **[Quickstart Guide](#-quickstart)** | 🐳 **[Production Deployment](#-production-deployment)** |
+| 🎯 **[Is RazorRecon a Fit?](#-is-razorrecon-a-fit)** | 🔌 **[Ports & Services](#-ports--services)** | 🧪 **[Testing & QA](#-testing--quality-assurance)** |
+| 🎬 **[Platform Demonstration](#-interactive-platform-demonstration)** | 📥 **[Data Ingestion Pipelines](#-data-ingestion-pipelines)** | 📁 **[Repository Structure](#-repository-structure)** |
+| 🏗️ **[Architecture Flowchart](#️-architecture)** | 🔐 **[Authentication](#-authentication)** | 🔧 **[Troubleshooting](#-troubleshooting)** |
+| 🛠️ **[Technology Stack](#️-technology-stack)** | 📖 **[API Reference](#-api-reference)** | 🏆 **[Project Info & License](#-project-info--license)** |
 
 </details>
 
@@ -117,7 +120,7 @@ webhook events and CSV uploads, through 4-pass reconciliation, to AI-powered dia
 
 ---
 
-## 🎬 Product Tour
+## 🎬 Interactive Platform Demonstration
 
 <details open>
 <summary><strong>Reconciliation Workbench & Live Engine</strong></summary>
@@ -220,32 +223,24 @@ API docs.
 
 ## 🏗️ Architecture
 
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                           PRODUCTION CLOUD PIPELINE                         │
-│                                                                             │
-│ ┌──────────────────────┐      ┌──────────────────┐      ┌─────────────────┐ │
-│ │ Vercel / Cloudflare  │ ---> │ AWS ECS / Render │ ---> │ AWS RDS Postgres│ │
-│ │ React 19 Frontend    │      │ Gunicorn FastAPI │      │ SSL Managed DB  │ │
-│ └──────────────────────┘      └────────┬─────────┘      └─────────────────┘ │
-│                                        │                                    │
-│ ┌──────────────────────┐               │                ┌─────────────────┐ │
-│ │ Razorpay Webhooks    │ ──────────────┼──────────────> │ Upstash Redis   │ │
-│ │ Live Payment Events  │               │                │ Managed Cache   │ │
-│ └──────────────────────┘               ▼                └─────────────────┘ │
-│                               ┌──────────────────┐                          │
-│                               │ Groq Cloud API   │                          │
-│                               │ Llama 3.3 70B    │                          │
-│                               └──────────────────┘                          │
-└─────────────────────────────────────────────────────────────────────────────┘
-```
+### End-to-End System Workflow Diagram
+
+<p align="center">
+  <img src="docs/images/end-to-end-system-architecture.png" alt="RazorRecon End-to-End System Workflow Diagram">
+</p>
+
+### Production Cloud Pipeline
+
+<p align="center">
+  <img src="docs/images/production-cloud-pipeline.png" alt="RazorRecon Production Cloud Pipeline Diagram">
+</p>
 
 ---
 
 ## 🛠️ Technology Stack
 
 <p align="center">
-  <img src="docs/images/Techstack.png" alt="RazorRecon Technology Stack Architecture Diagram — Built with modern, scalable technologies">
+  <img src="docs/images/technology-stack-architecture.png" alt="RazorRecon Technology Stack Architecture Diagram — Built with modern, scalable technologies">
 </p>
 
 | Layer | Component | Technologies & Architecture |
@@ -262,7 +257,7 @@ API docs.
 ## 📋 Platform Capabilities
 
 <p align="center">
-  <img src="docs/images/PlatformCapabilities.png" alt="RazorRecon Platform Capabilities Architecture Overview">
+  <img src="docs/images/platform-capabilities-overview.png" alt="RazorRecon Platform Capabilities Architecture Overview">
 </p>
 
 | Capability | What it covers |
