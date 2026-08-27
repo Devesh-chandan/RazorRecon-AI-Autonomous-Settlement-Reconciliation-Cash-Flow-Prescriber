@@ -20,11 +20,11 @@ class Settings(BaseSettings):
 
     # ── Database ─────────────────────────────────────────────────────────────
     # For production use: postgresql://user:pass@host:5432/db?sslmode=require
-    DATABASE_URL: str = "postgresql://razorrecon:razorrecon@localhost:5432/razorrecon"
+    DATABASE_URL: str = "postgresql://neondb_owner:npg_LEIBD5N8hQjr@ep-lively-mountain-axpkaqvq.c-4.us-east-2.aws.neon.tech/neondb?sslmode=require"
 
     # ── Redis ─────────────────────────────────────────────────────────────────
     # For production TLS use: rediss://:password@host:6380/0
-    REDIS_URL: str = "redis://localhost:6379/0"
+    REDIS_URL: str = "rediss://default:gQAAAAAAAmkoAAIgcDJmMjUwZWE4ZjgwNzg0NDgxYTZhMGFhZGVlM2I2NzM3Mw@wondrous-bee-157992.upstash.io:6379"
     CACHE_TTL: int = 300  # 5 minutes
 
     # ── Razorpay Webhook ──────────────────────────────────────────────────────
@@ -62,6 +62,7 @@ class Settings(BaseSettings):
         "http://127.0.0.1:3000",
         "https://localhost",           # production Nginx
         "https://razor-recon-ai-autonomous-settlemen.vercel.app",
+        "https://razorrecon-backend.onrender.com",
     ]
 
 
