@@ -3,7 +3,7 @@ import {
   Layers, TrendingUp, Bot, ClipboardList, Download, HelpCircle, ChevronLeft, ChevronRight, UploadCloud, Activity, PieChart
 } from 'lucide-react';
 import { useReconciliation } from '../context/ReconciliationContext';
-import { exportAuditLog } from '../api/client';
+import { exportAuditLog, DOCS_URL } from '../api/client';
 import './Sidebar.css';
 
 export default function Sidebar({
@@ -53,7 +53,7 @@ export default function Sidebar({
   };
 
   const handleHelp = () => {
-    window.open('http://localhost:8000/docs', '_blank');
+    window.open(DOCS_URL, '_blank');
   };
 
   const navGroups = [

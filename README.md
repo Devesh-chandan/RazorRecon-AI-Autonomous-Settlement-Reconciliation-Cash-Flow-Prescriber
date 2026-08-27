@@ -25,7 +25,7 @@
     ·
     <a href="#-quickstart"><strong>Get started</strong></a>
     ·
-    <a href="http://localhost:8000/docs"><strong>API Docs</strong></a>
+    <a href="https://razorrecon-backend.onrender.com/docs" target="_blank"><strong>API Docs</strong></a>
     ·
     <a href="PROBLEMS_AND_SOLUTIONS.md"><strong>Troubleshooting</strong></a>
   </p>
@@ -403,7 +403,8 @@ python -m app.send_test_webhook
 
 ## 🔌 Ports & Services
 
-| Port | Service | URL | Purpose |
+### Local Development Ports
+| Port | Service | Local URL | Purpose |
 | :---: | --- | --- | --- |
 | `5173` | React 19 frontend | [http://localhost:5173](http://localhost:5173) | Main dashboard UI |
 | `8000` | FastAPI backend | [http://localhost:8000](http://localhost:8000) | REST API & SSE stream |
@@ -412,6 +413,16 @@ python -m app.send_test_webhook
 | `443` | Nginx TLS proxy | `https://localhost` | Production SSL reverse proxy |
 | `5432` | PostgreSQL | `postgresql://localhost:5432` | Relational database |
 | `6379` | Redis | `redis://localhost:6379` | Cash-flow & recon results cache |
+
+### 🌐 Production Live Deployment Endpoints
+| Component | Provider / Platform | Production URL |
+| --- | --- | --- |
+| **Frontend Dashboard** | Vercel | [https://razor-recon-ai-autonomous-settlemen.vercel.app](https://razor-recon-ai-autonomous-settlemen.vercel.app/) |
+| **FastAPI Backend** | Render | [https://razorrecon-backend.onrender.com](https://razorrecon-backend.onrender.com) |
+| **Interactive API Docs (Swagger)** | Render (FastAPI) | [https://razorrecon-backend.onrender.com/docs](https://razorrecon-backend.onrender.com/docs) |
+| **ReDoc OpenAPI Spec** | Render (FastAPI) | [https://razorrecon-backend.onrender.com/redoc](https://razorrecon-backend.onrender.com/redoc) |
+| **PostgreSQL 16** | Neon Tech | `postgresql://neondb_owner:...@ep-lively-mountain-axpkaqvq.c-4.us-east-2.aws.neon.tech/neondb` |
+| **Redis 7 Cache** | Upstash Redis | `rediss://default:...@wondrous-bee-157992.upstash.io:6379` |
 
 ---
 

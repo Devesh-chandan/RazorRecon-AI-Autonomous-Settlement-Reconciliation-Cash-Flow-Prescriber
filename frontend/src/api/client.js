@@ -3,7 +3,8 @@
  * Handles REST + SSE communication with the FastAPI backend.
  */
 
-const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+export const BASE_URL = (import.meta.env.VITE_API_URL || 'https://razorrecon-backend.onrender.com').replace(/\/$/, '');
+export const DOCS_URL = `${BASE_URL}/docs`;
 
 // ── Helper ──────────────────────────────────────────────────────────────────
 

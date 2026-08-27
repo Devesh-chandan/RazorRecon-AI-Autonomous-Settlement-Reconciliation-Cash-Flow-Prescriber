@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Play, RefreshCw, Activity, Search, User, ChevronDown, UploadCloud, Globe, Code } from 'lucide-react';
 import { useReconciliation } from '../context/ReconciliationContext';
+import { DOCS_URL } from '../api/client';
 import './Header.css';
 
 export default function Header({ onOpenAudit, onOpenUpload }) {
@@ -141,7 +142,7 @@ export default function Header({ onOpenAudit, onOpenUpload }) {
                 {/* API Docs Button */}
                 <button
                   className="profile-menu-row profile-menu-btn"
-                  onClick={() => { setProfileOpen(false); window.open('http://localhost:8000/docs', '_blank'); }}
+                  onClick={() => { setProfileOpen(false); window.open(DOCS_URL, '_blank'); }}
                 >
                   <div className="profile-row-left">
                     <Code size={14} />
