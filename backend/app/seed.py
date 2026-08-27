@@ -135,10 +135,14 @@ def seed(seed_val: Optional[int] = None):
         break_list = list(break_indices)
         random.shuffle(break_list)
 
-        # Assign specific break types to the 20 break indices
-        missing_erp_set = set(break_list[:10])        # 10 Missing ERP
-        amount_mismatch_set = set(break_list[10:18])  # 8 Amount Mismatches
-        disputed_chargeback_set = set(break_list[18:])# 2 Chargebacks
+        # Assign specific break types covering ALL 7 root cause categories across the 20 break records
+        missing_erp_set = set(break_list[:4])          # 4 Missing ERP entries
+        amount_mismatch_set = set(break_list[4:8])    # 4 Data Entry / Amount mismatches
+        disputed_chargeback_set = set(break_list[8:11])# 3 Chargebacks
+        mdr_variance_set = set(break_list[11:14])     # 3 Excessive MDR fee variances (>₹30)
+        timing_lag_set = set(break_list[14:16])       # 2 Extreme timing lags (>14 days)
+        partial_refund_set = set(break_list[16:18])   # 2 Unrecorded partial refunds
+        gst_rounding_set = set(break_list[18:])       # 2 GST rounding discrepancies
 
         # Assign Pass 2 & Pass 3 matched edge cases to non-break indices
         non_break_list = [i for i in range(100) if i not in break_indices]
@@ -199,7 +203,7 @@ def seed(seed_val: Optional[int] = None):
 
             # Apply specific edge-case break & match logic
             if i in pass2_rules_set:
-                setl_fee = round(fee + float(rng.uniform(2.50, 12.00)), 2)
+                setl_fee = round(fee + float(rng.uniform(2.50, 4.50)), 2)
                 setl_credit = round(amt - setl_fee - tax, 2)
                 erp_notes = f"{erp_product_note} | Tier MDR fee variance"
 
@@ -224,6 +228,25 @@ def seed(seed_val: Optional[int] = None):
                 erp_status = "disputed"
                 skip_erp = True
                 erp_notes = f"{erp_product_note} | Chargeback holdback dispute"
+
+            elif i in mdr_variance_set:
+                setl_fee = round(fee + float(rng.uniform(35.00, 85.00)), 2)
+                setl_credit = round(amt - setl_fee - tax, 2)
+                erp_notes = f"{erp_product_note} | MDR fee variance exceeding contract rate"
+
+            elif i in timing_lag_set:
+                settled = captured + timedelta(days=14)
+                erp_notes = f"{erp_product_note} | Severe 14-day settlement delay lag"
+
+            elif i in partial_refund_set:
+                order_status = "partial_refund"
+                refund_amt = round(amt * 0.35, 2)
+                erp_notes = f"{erp_product_note} | Unrecorded partial refund"
+
+            elif i in gst_rounding_set:
+                setl_tax = round(tax + 1.85, 2)
+                setl_credit = round(amt - fee - setl_tax, 2)
+                erp_notes = f"{erp_product_note} | GST tax rounding discrepancy"
 
             orders.append(Order(
                 order_id=order_id,

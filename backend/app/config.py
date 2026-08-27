@@ -19,12 +19,12 @@ class Settings(BaseSettings):
     GROQ_TEMPERATURE: float = 0.1
 
     # ── Database ─────────────────────────────────────────────────────────────
-    # For production use: postgresql://user:pass@host:5432/db?sslmode=require
-    DATABASE_URL: str = "postgresql://neondb_owner:npg_LEIBD5N8hQjr@ep-lively-mountain-axpkaqvq.c-4.us-east-2.aws.neon.tech/neondb?sslmode=require"
+    # Environment variable DATABASE_URL takes precedence. Fallback to local PostgreSQL.
+    DATABASE_URL: str = "postgresql://razorrecon:razorrecon@localhost:5432/razorrecon"
 
     # ── Redis ─────────────────────────────────────────────────────────────────
-    # For production TLS use: rediss://:password@host:6380/0
-    REDIS_URL: str = "rediss://default:gQAAAAAAAmkoAAIgcDJmMjUwZWE4ZjgwNzg0NDgxYTZhMGFhZGVlM2I2NzM3Mw@wondrous-bee-157992.upstash.io:6379"
+    # Environment variable REDIS_URL takes precedence. Fallback to local Redis.
+    REDIS_URL: str = "redis://localhost:6379/0"
     CACHE_TTL: int = 300  # 5 minutes
 
     # ── Razorpay Webhook ──────────────────────────────────────────────────────
