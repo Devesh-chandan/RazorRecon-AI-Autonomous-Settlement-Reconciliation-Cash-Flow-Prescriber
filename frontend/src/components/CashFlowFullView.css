@@ -221,3 +221,39 @@
 
 .cf-pill-emerald { background: #dcfce7; color: #15803d; }
 .cf-pill-amber { background: #fef3c7; color: #b45309; }
+
+/* AI Recovery toggle badge & pulse */
+.cf-toggle-badge {
+  display: inline-block;
+  background: rgba(255, 255, 255, 0.22);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 10px;
+  padding: 1px 7px;
+  font-size: 10px;
+  font-weight: 800;
+  margin-left: 2px;
+  vertical-align: middle;
+  letter-spacing: 0.3px;
+}
+
+.cf-toggle-pulse {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.9);
+  margin-left: 4px;
+  vertical-align: middle;
+  animation: cf-pulse 1.4s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+@keyframes cf-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.55); }
+}
+
+.cf-toggle-btn--active:hover {
+  background: #0965d0;
+  border-color: #0965d0;
+}

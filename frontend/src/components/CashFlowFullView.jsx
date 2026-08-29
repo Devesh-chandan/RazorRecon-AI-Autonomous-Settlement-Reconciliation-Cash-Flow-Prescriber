@@ -19,7 +19,7 @@ export default function CashFlowFullView() {
   const { state } = useReconciliation();
   const { cashFlow, whatIfScenario, status } = state;
 
-  const [simulatedResolution, setSimulatedResolution] = useState(true);
+  const [simulatedResolution, setSimulatedResolution] = useState(false);
 
   // Compute live data directly from cashFlow
   const totalConfirmed = useMemo(() => {
@@ -50,13 +50,16 @@ export default function CashFlowFullView() {
 
       const baseInflow = day.confirmed_inflow || 0;
       const disputedAmt = day.disputed_held || 0;
-      const simulatedGain = simulatedResolution ? Math.round(disputedAmt * 0.85) : 0;
+      const simulatedGain = Math.round(disputedAmt * 0.85);
+      // 'AI Recovery Total' = confirmed + gain (rendered BEHIND green so only the
+      // gain strip above the green line is visible — clean scenario projection look)
+      const aiTotal = baseInflow + simulatedGain;
 
       return {
         date: day.day_label,
         'Confirmed Inflow': isFuture ? null : baseInflow,
         'Disputed / Held': isFuture ? null : disputedAmt,
-        'Simulated Recovery': isFuture ? null : baseInflow + simulatedGain,
+        'AI Recovery Total': (isFuture || !simulatedResolution) ? null : aiTotal,
       };
     });
   }, [cashFlow, whatIfScenario, simulatedResolution]);
@@ -77,10 +80,18 @@ export default function CashFlowFullView() {
         <button
           className={`cf-toggle-btn ${simulatedResolution ? 'cf-toggle-btn--active' : ''}`}
           onClick={() => setSimulatedResolution(prev => !prev)}
-          title="Toggle AI Recovery Simulation"
+          title={simulatedResolution ? 'Click to disable AI Recovery Simulation' : 'Click to simulate 85% AI exception resolution'}
         >
           <ShieldAlert size={15} />
-          <span>Simulate AI Recovery (+{formatINR(projectedRecovery)})</span>
+          {simulatedResolution ? (
+            <span>
+              AI Recovery ON&nbsp;
+              <span className="cf-toggle-badge">+{formatINR(projectedRecovery)}</span>
+            </span>
+          ) : (
+            <span>Simulate AI Recovery (+{formatINR(projectedRecovery)})</span>
+          )}
+          {simulatedResolution && <span className="cf-toggle-pulse" />}
         </button>
       </div>
 
@@ -139,7 +150,7 @@ export default function CashFlowFullView() {
           <div className="cf-legend-group">
             <span className="cf-legend legend-confirmed">● Confirmed Inflow</span>
             <span className="cf-legend legend-disputed">● Disputed / Held</span>
-            {simulatedResolution && <span className="cf-legend legend-simulated">-- AI Recovery</span>}
+            {simulatedResolution && <span className="cf-legend legend-simulated">-- AI Recovery Projection</span>}
           </div>
         </div>
 
@@ -181,6 +192,20 @@ export default function CashFlowFullView() {
                   contentStyle={{ background: '#ffffff', borderRadius: 6, border: '1px solid #e2e8f0', boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}
                 />
 
+                {/* AI Recovery Total — rendered FIRST (behind) so only the strip
+                    above the green Confirmed Inflow line shows in blue */}
+                {simulatedResolution && (
+                  <Area
+                    type="monotone"
+                    dataKey="AI Recovery Total"
+                    stroke="#0b72e7"
+                    strokeWidth={2}
+                    strokeDasharray="5 4"
+                    fill="url(#cfGradSimulated)"
+                    connectNulls={false}
+                  />
+                )}
+                {/* Confirmed Inflow — rendered ON TOP, covers overlapping blue fill */}
                 <Area
                   type="monotone"
                   dataKey="Confirmed Inflow"
@@ -189,6 +214,7 @@ export default function CashFlowFullView() {
                   fill="url(#cfGradConfirmed)"
                   connectNulls={false}
                 />
+                {/* Disputed / Held — separate area showing locked cash */}
                 <Area
                   type="monotone"
                   dataKey="Disputed / Held"
@@ -197,17 +223,6 @@ export default function CashFlowFullView() {
                   fill="url(#cfGradDisputed)"
                   connectNulls={false}
                 />
-                {simulatedResolution && (
-                  <Area
-                    type="monotone"
-                    dataKey="Simulated Recovery"
-                    stroke="#0b72e7"
-                    strokeWidth={2}
-                    strokeDasharray="4 4"
-                    fill="url(#cfGradSimulated)"
-                    connectNulls={false}
-                  />
-                )}
               </AreaChart>
             </ResponsiveContainer>
           )}
