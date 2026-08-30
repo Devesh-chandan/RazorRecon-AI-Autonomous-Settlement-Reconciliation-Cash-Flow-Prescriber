@@ -292,33 +292,58 @@ def seed(seed_val: Optional[int] = None):
                     notes=erp_notes,
                 ))
 
-            if i < 50:
-                csv_settlements_data.append({
-                    "Settlement ID": setl_id,
-                    "Entity ID": pay_id,
-                    "Type": setl_type,
-                    "Amount": f"{setl_amt:.2f}",
-                    "Fee": f"{setl_fee:.2f}",
-                    "Tax": f"{setl_tax:.2f}",
-                    "Credit": f"{setl_credit:.2f}",
-                    "Debit": f"{setl_debit:.2f}",
-                    "Settlement UTR": utr,
-                    "Settled At": settled.strftime("%Y-%m-%d %H:%M:%S"),
-                    "Order ID": order_id,
-                    "Gateway": gateway_name,
-                })
-                if not skip_erp:
-                    csv_erp_data.append({
-                        "Ledger ID": led_id,
-                        "Invoice ID": inv_id,
-                        "Order ID": order_id,
-                        "Expected Amount": f"{erp_expected:.2f}",
-                        "Recorded Amount": f"{erp_recorded:.2f}",
-                        "Payment Method": method,
-                        "Entry Date": created.date().strftime("%Y-%m-%d"),
-                        "Status": erp_status,
-                        "Notes": erp_notes,
-                    })
+        # ── Generate 50 unique CSV records (IDs 101-150, CSV-prefix) ──────────
+        # These IDs never overlap with seeded TH records so 0 will be skipped on upload.
+        for j in range(101, 151):
+            cat_idx = int(rng.integers(0, len(CATEGORIES)))
+            category_name, lo_price, hi_price = CATEGORIES[cat_idx]
+            base_price = float(rng.integers(lo_price, hi_price))
+            csv_amt = round(base_price, 2)
+            csv_gw_name, csv_utr_pfx = gateway_map[(j - 1) % len(gateway_map)]
+            csv_mw = GATEWAY_METHOD_WEIGHTS.get(csv_gw_name, {m: 0.2 for m in METHODS})
+            csv_method = random.choices(list(csv_mw.keys()), weights=list(csv_mw.values()), k=1)[0]
+            csv_fee, csv_tax = compute_fee_tax(csv_amt, csv_method)
+            csv_credit = round(csv_amt - csv_fee - csv_tax, 2)
+
+            csv_order_id = f"order_CSV2608{j:04d}"
+            csv_pay_id   = f"pay_CSV2608{j:04d}"
+            csv_setl_id  = f"setl_CSV2608{j:04d}"
+            csv_led_id   = f"LED-CSV-{j:04d}"
+            csv_inv_id   = f"INV/CSV/{j:05d}"
+            csv_utr      = f"{csv_utr_pfx}CSV{j:06d}00"
+
+            csv_created  = BASE_DATE + timedelta(hours=float(j * 1.1))
+            csv_settled  = csv_created + timedelta(days=1)
+
+            csv_products = PRODUCT_SAMPLES.get(category_name, [category_name])
+            csv_product  = csv_products[j % len(csv_products)]
+            csv_note     = f"{category_name} | {csv_product} (CSV Import)"
+
+            csv_settlements_data.append({
+                "Settlement ID": csv_setl_id,
+                "Entity ID":     csv_pay_id,
+                "Type":          "payment",
+                "Amount":        f"{csv_amt:.2f}",
+                "Fee":           f"{csv_fee:.2f}",
+                "Tax":           f"{csv_tax:.2f}",
+                "Credit":        f"{csv_credit:.2f}",
+                "Debit":         "0.00",
+                "Settlement UTR": csv_utr,
+                "Settled At":    csv_settled.strftime("%Y-%m-%d %H:%M:%S"),
+                "Order ID":      csv_order_id,
+                "Gateway":       csv_gw_name,
+            })
+            csv_erp_data.append({
+                "Ledger ID":        csv_led_id,
+                "Invoice ID":       csv_inv_id,
+                "Order ID":         csv_order_id,
+                "Expected Amount":  f"{csv_amt:.2f}",
+                "Recorded Amount":  f"{csv_amt:.2f}",
+                "Payment Method":   csv_method,
+                "Entry Date":       csv_created.date().strftime("%Y-%m-%d"),
+                "Status":           "received",
+                "Notes":            csv_note,
+            })
 
         db.add_all(orders)
         db.add_all(settlements)

@@ -44,9 +44,6 @@ async def trigger_recon(
     async def _run():
         bg_db = SessionLocal()
         try:
-            if scope == "all":
-                from app.seed import seed
-                seed(seed_val=None)  # Generate fresh bounded random dataset
             await run_reconciliation(run_id, bg_db, scope=scope)
         except Exception as e:
             logger.error(f"Background recon failed: {e}", exc_info=True)

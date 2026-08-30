@@ -1,50 +1,51 @@
 Ledger ID,Invoice ID,Order ID,Expected Amount,Recorded Amount,Payment Method,Entry Date,Status,Notes
-LED-TH-2608-0001,INV/2026-27/TH/00001,order_TH26080001,15317.00,15317.00,upi,2026-08-01,received,Sports & Fitness | Bowflex adjustable dumbbell
-LED-TH-2608-0002,INV/2026-27/TH/00002,order_TH26080002,8036.00,8036.00,upi,2026-08-01,received,Home & Kitchen | Philips air fryer 4L
-LED-TH-2608-0003,INV/2026-27/TH/00003,order_TH26080003,7658.00,7658.00,upi,2026-08-01,received,Electronics - Earbuds/TWS | JBL Tune 230NC TWS
-LED-TH-2608-0004,INV/2026-27/TH/00004,order_TH26080004,4794.00,4794.00,emi,2026-08-01,received,Home & Kitchen | Prestige induction cooktop
-LED-TH-2608-0005,INV/2026-27/TH/00005,order_TH26080005,865.00,865.00,emi,2026-08-01,received,Sports & Fitness | Boldfit resistance bands | Unrecorded partial refund
-LED-TH-2608-0006,INV/2026-27/TH/00006,order_TH26080006,143715.00,143715.00,netbanking,2026-08-01,received,Electronics - Laptop | HP Pavilion x360
-LED-TH-2608-0007,INV/2026-27/TH/00007,order_TH26080007,4430.00,4430.00,netbanking,2026-08-01,received,Fashion - Men Clothing | Peter England formal shirt
-LED-TH-2608-0008,INV/2026-27/TH/00008,order_TH26080008,3043.00,3043.00,card,2026-08-01,received,Fashion - Men Clothing | Jockey innerwear combo | Cross-midnight batch order
-LED-TH-2608-0009,INV/2026-27/TH/00009,order_TH26080009,2224.00,2224.00,wallet,2026-08-01,received,Grocery & Essentials | Maggi noodles 12-pack
-LED-TH-2608-0010,INV/2026-27/TH/00010,order_TH26080010,4118.00,4118.00,card,2026-08-01,received,Fashion - Footwear | Nike Revolution 6 shoes | MDR fee variance exceeding contract rate
-LED-TH-2608-0011,INV/2026-27/TH/00011,order_TH26080011,3123.00,3123.00,wallet,2026-08-01,received,Beauty & Personal Care | Mamaearth vitamin C serum
-LED-TH-2608-0012,INV/2026-27/TH/00012,order_TH26080012,1020.00,1020.00,card,2026-08-01,received,Fashion - Women Clothing | BIBA printed kurta
-LED-TH-2608-0013,INV/2026-27/TH/00013,order_TH26080013,4478.00,4478.00,card,2026-08-01,received,Jewellery | Tanishq 22K gold mangalsutra
-LED-TH-2608-0014,INV/2026-27/TH/00014,order_TH26080014,222.00,222.00,card,2026-08-01,received,Books & Stationery | Atomic Habits paperback
-LED-TH-2608-0015,INV/2026-27/TH/00015,order_TH26080015,103248.00,103248.00,upi,2026-08-01,received,Electronics - Laptop | HP Pavilion x360 | Severe 14-day settlement delay lag
-LED-TH-2608-0016,INV/2026-27/TH/00016,order_TH26080016,7545.00,7545.00,upi,2026-08-01,received,Fashion - Women Clothing | Floral kurti set
-LED-TH-2608-0017,INV/2026-27/TH/00017,order_TH26080017,2642.00,2642.00,card,2026-08-01,received,Electronics - Earbuds/TWS | boAt Airdopes 141
-LED-TH-2608-0018,INV/2026-27/TH/00018,order_TH26080018,27048.00,27048.00,card,2026-08-01,received,Jewellery | CaratLane silver anklet | Tier MDR fee variance
-LED-TH-2608-0019,INV/2026-27/TH/00019,order_TH26080019,8971.00,8971.00,card,2026-08-01,received,Electronics - Earbuds/TWS | Sony WH-1000XM5 | Tier MDR fee variance
-LED-TH-2608-0020,INV/2026-27/TH/00020,order_TH26080020,9740.75,9740.75,upi,2026-08-01,received,Home & Kitchen | Philips air fryer 4L | Amount mismatch — ERP invoice typo
-LED-TH-2608-0021,INV/2026-27/TH/00021,order_TH26080021,343.00,343.00,card,2026-08-01,received,Books & Stationery | Ikigai paperback
-LED-TH-2608-0022,INV/2026-27/TH/00022,order_TH26080022,3072.00,3072.00,emi,2026-08-01,received,Fashion - Footwear | Nike Revolution 6 shoes | Cross-midnight batch order
-LED-TH-2608-0023,INV/2026-27/TH/00023,order_TH26080023,3792.00,3792.00,card,2026-08-02,received,Fashion - Footwear | Puma Softride Pro
-LED-TH-2608-0024,INV/2026-27/TH/00024,order_TH26080024,2876.00,2876.00,upi,2026-08-02,received,Beauty & Personal Care | Forest Essentials wash
-LED-TH-2608-0025,INV/2026-27/TH/00025,order_TH26080025,7150.00,7150.00,netbanking,2026-08-02,received,Fashion - Women Clothing | Floral kurti set | MDR fee variance exceeding contract rate
-LED-TH-2608-0026,INV/2026-27/TH/00026,order_TH26080026,3099.00,3099.00,emi,2026-08-02,received,Fashion - Men Clothing | Jockey innerwear combo
-LED-TH-2608-0027,INV/2026-27/TH/00027,order_TH26080027,65903.00,65903.00,upi,2026-08-02,received,Electronics - Laptop | HP Pavilion x360
-LED-TH-2608-0028,INV/2026-27/TH/00028,order_TH26080028,2670.00,2670.00,emi,2026-08-02,received,Grocery & Essentials | Tata Tea Gold 1kg | Tier MDR fee variance
-LED-TH-2608-0029,INV/2026-27/TH/00029,order_TH26080029,7484.00,7484.00,upi,2026-08-02,received,Electronics - Earbuds/TWS | boAt Airdopes 141
-LED-TH-2608-0030,INV/2026-27/TH/00030,order_TH26080030,278.00,278.00,card,2026-08-02,received,Books & Stationery | Ikigai paperback | Severe 14-day settlement delay lag
-LED-TH-2608-0031,INV/2026-27/TH/00031,order_TH26080031,3392.00,3392.00,emi,2026-08-02,received,Fashion - Footwear | Nike Revolution 6 shoes
-LED-TH-2608-0032,INV/2026-27/TH/00032,order_TH26080032,53084.00,53084.00,card,2026-08-02,received,Electronics - Laptop | ASUS VivoBook 15
-LED-TH-2608-0033,INV/2026-27/TH/00033,order_TH26080033,4997.00,4997.00,upi,2026-08-02,received,Fashion - Men Clothing | Levi's 511 jeans
-LED-TH-2608-0034,INV/2026-27/TH/00034,order_TH26080034,19243.00,19243.00,wallet,2026-08-02,received,Sports & Fitness | Bowflex adjustable dumbbell
-LED-TH-2608-0035,INV/2026-27/TH/00035,order_TH26080035,1587.00,1587.00,upi,2026-08-02,received,Grocery & Essentials | Aashirvaad atta 10kg | Unrecorded partial refund
-LED-TH-2608-0036,INV/2026-27/TH/00036,order_TH26080036,13646.00,13646.00,upi,2026-08-02,received,Home & Kitchen | Dyson V8 vacuum
-LED-TH-2608-0037,INV/2026-27/TH/00037,order_TH26080037,2511.00,2511.00,upi,2026-08-02,received,Home & Kitchen | Prestige induction cooktop
-LED-TH-2608-0038,INV/2026-27/TH/00038,order_TH26080038,19029.00,19029.00,upi,2026-08-02,received,Jewellery | Malabar diamond pendant | Tier MDR fee variance
-LED-TH-2608-0039,INV/2026-27/TH/00039,order_TH26080039,2869.00,2869.00,netbanking,2026-08-02,received,Electronics - Earbuds/TWS | JBL Tune 230NC TWS
-LED-TH-2608-0040,INV/2026-27/TH/00040,order_TH26080040,64181.28,64181.28,upi,2026-08-02,received,"Electronics - Laptop | Lenovo IdeaPad 3 15"" | Amount mismatch — ERP invoice typo"
-LED-TH-2608-0041,INV/2026-27/TH/00041,order_TH26080041,2344.00,2344.00,emi,2026-08-02,received,Home & Kitchen | Philips air fryer 4L
-LED-TH-2608-0042,INV/2026-27/TH/00042,order_TH26080042,603.00,603.00,card,2026-08-02,received,Books & Stationery | Ikigai paperback | Tier MDR fee variance
-LED-TH-2608-0043,INV/2026-27/TH/00043,order_TH26080043,1432.00,1432.00,upi,2026-08-02,received,Fashion - Footwear | Nike Revolution 6 shoes
-LED-TH-2608-0044,INV/2026-27/TH/00044,order_TH26080044,30726.00,30726.00,card,2026-08-02,received,Jewellery | Malabar diamond pendant
-LED-TH-2608-0046,INV/2026-27/TH/00046,order_TH26080046,23288.00,23288.00,upi,2026-08-03,received,Jewellery | Tanishq 22K gold mangalsutra | Tier MDR fee variance
-LED-TH-2608-0047,INV/2026-27/TH/00047,order_TH26080047,80603.00,80603.00,card,2026-08-03,received,Electronics - Smartphone | Samsung Galaxy A54 5G
-LED-TH-2608-0048,INV/2026-27/TH/00048,order_TH26080048,7275.00,7275.00,upi,2026-08-03,received,Electronics - Earbuds/TWS | JBL Tune 230NC TWS
-LED-TH-2608-0049,INV/2026-27/TH/00049,order_TH26080049,1905.00,1905.00,card,2026-08-03,received,Grocery & Essentials | Tata Tea Gold 1kg
-LED-TH-2608-0050,INV/2026-27/TH/00050,order_TH26080050,809.00,809.00,emi,2026-08-03,received,Books & Stationery | Atomic Habits paperback | GST tax rounding discrepancy
+LED-CSV-0101,INV/CSV/00101,order_CSV26080101,2241.00,2241.00,emi,2026-08-05,received,Fashion - Men Clothing | Levi's 511 jeans (CSV Import)
+LED-CSV-0102,INV/CSV/00102,order_CSV26080102,3361.00,3361.00,emi,2026-08-05,received,Beauty & Personal Care | Lakme 9to5 lipstick set (CSV Import)
+LED-CSV-0103,INV/CSV/00103,order_CSV26080103,4066.00,4066.00,card,2026-08-05,received,Fashion - Men Clothing | Jockey innerwear combo (CSV Import)
+LED-CSV-0104,INV/CSV/00104,order_CSV26080104,1592.00,1592.00,upi,2026-08-05,received,Fashion - Footwear | Skechers Go Walk 5 (CSV Import)
+LED-CSV-0105,INV/CSV/00105,order_CSV26080105,6518.00,6518.00,upi,2026-08-05,received,Electronics - Earbuds/TWS | Sony WH-1000XM5 (CSV Import)
+LED-CSV-0106,INV/CSV/00106,order_CSV26080106,4373.00,4373.00,netbanking,2026-08-05,received,Home & Kitchen | Philips air fryer 4L (CSV Import)
+LED-CSV-0107,INV/CSV/00107,order_CSV26080107,4966.00,4966.00,netbanking,2026-08-05,received,Fashion - Men Clothing | Levi's 511 jeans (CSV Import)
+LED-CSV-0108,INV/CSV/00108,order_CSV26080108,3663.00,3663.00,upi,2026-08-05,received,Fashion - Footwear | Nike Revolution 6 shoes (CSV Import)
+LED-CSV-0109,INV/CSV/00109,order_CSV26080109,14164.00,14164.00,card,2026-08-05,received,Sports & Fitness | Boldfit resistance bands (CSV Import)
+LED-CSV-0110,INV/CSV/00110,order_CSV26080110,81432.00,81432.00,card,2026-08-06,received,Electronics - Laptop | HP Pavilion x360 (CSV Import)
+LED-CSV-0111,INV/CSV/00111,order_CSV26080111,364.00,364.00,netbanking,2026-08-06,received,Grocery & Essentials | Tata Tea Gold 1kg (CSV Import)
+LED-CSV-0112,INV/CSV/00112,order_CSV26080112,20608.00,20608.00,upi,2026-08-06,received,Electronics - Smartphone | Samsung Galaxy A54 5G (CSV Import)
+LED-CSV-0113,INV/CSV/00113,order_CSV26080113,3633.00,3633.00,emi,2026-08-06,received,Fashion - Men Clothing | Levi's 511 jeans (CSV Import)
+LED-CSV-0114,INV/CSV/00114,order_CSV26080114,3184.00,3184.00,netbanking,2026-08-06,received,Beauty & Personal Care | Lakme 9to5 lipstick set (CSV Import)
+LED-CSV-0115,INV/CSV/00115,order_CSV26080115,2689.00,2689.00,netbanking,2026-08-06,received,Grocery & Essentials | Aashirvaad atta 10kg (CSV Import)
+LED-CSV-0116,INV/CSV/00116,order_CSV26080116,459.00,459.00,netbanking,2026-08-06,received,Books & Stationery | Ikigai paperback (CSV Import)
+LED-CSV-0117,INV/CSV/00117,order_CSV26080117,4070.00,4070.00,upi,2026-08-06,received,Fashion - Footwear | Nike Revolution 6 shoes (CSV Import)
+LED-CSV-0118,INV/CSV/00118,order_CSV26080118,304.00,304.00,upi,2026-08-06,received,Grocery & Essentials | Aashirvaad atta 10kg (CSV Import)
+LED-CSV-0119,INV/CSV/00119,order_CSV26080119,337.00,337.00,wallet,2026-08-06,received,Books & Stationery | Ikigai paperback (CSV Import)
+LED-CSV-0120,INV/CSV/00120,order_CSV26080120,1523.00,1523.00,wallet,2026-08-06,received,Fashion - Men Clothing | Peter England formal shirt (CSV Import)
+LED-CSV-0121,INV/CSV/00121,order_CSV26080121,90278.00,90278.00,emi,2026-08-06,received,Electronics - Laptop | ASUS VivoBook 15 (CSV Import)
+LED-CSV-0122,INV/CSV/00122,order_CSV26080122,2877.00,2877.00,netbanking,2026-08-06,received,Electronics - Earbuds/TWS | JBL Tune 230NC TWS (CSV Import)
+LED-CSV-0123,INV/CSV/00123,order_CSV26080123,16884.00,16884.00,upi,2026-08-06,received,Sports & Fitness | Bowflex adjustable dumbbell (CSV Import)
+LED-CSV-0124,INV/CSV/00124,order_CSV26080124,10195.00,10195.00,card,2026-08-06,received,Home & Kitchen | Philips air fryer 4L (CSV Import)
+LED-CSV-0125,INV/CSV/00125,order_CSV26080125,2995.00,2995.00,upi,2026-08-06,received,Electronics - Earbuds/TWS | JBL Tune 230NC TWS (CSV Import)
+LED-CSV-0126,INV/CSV/00126,order_CSV26080126,2322.00,2322.00,netbanking,2026-08-06,received,Fashion - Men Clothing | Peter England formal shirt (CSV Import)
+LED-CSV-0127,INV/CSV/00127,order_CSV26080127,69338.00,69338.00,emi,2026-08-06,received,Electronics - Smartphone | Samsung Galaxy A54 5G (CSV Import)
+LED-CSV-0128,INV/CSV/00128,order_CSV26080128,4327.00,4327.00,card,2026-08-06,received,Fashion - Women Clothing | BIBA printed kurta (CSV Import)
+LED-CSV-0129,INV/CSV/00129,order_CSV26080129,24724.00,24724.00,card,2026-08-06,received,Electronics - Smartphone | Redmi Note 13 Pro (CSV Import)
+LED-CSV-0130,INV/CSV/00130,order_CSV26080130,2088.00,2088.00,upi,2026-08-06,received,Beauty & Personal Care | Mamaearth vitamin C serum (CSV Import)
+LED-CSV-0131,INV/CSV/00131,order_CSV26080131,21357.00,21357.00,netbanking,2026-08-07,received,Jewellery | CaratLane silver anklet (CSV Import)
+LED-CSV-0132,INV/CSV/00132,order_CSV26080132,12394.00,12394.00,card,2026-08-07,received,Sports & Fitness | Bowflex adjustable dumbbell (CSV Import)
+LED-CSV-0133,INV/CSV/00133,order_CSV26080133,12172.00,12172.00,card,2026-08-07,received,Sports & Fitness | Boldfit resistance bands (CSV Import)
+LED-CSV-0134,INV/CSV/00134,order_CSV26080134,400.00,400.00,upi,2026-08-07,received,Books & Stationery | Ikigai paperback (CSV Import)
+LED-CSV-0135,INV/CSV/00135,order_CSV26080135,144617.00,144617.00,upi,2026-08-07,received,"Electronics - Laptop | Lenovo IdeaPad 3 15"" (CSV Import)"
+LED-CSV-0136,INV/CSV/00136,order_CSV26080136,1065.00,1065.00,card,2026-08-07,received,Electronics - Earbuds/TWS | boAt Airdopes 141 (CSV Import)
+LED-CSV-0137,INV/CSV/00137,order_CSV26080137,829.00,829.00,netbanking,2026-08-07,received,Books & Stationery | Ikigai paperback (CSV Import)
+LED-CSV-0138,INV/CSV/00138,order_CSV26080138,992.00,992.00,card,2026-08-07,received,Grocery & Essentials | Tata Tea Gold 1kg (CSV Import)
+LED-CSV-0139,INV/CSV/00139,order_CSV26080139,14840.00,14840.00,upi,2026-08-07,received,Jewellery | Malabar diamond pendant (CSV Import)
+LED-CSV-0140,INV/CSV/00140,order_CSV26080140,4840.00,4840.00,card,2026-08-07,received,Home & Kitchen | Dyson V8 vacuum (CSV Import)
+LED-CSV-0141,INV/CSV/00141,order_CSV26080141,1757.00,1757.00,upi,2026-08-07,received,Grocery & Essentials | Tata Tea Gold 1kg (CSV Import)
+LED-CSV-0142,INV/CSV/00142,order_CSV26080142,15254.00,15254.00,card,2026-08-07,received,Sports & Fitness | Boldfit resistance bands (CSV Import)
+LED-CSV-0143,INV/CSV/00143,order_CSV26080143,635.00,635.00,upi,2026-08-07,received,Books & Stationery | Ikigai paperback (CSV Import)
+LED-CSV-0144,INV/CSV/00144,order_CSV26080144,8281.00,8281.00,card,2026-08-07,received,Electronics - Earbuds/TWS | Sony WH-1000XM5 (CSV Import)
+LED-CSV-0145,INV/CSV/00145,order_CSV26080145,7019.00,7019.00,emi,2026-08-07,received,Home & Kitchen | Philips air fryer 4L (CSV Import)
+LED-CSV-0146,INV/CSV/00146,order_CSV26080146,1942.00,1942.00,netbanking,2026-08-07,received,Beauty & Personal Care | Forest Essentials wash (CSV Import)
+LED-CSV-0147,INV/CSV/00147,order_CSV26080147,4597.00,4597.00,emi,2026-08-07,received,Fashion - Footwear | Nike Revolution 6 shoes (CSV Import)
+LED-CSV-0148,INV/CSV/00148,order_CSV26080148,1219.00,1219.00,upi,2026-08-07,received,Fashion - Women Clothing | Libas ethnic kurta palazzo (CSV Import)
+LED-CSV-0149,INV/CSV/00149,order_CSV26080149,5259.00,5259.00,wallet,2026-08-07,received,Fashion - Women Clothing | BIBA printed kurta (CSV Import)
+LED-CSV-0150,INV/CSV/00150,order_CSV26080150,2877.00,2877.00,card,2026-08-07,received,Fashion - Men Clothing | Peter England formal shirt (CSV Import)

@@ -92,15 +92,22 @@ async def run_reconciliation(run_id: str, db: Session, scope: str = "all") -> No
         erp_raw = db.query(ErpLedger).all()
 
         if scope == "imported":
-            # Filter by import_source tag — CSV/webhook imports are tagged 'csv_import'
+            # Only the 50 CSV-imported records
             settlements_raw = db.query(Settlement).filter(
                 Settlement.import_source == "csv_import"
             ).all()
             if not settlements_raw:
-                # Fallback: if no tagged imports found, audit all records
                 logger.warning("No csv_import-tagged settlements found — falling back to full audit")
                 settlements_raw = db.query(Settlement).all()
+        elif scope == "seeded":
+            # Only the original 100 seeded records (main Run Recon button after CSV import)
+            settlements_raw = db.query(Settlement).filter(
+                Settlement.import_source == "seeded"
+            ).all()
+            if not settlements_raw:
+                settlements_raw = db.query(Settlement).all()
         else:
+            # scope == "all": everything — 100 seeded + 50 CSV + webhooks
             settlements_raw = db.query(Settlement).all()
 
         orders = [_model_to_dict(o) for o in orders_raw]
