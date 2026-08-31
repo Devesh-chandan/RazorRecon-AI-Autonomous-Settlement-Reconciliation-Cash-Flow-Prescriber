@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import {
-  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
+  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  ReferenceArea, ReferenceLine
 } from 'recharts';
 import {
   TrendingUp, AlertCircle, CheckCircle2, ShieldAlert, ArrowUpRight, Calendar
@@ -34,8 +35,8 @@ export default function CashFlowFullView() {
     return Math.round(totalDisputed * 0.85);
   }, [totalDisputed]);
 
-  const chartData = useMemo(() => {
-    if (!cashFlow?.length) return [];
+  const { chartData, lastActiveLabel, futureLabels } = useMemo(() => {
+    if (!cashFlow?.length) return { chartData: [], lastActiveLabel: null, futureLabels: [] };
 
     let lastActiveIdx = cashFlow.length - 1;
     for (let i = cashFlow.length - 1; i >= 0; i--) {
@@ -45,14 +46,16 @@ export default function CashFlowFullView() {
       }
     }
 
-    return cashFlow.map((day, i) => {
+    const _futureLabels = cashFlow
+      .slice(lastActiveIdx + 1)
+      .map(d => d.day_label);
+
+    const data = cashFlow.map((day, i) => {
       const isFuture = i > lastActiveIdx && !whatIfScenario;
 
       const baseInflow = day.confirmed_inflow || 0;
       const disputedAmt = day.disputed_held || 0;
       const simulatedGain = Math.round(disputedAmt * 0.85);
-      // 'AI Recovery Total' = confirmed + gain (rendered BEHIND green so only the
-      // gain strip above the green line is visible — clean scenario projection look)
       const aiTotal = baseInflow + simulatedGain;
 
       return {
@@ -62,6 +65,12 @@ export default function CashFlowFullView() {
         'AI Recovery Total': (isFuture || !simulatedResolution) ? null : aiTotal,
       };
     });
+
+    return {
+      chartData: data,
+      lastActiveLabel: cashFlow[lastActiveIdx]?.day_label ?? null,
+      futureLabels: _futureLabels,
+    };
   }, [cashFlow, whatIfScenario, simulatedResolution]);
 
   const isLoading = status === 'running';
@@ -178,7 +187,27 @@ export default function CashFlowFullView() {
                 </defs>
 
                 <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
-                <XAxis dataKey="date" stroke="#94a3b8" fontSize={11} tickLine={false} axisLine={{ stroke: '#e2e8f0' }} />
+                <XAxis
+                  dataKey="date"
+                  stroke="#94a3b8"
+                  fontSize={11}
+                  tickLine={false}
+                  axisLine={{ stroke: '#e2e8f0' }}
+                  tick={({ x, y, payload }) => {
+                    const isFuture = futureLabels.includes(payload.value);
+                    return (
+                      <text
+                        x={x} y={y + 12}
+                        textAnchor="middle"
+                        fontSize={11}
+                        fill="#94a3b8"
+                        opacity={isFuture ? 0.4 : 1}
+                      >
+                        {payload.value}
+                      </text>
+                    );
+                  }}
+                />
                 <YAxis
                   stroke="#94a3b8"
                   fontSize={11}
@@ -191,6 +220,32 @@ export default function CashFlowFullView() {
                   formatter={(value) => [formatINR(value), '']}
                   contentStyle={{ background: '#ffffff', borderRadius: 6, border: '1px solid #e2e8f0', boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}
                 />
+
+                {/* Shade future / no-data zone */}
+                {futureLabels.length > 0 && lastActiveLabel && (
+                  <ReferenceArea
+                    x1={lastActiveLabel}
+                    x2={futureLabels[futureLabels.length - 1]}
+                    fill="#e2e8f0"
+                    fillOpacity={0.35}
+                    stroke="none"
+                  />
+                )}
+                {/* Vertical dashed marker where analyzed data ends */}
+                {futureLabels.length > 0 && lastActiveLabel && (
+                  <ReferenceLine
+                    x={lastActiveLabel}
+                    stroke="#94a3b8"
+                    strokeDasharray="4 3"
+                    strokeOpacity={0.55}
+                    label={{
+                      value: 'Analysis ends',
+                      position: 'insideTopRight',
+                      fontSize: 10,
+                      fill: '#94a3b8',
+                    }}
+                  />
+                )}
 
                 {/* AI Recovery Total — rendered FIRST (behind) so only the strip
                     above the green Confirmed Inflow line shows in blue */}

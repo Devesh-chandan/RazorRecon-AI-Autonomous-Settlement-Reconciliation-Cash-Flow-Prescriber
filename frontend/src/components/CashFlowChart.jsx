@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
-  ResponsiveContainer, Legend, ReferenceLine,
+  ResponsiveContainer, Legend, ReferenceLine, ReferenceArea,
 } from 'recharts';
 import { TrendingUp, AlertTriangle } from 'lucide-react';
 import { useReconciliation } from '../context/ReconciliationContext';
@@ -34,8 +34,8 @@ export default function CashFlowChart() {
   const { state } = useReconciliation();
   const { cashFlow, whatIfScenario, status } = state;
 
-  const chartData = useMemo(() => {
-    if (!cashFlow?.length) return [];
+  const { chartData, lastActiveLabel, futureLabels } = useMemo(() => {
+    if (!cashFlow?.length) return { chartData: [], lastActiveLabel: null, futureLabels: [] };
 
     // Find last index with non-zero activity
     let lastActiveIdx = cashFlow.length - 1;
@@ -46,7 +46,13 @@ export default function CashFlowChart() {
       }
     }
 
-    return cashFlow.map((day, i) => {
+    // Determine which tail days have zero data (future / no-data zone)
+    const _futureLabels = cashFlow
+      .slice(lastActiveIdx + 1)
+      .map(d => d.day_label);
+
+    const data = cashFlow.map((day, i) => {
+      // Days beyond last active index: no data — render as null so line stops cleanly
       const isFuture = i > lastActiveIdx && !whatIfScenario;
 
       const row = {
@@ -61,6 +67,12 @@ export default function CashFlowChart() {
 
       return row;
     });
+
+    return {
+      chartData: data,
+      lastActiveLabel: cashFlow[lastActiveIdx]?.day_label ?? null,
+      futureLabels: _futureLabels,
+    };
   }, [cashFlow, whatIfScenario]);
 
   const totalConfirmed = (cashFlow || []).reduce((s, d) => s + (d?.confirmed_inflow || 0), 0);
@@ -149,7 +161,20 @@ export default function CashFlowChart() {
               <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
               <XAxis
                 dataKey="date"
-                tick={{ fontSize: 11, fill: 'var(--text-tertiary)' }}
+                tick={({ x, y, payload }) => {
+                  const isFuture = futureLabels.includes(payload.value);
+                  return (
+                    <text
+                      x={x} y={y + 12}
+                      textAnchor="middle"
+                      fontSize={11}
+                      fill={isFuture ? 'var(--text-tertiary)' : 'var(--text-tertiary)'}
+                      opacity={isFuture ? 0.45 : 1}
+                    >
+                      {payload.value}
+                    </text>
+                  );
+                }}
                 axisLine={false}
                 tickLine={false}
               />
@@ -166,6 +191,33 @@ export default function CashFlowChart() {
                 iconSize={8}
                 wrapperStyle={{ fontSize: 12, paddingTop: 8 }}
               />
+
+              {/* Shade future / no-data zone */}
+              {futureLabels.length > 0 && lastActiveLabel && (
+                <ReferenceArea
+                  x1={lastActiveLabel}
+                  x2={futureLabels[futureLabels.length - 1]}
+                  fill="var(--border)"
+                  fillOpacity={0.18}
+                  stroke="none"
+                />
+              )}
+              {/* Vertical marker where data ends */}
+              {futureLabels.length > 0 && lastActiveLabel && (
+                <ReferenceLine
+                  x={lastActiveLabel}
+                  stroke="var(--text-tertiary)"
+                  strokeDasharray="4 3"
+                  strokeOpacity={0.5}
+                  label={{
+                    value: 'Data ends',
+                    position: 'insideTopRight',
+                    fontSize: 10,
+                    fill: 'var(--text-tertiary)',
+                    opacity: 0.7,
+                  }}
+                />
+              )}
 
               <Area
                 type="monotone"
