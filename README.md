@@ -521,3 +521,11 @@ See **[`WHAT_BROKE.md`](WHAT_BROKE.md)** for root-cause analyses and engineering
 ### License
 
 Distributed under the [MIT License](LICENSE). Built for Razorpay Buildathon 2026.
+---
+
+<!-- VISITOR COUNTER -->
+<p align="center">
+  <a href="https://github.com/Devesh-chandan/RazorRecon-AI-Autonomous-Settlement-Reconciliation-Cash-Flow-Prescriber">
+    <img src="https://hits.sh/github.com/Devesh-chandan/RazorRecon-AI-Autonomous-Settlement-Reconciliation-Cash-Flow-Prescriber.svg?style=flat-square&label=REPOSITORY+VISITORS&color=0C2340" alt="Repository Visitors" />
+  </a>
+</p>
